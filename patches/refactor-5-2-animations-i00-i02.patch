@@ -1,0 +1,384 @@
+diff --git a/examples/demo/compositions/i00.html b/examples/demo/compositions/i00.html
+index a623f5a..7b356dd 100644
+--- a/examples/demo/compositions/i00.html
++++ b/examples/demo/compositions/i00.html
+@@ -6,6 +6,7 @@
+ <div data-hf-id="hf-9mh2" class="clip bg" id="fond" data-start="0" data-duration="16.00" data-track-index="0" data-layout-allow-overflow="">
+   <img data-hf-id="hf-a7qi" class="fond" id="fond-img" src="assets/bg/BG-00.jpg" alt="">
+   <div data-hf-id="hf-89y7" class="voile"></div>
++  <div class="vignette"></div>
+ </div>
+ 
+ <section data-hf-id="hf-t7zs" class="clip step" id="step-I0-1-0" data-step="I0.1#0" data-start="0.00" data-duration="5.00" data-track-index="1" data-cam="off">
+@@ -35,51 +36,85 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
+   const t = parseFloat(step.getAttribute("data-start"));
+   const dur = parseFloat(step.getAttribute("data-duration"));
+   const sel = "#" + step.id;
++  const has = function (q) { return step.querySelector(q) !== null; };
+   tl.addLabel(step.getAttribute("data-step"), t);
++
++  // --- entrée de l'étape : le bloc glisse et apparaît, les mots-clés ont un léger rebond
+   const inEl = step.querySelector(".in");
+-  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, t);
++  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
+   var _num = step.querySelector(".dbig") || step.querySelector(".dkw");
+-  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.85 }, { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, t + 0.1);
+-  // versus : la colonne gauche diminue, la droite s'agrandit
++  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.92 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)" }, t + 0.05);
++  // lignes d'un même bloc : décalées de 0,12 s
++  if (inEl && step.querySelectorAll(".in > .dline").length > 1) tl.fromTo(sel + " .in > .dline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
++  // titre : kicker puis titre
++  if (has(".kicker")) tl.fromTo(sel + " .kicker", { opacity: 0, x: -26 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
++  if (has(".stitle")) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
++
++  // --- versus : le filet se trace, la gauche diminue en s'écartant, la droite s'agrandit
+   var _vs = step.querySelector(".versus");
+   if (_vs) {
+-    tl.fromTo(_vs.querySelector(".vcol.left"), { scale: 1 }, { scale: 0.82, duration: 0.7, ease: "power2.out" }, t + 0.25);
+-    tl.fromTo(_vs.querySelector(".vcol.right"), { scale: 1 }, { scale: 1.18, duration: 0.7, ease: "power2.out" }, t + 0.25);
++    tl.fromTo(sel + " .vsep", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out" }, t + 0.15);
++    tl.fromTo(sel + " .vcol.left", { scale: 1, x: 0 }, { scale: 0.82, x: -24, duration: 0.7, ease: "power2.out" }, t + 0.3);
++    tl.fromTo(sel + " .vcol.right", { scale: 1 }, { scale: 1.16, duration: 0.8, ease: "back.out(1.4)" }, t + 0.3);
+   }
+-  // strike : les deux traits se dessinent
+-  if (step.querySelector(".sline1")) {
+-    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.25);
+-    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.55);
++  // --- diverge : le tronc, puis chaque flèche part de l'origine et pulse une fois
++  if (has(".diverge")) {
++    tl.fromTo(sel + " .branch.up .darr-big", { opacity: 0, x: -36, y: 36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
++    tl.fromTo(sel + " .branch.down .darr-big", { opacity: 0, x: -36, y: -36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.85);
++    tl.fromTo(sel + " .branch.up .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 0.6);
++    tl.fromTo(sel + " .branch.down .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 1.1);
++    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.85);
++    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 1.35);
+   }
+-  // diverge : pulse des flèches, gauche puis droite
+-  if (step.querySelector(".diverge")) {
+-    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.4);
+-    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.9);
++  // --- strike : deux traits se tracent, le second en sens inverse
++  if (has(".sline1")) {
++    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "left center" }, t + 0.35);
++    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "right center" }, t + 0.7);
+   }
+-  // count : compteur
++  // --- count : compteur qui ralentit, puis le libellé
+   step.querySelectorAll(".ctr").forEach(function (el) {
+     var obj = { val: 0 }, target = parseFloat(el.getAttribute("data-target"));
+-    tl.to(obj, { val: target, duration: 0.9, ease: "power2.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
++    tl.to(obj, { val: target, duration: 1.1, ease: "power3.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
+   });
+-  // enumerate : seul le nouvel item apparaît
+-  if (step.querySelector(".it.new")) tl.fromTo(sel + " .it.new", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t);
+-  // stamp : claque ; chip, icon : pop ; flèche : glisse
+-  if (step.querySelector(".stamp")) tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -12 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.25, ease: "power4.in", stagger: 0.2 }, t + 0.35);
+-  if (step.querySelector(".chip")) tl.fromTo(sel + " .chip", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.15 }, t + 0.2);
+-  if (step.querySelector(".dico")) tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.12 }, t + 0.2);
+-  if (step.querySelector(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", stagger: 0.25 }, t + 0.3);
+-  // punch : mot à mot
+-  if (step.classList.contains("step-punch")) tl.fromTo(sel + " .w", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.22 }, t + 0.1);
+-  // ref-card : entrée (opacity, y), extrait en or, zoom lent (scale seul, sans retomber sur l'entrée)
++  if (has(".dbig") && has(".dsub")) tl.fromTo(sel + " .dsub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t + 0.9);
++  // --- enumerate : le nouvel item entre, les précédents s'estompent (focus-shift)
++  if (has(".it.new")) {
++    tl.fromTo(sel + " .it.new", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t + 0.1);
++    if (has(".it:not(.new)")) tl.fromTo(sel + " .it:not(.new)", { opacity: 1 }, { opacity: 0.55, duration: 0.5, ease: "power2.out" }, t + 0.1);
++  }
++  // --- cols2 : ligne par ligne
++  if (has(".cols2")) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
++  // --- stamp : claque (dépasse puis se pose)
++  if (has(".stamp")) {
++    tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -14 }, { scale: 0.94, opacity: 1, rotation: -3, duration: 0.24, ease: "power4.in", stagger: 0.24 }, t + 0.35);
++    tl.to(sel + " .stamp", { scale: 1, duration: 0.2, ease: "back.out(3)", stagger: 0.24 }, t + 0.59);
++  }
++  // --- chip : pop
++  if (has(".chip")) tl.fromTo(sel + " .chip", { scale: 0, y: 10 }, { scale: 1, y: 0, duration: 0.45, ease: "back.out(2.4)", stagger: 0.14 }, t + 0.25);
++  // --- icon, check, cross : la pastille pop, puis le trait se dessine
++  if (has(".dico")) {
++    tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.45, ease: "back.out(2.2)", stagger: 0.14 }, t + 0.2);
++    tl.fromTo(sel + " .dico path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.07 }, t + 0.45);
++  }
++  // --- arrow : la flèche glisse et se pose
++  if (has(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -34, scale: 0.7 }, { opacity: 1, x: 0, scale: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, t + 0.3);
++  // --- punch : mot à mot, puis lente avancée
++  if (step.classList.contains("step-punch")) {
++    tl.fromTo(sel + " .w", { opacity: 0, y: 46, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.7)", stagger: 0.2 }, t + 0.1);
++    tl.fromTo(sel + " .punch-text", { scale: 1 }, { scale: 1.035, duration: dur, ease: "none" }, t);
++  }
++  // --- ref-card : la carte entre, ses lignes se succèdent, l'extrait se surligne, zoom lent (scale seul)
+   var _ref = step.querySelector(".ref-card");
+   if (_ref) {
+-    tl.fromTo("#" + _ref.id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t);
+-    tl.to("#" + _ref.id + " .hl", { color: "#F0B429", backgroundColor: "rgba(240,180,41,0.16)", duration: 0.4 }, t + 0.3);
+-    tl.fromTo("#" + _ref.id, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
++    var rs = "#" + _ref.id;
++    tl.fromTo(rs, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
++    tl.fromTo(rs + " > div", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.12 }, t + 0.2);
++    tl.to(rs + " .hl", { color: "#F0B429", backgroundSize: "100% 100%", duration: 0.7, ease: "power2.inOut" }, t + 1.0);
++    tl.fromTo(rs, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
+   }
+-  // images plein écran : zoom lent
++  // --- image plein écran, capture : zoom lent
+   var _img = step.querySelector("img.fond, img.ref-shot");
+-  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.06 : 1.04, duration: dur, ease: "none" }, t);
++  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
+ });
+ window.__timelines = window.__timelines || {};
+ window.__timelines["i00"] = tl;
+diff --git a/examples/demo/compositions/i01.html b/examples/demo/compositions/i01.html
+index 5edb371..c87ac5c 100644
+--- a/examples/demo/compositions/i01.html
++++ b/examples/demo/compositions/i01.html
+@@ -6,6 +6,7 @@
+ <div data-hf-id="hf-97ga" class="clip bg" id="fond" data-start="0" data-duration="12.00" data-track-index="0" data-layout-allow-overflow="">
+   <img data-hf-id="hf-a7qi" class="fond" id="fond-img" src="assets/bg/BG-00.jpg" alt="">
+   <div data-hf-id="hf-89y7" class="voile"></div>
++  <div class="vignette"></div>
+ </div>
+ 
+ <section data-hf-id="hf-e83l" class="clip step" id="step-I1-1-0" data-step="I1.1#0" data-start="0.00" data-duration="4.00" data-track-index="1" data-cam="off">
+@@ -33,51 +34,85 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
+   const t = parseFloat(step.getAttribute("data-start"));
+   const dur = parseFloat(step.getAttribute("data-duration"));
+   const sel = "#" + step.id;
++  const has = function (q) { return step.querySelector(q) !== null; };
+   tl.addLabel(step.getAttribute("data-step"), t);
++
++  // --- entrée de l'étape : le bloc glisse et apparaît, les mots-clés ont un léger rebond
+   const inEl = step.querySelector(".in");
+-  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, t);
++  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
+   var _num = step.querySelector(".dbig") || step.querySelector(".dkw");
+-  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.85 }, { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, t + 0.1);
+-  // versus : la colonne gauche diminue, la droite s'agrandit
++  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.92 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)" }, t + 0.05);
++  // lignes d'un même bloc : décalées de 0,12 s
++  if (inEl && step.querySelectorAll(".in > .dline").length > 1) tl.fromTo(sel + " .in > .dline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
++  // titre : kicker puis titre
++  if (has(".kicker")) tl.fromTo(sel + " .kicker", { opacity: 0, x: -26 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
++  if (has(".stitle")) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
++
++  // --- versus : le filet se trace, la gauche diminue en s'écartant, la droite s'agrandit
+   var _vs = step.querySelector(".versus");
+   if (_vs) {
+-    tl.fromTo(_vs.querySelector(".vcol.left"), { scale: 1 }, { scale: 0.82, duration: 0.7, ease: "power2.out" }, t + 0.25);
+-    tl.fromTo(_vs.querySelector(".vcol.right"), { scale: 1 }, { scale: 1.18, duration: 0.7, ease: "power2.out" }, t + 0.25);
++    tl.fromTo(sel + " .vsep", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out" }, t + 0.15);
++    tl.fromTo(sel + " .vcol.left", { scale: 1, x: 0 }, { scale: 0.82, x: -24, duration: 0.7, ease: "power2.out" }, t + 0.3);
++    tl.fromTo(sel + " .vcol.right", { scale: 1 }, { scale: 1.16, duration: 0.8, ease: "back.out(1.4)" }, t + 0.3);
+   }
+-  // strike : les deux traits se dessinent
+-  if (step.querySelector(".sline1")) {
+-    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.25);
+-    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.55);
++  // --- diverge : le tronc, puis chaque flèche part de l'origine et pulse une fois
++  if (has(".diverge")) {
++    tl.fromTo(sel + " .branch.up .darr-big", { opacity: 0, x: -36, y: 36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
++    tl.fromTo(sel + " .branch.down .darr-big", { opacity: 0, x: -36, y: -36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.85);
++    tl.fromTo(sel + " .branch.up .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 0.6);
++    tl.fromTo(sel + " .branch.down .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 1.1);
++    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.85);
++    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 1.35);
+   }
+-  // diverge : pulse des flèches, gauche puis droite
+-  if (step.querySelector(".diverge")) {
+-    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.4);
+-    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.9);
++  // --- strike : deux traits se tracent, le second en sens inverse
++  if (has(".sline1")) {
++    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "left center" }, t + 0.35);
++    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "right center" }, t + 0.7);
+   }
+-  // count : compteur
++  // --- count : compteur qui ralentit, puis le libellé
+   step.querySelectorAll(".ctr").forEach(function (el) {
+     var obj = { val: 0 }, target = parseFloat(el.getAttribute("data-target"));
+-    tl.to(obj, { val: target, duration: 0.9, ease: "power2.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
++    tl.to(obj, { val: target, duration: 1.1, ease: "power3.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
+   });
+-  // enumerate : seul le nouvel item apparaît
+-  if (step.querySelector(".it.new")) tl.fromTo(sel + " .it.new", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t);
+-  // stamp : claque ; chip, icon : pop ; flèche : glisse
+-  if (step.querySelector(".stamp")) tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -12 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.25, ease: "power4.in", stagger: 0.2 }, t + 0.35);
+-  if (step.querySelector(".chip")) tl.fromTo(sel + " .chip", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.15 }, t + 0.2);
+-  if (step.querySelector(".dico")) tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.12 }, t + 0.2);
+-  if (step.querySelector(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", stagger: 0.25 }, t + 0.3);
+-  // punch : mot à mot
+-  if (step.classList.contains("step-punch")) tl.fromTo(sel + " .w", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.22 }, t + 0.1);
+-  // ref-card : entrée (opacity, y), extrait en or, zoom lent (scale seul, sans retomber sur l'entrée)
++  if (has(".dbig") && has(".dsub")) tl.fromTo(sel + " .dsub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t + 0.9);
++  // --- enumerate : le nouvel item entre, les précédents s'estompent (focus-shift)
++  if (has(".it.new")) {
++    tl.fromTo(sel + " .it.new", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t + 0.1);
++    if (has(".it:not(.new)")) tl.fromTo(sel + " .it:not(.new)", { opacity: 1 }, { opacity: 0.55, duration: 0.5, ease: "power2.out" }, t + 0.1);
++  }
++  // --- cols2 : ligne par ligne
++  if (has(".cols2")) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
++  // --- stamp : claque (dépasse puis se pose)
++  if (has(".stamp")) {
++    tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -14 }, { scale: 0.94, opacity: 1, rotation: -3, duration: 0.24, ease: "power4.in", stagger: 0.24 }, t + 0.35);
++    tl.to(sel + " .stamp", { scale: 1, duration: 0.2, ease: "back.out(3)", stagger: 0.24 }, t + 0.59);
++  }
++  // --- chip : pop
++  if (has(".chip")) tl.fromTo(sel + " .chip", { scale: 0, y: 10 }, { scale: 1, y: 0, duration: 0.45, ease: "back.out(2.4)", stagger: 0.14 }, t + 0.25);
++  // --- icon, check, cross : la pastille pop, puis le trait se dessine
++  if (has(".dico")) {
++    tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.45, ease: "back.out(2.2)", stagger: 0.14 }, t + 0.2);
++    tl.fromTo(sel + " .dico path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.07 }, t + 0.45);
++  }
++  // --- arrow : la flèche glisse et se pose
++  if (has(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -34, scale: 0.7 }, { opacity: 1, x: 0, scale: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, t + 0.3);
++  // --- punch : mot à mot, puis lente avancée
++  if (step.classList.contains("step-punch")) {
++    tl.fromTo(sel + " .w", { opacity: 0, y: 46, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.7)", stagger: 0.2 }, t + 0.1);
++    tl.fromTo(sel + " .punch-text", { scale: 1 }, { scale: 1.035, duration: dur, ease: "none" }, t);
++  }
++  // --- ref-card : la carte entre, ses lignes se succèdent, l'extrait se surligne, zoom lent (scale seul)
+   var _ref = step.querySelector(".ref-card");
+   if (_ref) {
+-    tl.fromTo("#" + _ref.id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t);
+-    tl.to("#" + _ref.id + " .hl", { color: "#F0B429", backgroundColor: "rgba(240,180,41,0.16)", duration: 0.4 }, t + 0.3);
+-    tl.fromTo("#" + _ref.id, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
++    var rs = "#" + _ref.id;
++    tl.fromTo(rs, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
++    tl.fromTo(rs + " > div", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.12 }, t + 0.2);
++    tl.to(rs + " .hl", { color: "#F0B429", backgroundSize: "100% 100%", duration: 0.7, ease: "power2.inOut" }, t + 1.0);
++    tl.fromTo(rs, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
+   }
+-  // images plein écran : zoom lent
++  // --- image plein écran, capture : zoom lent
+   var _img = step.querySelector("img.fond, img.ref-shot");
+-  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.06 : 1.04, duration: dur, ease: "none" }, t);
++  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
+ });
+ window.__timelines = window.__timelines || {};
+ window.__timelines["i01"] = tl;
+diff --git a/examples/demo/compositions/i02.html b/examples/demo/compositions/i02.html
+index 951ed90..bfb80eb 100644
+--- a/examples/demo/compositions/i02.html
++++ b/examples/demo/compositions/i02.html
+@@ -6,6 +6,7 @@
+ <div data-hf-id="hf-g22n" class="clip bg" id="fond" data-start="0" data-duration="15.00" data-track-index="0" data-layout-allow-overflow="">
+   <img data-hf-id="hf-a7qi" class="fond" id="fond-img" src="assets/bg/BG-00.jpg" alt="">
+   <div data-hf-id="hf-89y7" class="voile"></div>
++  <div class="vignette"></div>
+ </div>
+ 
+ <section data-hf-id="hf-n5sw" class="clip step" id="step-I2-1-0" data-step="I2.1#0" data-start="0.00" data-duration="5.00" data-track-index="1" data-cam="off">
+@@ -33,51 +34,85 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
+   const t = parseFloat(step.getAttribute("data-start"));
+   const dur = parseFloat(step.getAttribute("data-duration"));
+   const sel = "#" + step.id;
++  const has = function (q) { return step.querySelector(q) !== null; };
+   tl.addLabel(step.getAttribute("data-step"), t);
++
++  // --- entrée de l'étape : le bloc glisse et apparaît, les mots-clés ont un léger rebond
+   const inEl = step.querySelector(".in");
+-  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, t);
++  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
+   var _num = step.querySelector(".dbig") || step.querySelector(".dkw");
+-  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.85 }, { scale: 1, duration: 0.5, ease: "back.out(1.6)" }, t + 0.1);
+-  // versus : la colonne gauche diminue, la droite s'agrandit
++  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.92 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)" }, t + 0.05);
++  // lignes d'un même bloc : décalées de 0,12 s
++  if (inEl && step.querySelectorAll(".in > .dline").length > 1) tl.fromTo(sel + " .in > .dline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
++  // titre : kicker puis titre
++  if (has(".kicker")) tl.fromTo(sel + " .kicker", { opacity: 0, x: -26 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
++  if (has(".stitle")) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
++
++  // --- versus : le filet se trace, la gauche diminue en s'écartant, la droite s'agrandit
+   var _vs = step.querySelector(".versus");
+   if (_vs) {
+-    tl.fromTo(_vs.querySelector(".vcol.left"), { scale: 1 }, { scale: 0.82, duration: 0.7, ease: "power2.out" }, t + 0.25);
+-    tl.fromTo(_vs.querySelector(".vcol.right"), { scale: 1 }, { scale: 1.18, duration: 0.7, ease: "power2.out" }, t + 0.25);
++    tl.fromTo(sel + " .vsep", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out" }, t + 0.15);
++    tl.fromTo(sel + " .vcol.left", { scale: 1, x: 0 }, { scale: 0.82, x: -24, duration: 0.7, ease: "power2.out" }, t + 0.3);
++    tl.fromTo(sel + " .vcol.right", { scale: 1 }, { scale: 1.16, duration: 0.8, ease: "back.out(1.4)" }, t + 0.3);
+   }
+-  // strike : les deux traits se dessinent
+-  if (step.querySelector(".sline1")) {
+-    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.25);
+-    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.55);
++  // --- diverge : le tronc, puis chaque flèche part de l'origine et pulse une fois
++  if (has(".diverge")) {
++    tl.fromTo(sel + " .branch.up .darr-big", { opacity: 0, x: -36, y: 36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
++    tl.fromTo(sel + " .branch.down .darr-big", { opacity: 0, x: -36, y: -36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.85);
++    tl.fromTo(sel + " .branch.up .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 0.6);
++    tl.fromTo(sel + " .branch.down .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 1.1);
++    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.85);
++    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 1.35);
+   }
+-  // diverge : pulse des flèches, gauche puis droite
+-  if (step.querySelector(".diverge")) {
+-    tl.fromTo(sel + " .branch.up .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.4);
+-    tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.9);
++  // --- strike : deux traits se tracent, le second en sens inverse
++  if (has(".sline1")) {
++    tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "left center" }, t + 0.35);
++    tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "right center" }, t + 0.7);
+   }
+-  // count : compteur
++  // --- count : compteur qui ralentit, puis le libellé
+   step.querySelectorAll(".ctr").forEach(function (el) {
+     var obj = { val: 0 }, target = parseFloat(el.getAttribute("data-target"));
+-    tl.to(obj, { val: target, duration: 0.9, ease: "power2.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
++    tl.to(obj, { val: target, duration: 1.1, ease: "power3.out", onUpdate: function () { el.textContent = _fmt(obj.val); } }, t + 0.15);
+   });
+-  // enumerate : seul le nouvel item apparaît
+-  if (step.querySelector(".it.new")) tl.fromTo(sel + " .it.new", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t);
+-  // stamp : claque ; chip, icon : pop ; flèche : glisse
+-  if (step.querySelector(".stamp")) tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -12 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.25, ease: "power4.in", stagger: 0.2 }, t + 0.35);
+-  if (step.querySelector(".chip")) tl.fromTo(sel + " .chip", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.15 }, t + 0.2);
+-  if (step.querySelector(".dico")) tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.12 }, t + 0.2);
+-  if (step.querySelector(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", stagger: 0.25 }, t + 0.3);
+-  // punch : mot à mot
+-  if (step.classList.contains("step-punch")) tl.fromTo(sel + " .w", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.22 }, t + 0.1);
+-  // ref-card : entrée (opacity, y), extrait en or, zoom lent (scale seul, sans retomber sur l'entrée)
++  if (has(".dbig") && has(".dsub")) tl.fromTo(sel + " .dsub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t + 0.9);
++  // --- enumerate : le nouvel item entre, les précédents s'estompent (focus-shift)
++  if (has(".it.new")) {
++    tl.fromTo(sel + " .it.new", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t + 0.1);
++    if (has(".it:not(.new)")) tl.fromTo(sel + " .it:not(.new)", { opacity: 1 }, { opacity: 0.55, duration: 0.5, ease: "power2.out" }, t + 0.1);
++  }
++  // --- cols2 : ligne par ligne
++  if (has(".cols2")) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
++  // --- stamp : claque (dépasse puis se pose)
++  if (has(".stamp")) {
++    tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -14 }, { scale: 0.94, opacity: 1, rotation: -3, duration: 0.24, ease: "power4.in", stagger: 0.24 }, t + 0.35);
++    tl.to(sel + " .stamp", { scale: 1, duration: 0.2, ease: "back.out(3)", stagger: 0.24 }, t + 0.59);
++  }
++  // --- chip : pop
++  if (has(".chip")) tl.fromTo(sel + " .chip", { scale: 0, y: 10 }, { scale: 1, y: 0, duration: 0.45, ease: "back.out(2.4)", stagger: 0.14 }, t + 0.25);
++  // --- icon, check, cross : la pastille pop, puis le trait se dessine
++  if (has(".dico")) {
++    tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.45, ease: "back.out(2.2)", stagger: 0.14 }, t + 0.2);
++    tl.fromTo(sel + " .dico path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.07 }, t + 0.45);
++  }
++  // --- arrow : la flèche glisse et se pose
++  if (has(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -34, scale: 0.7 }, { opacity: 1, x: 0, scale: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, t + 0.3);
++  // --- punch : mot à mot, puis lente avancée
++  if (step.classList.contains("step-punch")) {
++    tl.fromTo(sel + " .w", { opacity: 0, y: 46, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.7)", stagger: 0.2 }, t + 0.1);
++    tl.fromTo(sel + " .punch-text", { scale: 1 }, { scale: 1.035, duration: dur, ease: "none" }, t);
++  }
++  // --- ref-card : la carte entre, ses lignes se succèdent, l'extrait se surligne, zoom lent (scale seul)
+   var _ref = step.querySelector(".ref-card");
+   if (_ref) {
+-    tl.fromTo("#" + _ref.id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t);
+-    tl.to("#" + _ref.id + " .hl", { color: "#F0B429", backgroundColor: "rgba(240,180,41,0.16)", duration: 0.4 }, t + 0.3);
+-    tl.fromTo("#" + _ref.id, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
++    var rs = "#" + _ref.id;
++    tl.fromTo(rs, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
++    tl.fromTo(rs + " > div", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.12 }, t + 0.2);
++    tl.to(rs + " .hl", { color: "#F0B429", backgroundSize: "100% 100%", duration: 0.7, ease: "power2.inOut" }, t + 1.0);
++    tl.fromTo(rs, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
+   }
+-  // images plein écran : zoom lent
++  // --- image plein écran, capture : zoom lent
+   var _img = step.querySelector("img.fond, img.ref-shot");
+-  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.06 : 1.04, duration: dur, ease: "none" }, t);
++  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
+ });
+ window.__timelines = window.__timelines || {};
+ window.__timelines["i02"] = tl;
