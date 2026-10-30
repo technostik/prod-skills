@@ -226,8 +226,29 @@ Deux modèles et deux contextes donnent deux HTML. L'exemple montre chaque primi
 
 Fichiers à donner tels quels.
 
-- **Scénario → storyboard** : le texte source (auto : le script ; slides, avant la prise : le script, après : le transcript mesuré ; webcam : `transcript.json`), `references/visual-language-joriel.md`, `SKILL.md`.
-- **Storyboard → composition** : le storyboard du film (`assets/scenario-hyperframes.md`), `references/visual-language-joriel.md`, `references/primitives-joriel.md` (balisage HTML exact), puis l'exemple `examples/demo/` : `scenario.md`, `index.html`, `compositions/i00.html` et suivants.
+- **Scénario → storyboard**
+  - Source :
+    - Auto : script, puis `transcript.json` après vocalisation TTS pour le recalage.
+    - Slides avant prise : script.
+    - Slides après prise : transcript mesuré.
+    - Webcam : `transcript.json` (segments et mots).
+  - `SKILL.md`
+  - `references/visual-language-joriel.md`
+  - Selon le mode :
+    - Webcam : `references/posthoc-video-conventions.md`
+    - Conventions détaillées : `references/scenario-studio-conventions.md`
+
+- **Storyboard → composition**
+  - Source : `assets/scenario-hyperframes.md` (storyboard du film)
+  - `SKILL.md`
+  - `references/visual-language-joriel.md`
+  - `references/primitives-joriel.md`
+  - `examples/demo/index.html`
+  - `examples/demo/assets/style-joriel.css`
+  - `examples/demo/compositions/i00.html`
+  - `examples/demo/compositions/i01.html` et les suivantes (`i02.html`, etc.)
+  - Selon les besoins :
+    - Extraits de tweets ou vidéos externes : `references/embed-tweets-video.md`
 
 ## Mode auto
 
