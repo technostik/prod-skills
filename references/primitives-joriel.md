@@ -4,6 +4,32 @@ Source de vérité pour la traduction scénario → HTML.
 Chaque primitive est démontrée une fois, avec son nom affiché à l'écran, dans `examples/demo/` (table : `examples/demo/README.md`). Les styles de `chip`, `stamp`, `dico` et `cols2` sont déduits de `visual-language-joriel.md` §3 : à valider.
 Chaque primitive ci-dessous est un bloc HTML réutilisable tel quel.
 
+## Mouvements
+
+Le style est dans `examples/demo/assets/style-joriel.css`, les animations dans le script de chaque composition de la démo (`examples/demo/compositions/`) : ce sont les deux sources de vérité, aucun bloc de code n'est recopié ici. Les délais sont relatifs au début de l'étape, les durées en secondes.
+
+| Primitive | Mouvement | Délai | Durée |
+|---|---|---|---|
+| bloc `.in` | glisse (y 34 → 0) et apparaît ; rebond léger pour `kw` et `count` | 0 | 0,6 (0,7) |
+| lignes d'un bloc | décalées de 0,12 s | 0,1 | 0,5 |
+| `kicker`, `stitle` | le kicker entre par la gauche, le titre descend | 0 ; 0,1 | 0,5 ; 0,6 |
+| `strike` | deux traits tracés, le second en sens inverse | 0,35 ; 0,7 | 0,4 |
+| `stamp` | claque (×2,4 → 0,94 → 1), un tampon toutes les 0,24 s | 0,35 | 0,24 + 0,2 |
+| `chip` | pop `back.out`, 0,14 s entre deux | 0,25 | 0,45 |
+| `icon`, `check`, `cross` | la pastille pop, puis le trait se dessine | 0,2 ; 0,45 | 0,45 ; 0,5 |
+| `arrow` | glisse et se pose, 0,28 s entre deux | 0,3 | 0,5 |
+| `count` | compteur qui ralentit (`power3.out`), puis le libellé | 0,15 ; 0,9 | 1,1 ; 0,5 |
+| `enumerate` | le nouvel item entre, les précédents passent à 55 % | 0,1 | 0,5 |
+| `cols2` | ligne par ligne, 0,1 s entre deux | 0,15 | 0,45 |
+| `versus` | le filet se trace, la gauche passe à ×0,82, la droite à ×1,16 | 0,15 ; 0,3 | 0,5 ; 0,7 |
+| `diverge` | la flèche ↗ entre et pulse (×1,35, 1 fois), puis ↘ ; chaque sous-ligne suit | 0,35 à 1,35 | 0,25 à 0,45 |
+| `punch` | mot à mot (0,2 s), puis avancée lente ×1,035 sur l'étape | 0,1 | 0,45 |
+| `ref-card` | la carte, ses lignes (0,12 s), l'extrait surligné par balayage, zoom ×1,03 | 0 ; 0,2 ; 1,0 | 0,6 ; 0,45 ; 0,7 |
+| image, `ref-shot` | zoom lent (×1,07 ; ×1,04) pendant toute l'étape | 0 | l'étape |
+| webcam | tween du cadre et flou (`references/webcam.md`) | 0 | 0,55 |
+
+Les tweens d'un même élément portent sur des propriétés différentes ; quand un `fromTo` en suit un autre sur le même élément (zoom de la `ref-card`), il reçoit `immediateRender: false` (voir `hyperframes-check.md`).
+
 ## Structure d'une étape (step)
 
 ```html
@@ -43,22 +69,6 @@ Classes : `plain` (blanc), `bleu`, `vert`, `or`, `rouge`, `dim` (grisé, opacity
 <span class="dstrike"><span>préparation à l'oppression</span><span class="sline1"></span><span class="sline2"></span></span>
 ```
 
-CSS (style-joriel.css) :
-```css
-.dstrike { font-size: 7.2vh; font-weight: 800; color: var(--blanc); position: relative; display: inline-block; line-height: 1; }
-.dstrike .sline1, .dstrike .sline2 { position: absolute; left: 0; top: 55%; width: 100%; height: 1.8vh; background: var(--rouge); transform-origin: center center; }
-.dstrike .sline1 { transform: rotate(-5deg); }
-.dstrike .sline2 { transform: rotate(5deg); }
-```
-
-Animation GSAP (les deux traits se dessinent l'un après l'autre) :
-```js
-if (step.querySelector(".sline1")) {
-  tl.fromTo("#" + step.id + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.25);
-  tl.fromTo("#" + step.id + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "center center" }, t + 0.55);
-}
-```
-
 ## Diverge (trunk + branches)
 
 ```html
@@ -69,21 +79,6 @@ if (step.querySelector(".sline1")) {
     <div class="branch down"><div class="darr-big">↘</div><div class="dsub">compréhension humaine en retard</div></div>
   </div>
 </div>
-```
-
-CSS :
-```css
-.trunk { font-size: 6vh; font-weight: 800; color: var(--blanc); text-align: center; margin-bottom: 2vh; }
-.branches { display: flex; gap: 4vw; justify-content: center; align-items: center; margin-top: 2vh; }
-.branch { display: flex; flex-direction: column; align-items: center; gap: .6vh; }
-.darr-big { font-size: 6vh; font-weight: 900; }
-.branch .dsub { font-size: 3.4vh; color: var(--blanc); }
-```
-
-Animation GSAP (pulse des flèches, gauche puis droite) :
-```js
-tl.fromTo("#" + step.id + " .branch.up .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.4);
-tl.fromTo("#" + step.id + " .branch.down .darr-big", { scale: 1 }, { scale: 1.5, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 0.9);
 ```
 
 ## Flèche (arrow / darr / darr-big)
@@ -109,11 +104,6 @@ Pour afficher une image en plein écran (illustration, photo, capture d'écran) 
 
 CSS : `.fond` (position absolute, inset 0, object-fit cover). z-index 2 pour être au-dessus du fond BG (z-index 1) mais sous les steps (z-index 4).
 
-Animation GSAP (zoom lent) :
-```js
-tl.fromTo("#img-xxx", { scale: 1 }, { scale: 1.06, duration: <dur>, ease: "none" }, <start>);
-```
-
 Règles :
 - L'image doit être en 1920×1080 (ou redimensionnée avec ffmpeg pad).
 - Pas de webcam incrustée sur ces steps (`data-cam="off"`, pas de `cam-frame`).
@@ -124,41 +114,6 @@ Règles :
 
 ```html
 <span class="dbig"><span class="ctr" id="ctr-xxx" data-target="24">0</span></span>
-```
-
-CSS :
-```css
-.dbig { font-size: 16vh; line-height: 1.1; font-weight: 800; }
-```
-
-Animation GSAP (counter : défilement rapide jusqu'à la valeur cible) :
-```js
-function _fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
-[
-  { id: "ctr-xxx", target: 24, start: 0.0 },
-].forEach(function (c) {
-  var obj = { val: 0 };
-  tl.to(obj, { val: c.target, duration: 0.9, ease: "power2.out",
-    onUpdate: function () { var el = document.getElementById(c.id); if (el) el.textContent = _fmt(obj.val); }
-  }, c.start + 0.15);
-});
-```
-
-CSS pour les classes de texte (style-joriel.css) :
-```css
-.kicker { font-size: 3.8vh; letter-spacing: .22em; text-transform: uppercase; color: var(--bleu-clair); }
-.stitle { font-size: 7.2vh; line-height: 1.08; font-weight: 800; }
-.slideno { font-size: 2.2vh; color: var(--gris); letter-spacing: .1em; }
-.dkw { font-size: 7.2vh; line-height: 1.2; font-weight: 800; }
-.dsub { font-size: 4.4vh; color: var(--bleu-clair); margin-top: .8vh; }
-.punch-text { font-size: 11vh; line-height: 1.18; font-weight: 900; color: var(--or); max-width: 86vw; }
-.trunk { font-size: 6vh; font-weight: 800; color: var(--blanc); text-align: center; margin-bottom: 2vh; }
-.dstrike { font-size: 7.2vh; font-weight: 800; color: var(--blanc); position: relative; display: inline-block; }
-.dstrike .sline { position: absolute; left: 0; top: 50%; width: 100%; height: 1.8vh; background: var(--rouge); transform: translateY(-50%) rotate(-3deg); transform-origin: center center; }
-.branches { display: flex; gap: 4vw; justify-content: center; align-items: center; margin-top: 2vh; }
-.branch { display: flex; flex-direction: column; align-items: center; gap: .6vh; }
-.darr-big { font-size: 6vh; font-weight: 900; }
-.branch .dsub { font-size: 3.4vh; color: var(--bleu-clair); }
 ```
 
 ## Tampon verdict (stamp)
@@ -182,17 +137,6 @@ CSS pour les classes de texte (style-joriel.css) :
   <div class="vsep"></div>
   <div class="vcol right"><div class="dline"><span class="dkw rouge">guichet des savoirs</span></div><div class="dsub">l'élève égal du prof</div></div>
 </div>
-```
-
-Animation GSAP (gauche diminue, droite s'agrandit) :
-```js
-var _vs = step.querySelector(".versus");
-if (_vs) {
-  var _l = _vs.querySelector(".vcol.left");
-  var _r = _vs.querySelector(".vcol.right");
-  if (_l) tl.fromTo(_l, { scale: 1 }, { scale: 0.82, duration: 0.7, ease: "power2.out" }, t + 0.25);
-  if (_r) tl.fromTo(_r, { scale: 1 }, { scale: 1.18, duration: 0.7, ease: "power2.out" }, t + 0.25);
-}
 ```
 
 ## Diverge (branches)
@@ -246,13 +190,6 @@ Page web stylisée, pour une source citée (`Rxx`). Jamais d'iframe ni de charge
 </div>
 ```
 
-Animation GSAP : l'entrée (`opacity`, `y`) et le zoom lent (`scale`) portent sur des propriétés différentes ; le second `fromTo` reçoit `immediateRender: false`, sinon `hyperframes lint` signale `overlapping_gsap_tweens` et `gsap_repeated_fromto_without_baseline` (voir `hyperframes-check.md`).
-```js
-tl.fromTo("#ref-xxx", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t);
-tl.to("#ref-xxx .hl", { color: "#F0B429", backgroundColor: "rgba(240,180,41,0.16)", duration: 0.4 }, t + 0.3);
-tl.fromTo("#ref-xxx", { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
-```
-
 ## Capture plein écran (ref-shot)
 
 ```html
@@ -282,7 +219,7 @@ Zoom lent : `tl.fromTo("#ref-xxx", { scale: 1 }, { scale: 1.04, duration: dur, e
 
 ## Webcam
 
-Les trois modes, le CSS et le `tl.set` du cadre sont dans `SKILL.md`, section Webcam. Ne pas recopier un bloc plus ancien (coin haut, `className`, `left` inline).
+Les trois modes et `applyCam` sont dans `references/webcam.md`. Ne pas recopier un bloc plus ancien (coin haut, `className`, `visibility`).
 
 ## Règle d'or
 

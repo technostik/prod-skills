@@ -4,7 +4,7 @@ description: Build a Joriel-styled HyperFrames video in one of three modes — a
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.10.0
+version: 1.11.0
 ---
 
 # Hyperframe-joriel

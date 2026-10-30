@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0
+
+- Primitives plus lisibles et mieux animées, vérifiées sur des captures réelles (`hyperframes snapshot`) et `hyperframes check` complet : halos de la couleur du sens, vignette, filet sous le titre, tailles de `count` (28 vh), de `stitle` et de `diverge` alignées sur la spec, `dkw.dim` plus grand dans `versus`, `punch` équilibré et centré, `chip` en pastille, `stamp` à double cadre, `icon` en pastille avec trait dessiné, `strike` plus fin, `cols2` avec filet, `ref-card` avec surlignage par balayage.
+- Mouvements : lignes décalées, `enumerate` avec focus-shift, `stamp` qui claque, compteur qui ralentit, `diverge` en séquence, `punch` avec avancée lente, transitions webcam en tween (0,55 s).
+- Correctif : le cadre webcam en `off` restait visible (rectangle noir) ; `off` passe l'opacité du cadre à 0. `references/webcam.md` mis à jour.
+- Documentation : les blocs CSS et JS recopiés dans `primitives-joriel.md` sont remplacés par un tableau `Mouvements` ; `style-joriel.css` et les compositions de la démo sont la source de vérité.
+
 ## 1.10.0
 
 - Inserts : extraits vidéo qui remplacent l'image et le son du master, posés après le rendu. `scripts/post-render.py` télécharge (yt-dlp), découpe, transforme (hauteur du son +5 % à durée constante, rotation de 1° avec zoom) et assemble en un seul graphe ffmpeg. Les coupes sont ancrées sur les étapes du storyboard, pas sur des temps ; `--plan` affiche le texte autour de chaque coupe, `--preview` produit un clip de 11 s par coupe.

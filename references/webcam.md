@@ -6,33 +6,30 @@ Une seule webcam, trois modes, `data-cam` sur l'étape. La définition de la pri
 - `pip` — incrustation en bas à droite, 22 % de la largeur. Le schéma reste lisible, le locuteur reste là. Chiffre isolé, preuve, explication.
 - `full` — fond et étapes floutés, webcam centrée sur la moitié de l'écran (50 % × 50 %). Entrée de scène, question ouverte, conclusion, moment où le visage porte le propos.
 
-Rythme : un état dure au moins 2,5 s. Le changement de mode est un `tl.set` de `visibility`, immédiat ; seul le flou dure 0,3 s. Jamais de cut sec. Revoir le locuteur (`pip` ou `full`) au moins toutes les ~20 s.
+Rythme : un état dure au moins 2,5 s. Le changement de mode est un tween du cadre (position, taille, opacité, 0,55 s) avec un flou de 0,4 s sur le fond et l'étape ; le tout premier état se pose en `tl.set` à `t = 0`. Jamais de cut sec. Revoir le locuteur (`pip` ou `full`) au moins toutes les ~20 s.
 
 On ne redimensionne pas la balise `<video>`. Le runtime la passe en `opacity: 0` et peint l'image sur un canvas calé sur la vidéo. Le cadre est un `<div class="cam-frame">` qui contient la vidéo ; la vidéo remplit le cadre (`inset: 0`). C'est le div qu'on place.
 
-`.clip { inset: 0 }` laisse `top: 0`. Sur un cadre à hauteur fixe, `top` et `bottom` ensemble font ignorer `bottom` : le cadre colle en haut. `pip` remet `top: auto`. `full` remet `right` et `bottom` à `auto`.
+La géométrie est pilotée par `applyCam` en pixels sur 1920×1080 : `pip` 422×238 en bas à droite (22 % de la largeur, le 16:9 de la prise), `full` 960×540 centré (50 % × 50 %). La feuille de style ne fixe que l'habillage du cadre (rayon, bordure, ombre, fond noir) : `.cam-frame` dans `examples/demo/assets/style-joriel.css`.
 
-```css
-.cam-frame{position:absolute;top:auto;bottom:2vh;right:2vw;left:auto;width:22vw;height:12.4vw;z-index:6;border-radius:1.2vh;overflow:hidden;border:2px solid var(--bleu);background:#000}
-.cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-```
-
-`12.4vw` de haut pour `22vw` de large, c'est le 16:9 de la prise. `full` est 50 % × 50 % : sur un cadre 16:9, c'est la moitié de l'écran, centré.
-
-Le seek passe avec `suppressEvents`. GSAP 3 n'applique pas `className`. Le cadre se pose en `tl.set`, pas dans un callback. `off` cache le cadre (`visibility`), sans tween d'`opacity` sur la vidéo. Le flou va sur `#fond` et sur chaque `.step`, jamais sur `#root` ni sur le cadre.
+Le seek passe avec `suppressEvents`. GSAP 3 n'applique pas `className`. Le cadre est piloté par les tweens de la timeline, pas par un callback. `off` met l'`opacity` du **cadre** à 0, jamais celle de la vidéo : un `visibility: hidden` sur le cadre laisse le canvas du runtime visible, et on voit un rectangle noir fantôme. Le flou va sur `#fond` et sur l'étape courante, jamais sur `#root` ni sur le cadre.
 
 ```js
-function applyCam(tl, frame, mode, t) {
-  var box = mode === "full"
-    ? { top: "25%", left: "25%", right: "auto", bottom: "auto", width: "50%", height: "50%", borderColor: "transparent", boxShadow: "0 0 40px rgba(0,0,0,.6)" }
-    : { top: "auto", left: "auto", right: "2vw", bottom: "2vh", width: "22vw", height: "12.4vw", borderColor: "#5B9CF6", boxShadow: "none" };
-  tl.set(frame, Object.assign({ visibility: mode === "off" ? "hidden" : "visible" }, box), t);
+// webcam : géométrie en px sur 1920x1080. off = fondu + léger retrait, pip = coin bas droit, full = mi-écran.
+var CAM = {
+  pip:  { left: 1460, top: 821, width: 422, height: 238, opacity: 1 },
+  full: { left: 480, top: 270, width: 960, height: 540, opacity: 1 },
+  off:  { left: 1460, top: 821, width: 422, height: 238, opacity: 0 }
+};
+function applyCam(tl, frame, mode, t, stepSel) {
+  var g = CAM[mode] || CAM.off;
+  if (t === 0) tl.set(frame, g, 0);
+  else tl.to(frame, Object.assign({ duration: 0.55, ease: "power3.inOut" }, g), t);
   var blur = mode === "full" ? "blur(8px)" : "blur(0px)";
-  tl.to("#fond", { filter: blur, duration: 0.3 }, t);
-  document.querySelectorAll(".step,.step-punch").forEach(function (st) {
-    tl.to("#" + st.id, { filter: blur, duration: 0.3 }, t);
-  });
+  tl.to("#fond", { filter: blur, duration: 0.4, ease: "power2.inOut" }, t);
+  tl.to(stepSel, { filter: blur, duration: 0.4, ease: "power2.inOut" }, t);
 }
+// dans la boucle des étapes : applyCam(tl, "#cam-frame-i00", step.getAttribute("data-cam") || "off", t, "#" + step.id);
 ```
 
 Le corps est recopié dans chaque composition : le script doit rester dans le HTML (scope HyperFrames), pas de fichier partagé.

@@ -58,6 +58,8 @@ Règles impératives :
 Tailles à 1080p (rappel conventions, inchangées) : contenu ≥ 64 px,
 titres 96–140, chiffres 260–420, punchlines 110–150.
 
+Finitions (1.11.0, aucune teinte nouvelle) : halo de la couleur du sens sous les mots colorés (36 % d'opacité au plus), vignette noire sur les fonds (55 % au plus), filet de 4 px sous le titre de scène, pastilles rondes pour les `chip` et les pictos, tampons à double cadre.
+
 ## 2. Typographie et composition
 
 - **Centrage par défaut : contenu centré verticalement et horizontalement**
@@ -114,6 +116,7 @@ identifiable.
 - Micro-animations inline à la même échelle : flèche qui glisse (`arrow`),
   barré qui se trace (`strike`), tampon qui claque (`stamp`), picto qui
   pop (`icon`), mot-clé accent qui pulse (1×, jamais en boucle).
+- Le détail des mouvements, primitive par primitive (délais, durées), est dans `primitives-joriel.md`, § Mouvements.
 - 1 étape = 1 apparition = 1 affichage = 1 label GSAP `SLIDE#k`.
   `python3 scripts/check-steps.py` vert exigé.
 - 1 son max / étape (pops alternés / tic / carillon punchlines),
