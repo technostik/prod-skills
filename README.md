@@ -20,11 +20,13 @@ prod-skills/
 │   └── jo-narration-serie/      # transforme un corpus en série narrative d'articles (pipeline 4 phases)
 │       └── SKILL.md
 └── YouTube/
-    ├── jo-hyperframe/        # produit une vidéo HyperFrames en mode auto/slides/webcam
+    ├── jo-hyperframe/            # produit une vidéo HyperFrames en mode auto/slides/webcam
     │   └── SKILL.md
-    ├── jo-youtube-title/     # génère un titre YouTube
+    ├── jo-youtube-title/         # génère un titre YouTube
     │   └── SKILL.md
-    └── tk-yt-editorial/      # audite une idée/sujet vidéo selon la ligne éditoriale
+    ├── tk-yt-editorial/          # audite une idée/sujet vidéo selon la ligne éditoriale
+    │   └── SKILL.md
+    └── yt-narration-from-scenario/  # produit des scripts YouTube narratifs, oraux et accrocheurs avec chapitres
         └── SKILL.md
 ```
 
