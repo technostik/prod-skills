@@ -8,9 +8,9 @@ Skills de production pour agents IA, organisées par domaine.
 prod-skills/
 ├── Article/
 ├── Copywriting/
-│   ├── jo-brief-produit/    # extrait un brief de copywriting sourcé à partir d'un produit
+│   ├── my-product-generate-brief/    # extrait un brief de copywriting sourcé à partir d'un produit
 │   │   └── SKILL.md
-│   └── jo-email-vente/      # rédige un email ou une séquence de vente directe à partir d'un brief
+│   └── my-product-generate-email-vente/      # rédige un email ou une séquence de vente directe à partir d'un brief
 │       └── SKILL.md
 ├── Newsletter/
 │   ├── my-joriel-narration-article/    # transforme une note de réflexion en article narratif (Substack, fil, LinkedIn)

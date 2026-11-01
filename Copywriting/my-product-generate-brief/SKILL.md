@@ -1,5 +1,5 @@
 ---
-name: jo-brief-produit
+name: my-product-generate-brief
 description: Analyse un produit — un document unique (livre, ebook) ou un répertoire (formation, programme) — et en extrait un brief-produit.md contenant toute la matière nécessaire au copywriting (promesse, douleurs, villain, mécanisme unique, before/after, preuves réelles, banque de hooks, objections, offre, CTA). Tout est sourcé sur le produit, jamais inventé. Use when the user runs /jo-brief-produit, /jo_brief-produit, asks for a brief produit, extraire un brief, or copywriting source material.
 ---
 

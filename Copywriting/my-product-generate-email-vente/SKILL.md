@@ -1,5 +1,5 @@
 ---
-name: jo-email-vente
+name: my-product-generate-email-vente
 description: Rédige un email de vente OU une séquence de vente (régime vente directe) à partir d'un brief-produit. Habille l'argumentaire en narration — hook vérifiable ou vécu, pont nommé, douleur, villain système, mécanisme unique, preuves réelles, offre, urgence fondée, CTA ferme et unique. Zéro faux témoignage, zéro urgence artificielle. Propose 3 accroches avant de rédiger. Use when the user runs /jo-email-vente, /jo_email-vente, asks for an email de vente, séquence de vente, or sales email from a brief.
 ---
 
