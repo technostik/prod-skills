@@ -24,7 +24,7 @@ prod-skills/
     │   └── SKILL.md
     ├── jo-youtube-title/         # génère un titre YouTube
     │   └── SKILL.md
-    ├── tk-yt-editorial/          # audite une idée/sujet vidéo selon la ligne éditoriale
+    ├── my-technostik-editorial-check/  # audite une idée/sujet vidéo selon la ligne éditoriale
     │   └── SKILL.md
     └── yt-narration-from-scenario/  # produit des scripts YouTube narratifs, oraux et accrocheurs avec chapitres
         └── SKILL.md
