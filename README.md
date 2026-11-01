@@ -7,6 +7,11 @@ Skills de production pour agents IA, organisées par domaine.
 ```
 prod-skills/
 ├── Article/
+├── Copywriting/
+│   ├── jo-brief-produit/
+│   │   └── SKILL.md
+│   └── jo-email-vente/
+│       └── SKILL.md
 └── YouTube/
     ├── jo-hyperframe/
     │   └── SKILL.md
