@@ -1,0 +1,5 @@
+/* Calque de démonstration : affiche le nom de la primitive montrée. Propre à examples/demo, jamais dans un film. */
+.demo-label{position:absolute;top:2.4vh;right:2vw;left:auto;bottom:auto;z-index:9;display:flex;flex-direction:column;align-items:flex-end;gap:.4vh;max-width:46vw;padding:1vh 1.4vw;background:rgba(0,0,0,.8);border:2px solid rgba(244,246,249,.5);border-radius:1vh;text-align:right}
+.demo-kind{font-size:2vh;letter-spacing:.2em;text-transform:uppercase;color:var(--bleu-clair)}
+.demo-name{font-size:3.6vh;font-weight:800;color:var(--blanc)}
+.demo-note{font-size:2.2vh;color:var(--gris)}

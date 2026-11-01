@@ -1,0 +1,80 @@
+:root{--fond:#000;--voile:rgba(0,0,0,.62);--bleu:#5B9CF6;--bleu-clair:#A9C7F5;--vert:#6FDC8C;--blanc:#F4F6F9;--gris:#9AA4B2;--or:#F0B429;--rouge:#E5484D;--bleu-sombre:#1B2B4A;--vert-sombre:#173A26;--gris-rappel:#6B7484;
+  /* halos : la couleur du sens, à faible opacité, jamais de dégradé de teinte */
+  --halo-bleu:rgba(91,156,246,.34);--halo-vert:rgba(111,220,140,.30);--halo-or:rgba(240,180,41,.36);--halo-rouge:rgba(229,72,77,.36);--ombre:rgba(0,0,0,.55)}
+*{margin:0;padding:0;box-sizing:border-box}
+#root{position:absolute;inset:0;overflow:hidden;background:#000;color:var(--blanc);font-family:Verdana,Geneva,sans-serif;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+.clip{position:absolute;inset:0}
+.bg{z-index:1}
+.fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.voile{position:absolute;inset:0;background:var(--voile)}
+/* vignette : bords assombris (noir, 55 % au plus), garde le texte lisible sur n'importe quelle photo */
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 52%,rgba(0,0,0,.55) 100%)}
+.step{z-index:4}
+/* .cam-frame : pip au repos. Position et taille sont pilotées par applyCam (GSAP, en px sur 1920×1080). */
+.cam-frame{position:absolute;left:1460px;top:821px;width:422px;height:238px;z-index:6;border-radius:1.4vh;overflow:hidden;border:.3vh solid var(--bleu);background:#000;box-shadow:0 1.6vh 5vh rgba(0,0,0,.65)}
+.cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slideno{position:absolute;bottom:2vh;left:2vw;font-size:2.2vh;color:var(--gris);letter-spacing:.1em;z-index:5}
+.kicker{position:absolute;top:4.4vh;left:7.3vw;font-size:3.8vh;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--bleu-clair)}
+.stitle{position:absolute;top:10vh;left:7.3vw;right:7.3vw;font-size:9.6vh;line-height:1.08;font-weight:800;letter-spacing:-.01em;text-shadow:0 .5vh 2.4vh var(--ombre)}
+/* filet de séparation : 4 px bleu à 30 % (visual-language §2) */
+.stitle::after{content:"";display:block;width:14vw;height:4px;margin-top:1.8vh;border-radius:4px;background:var(--bleu);opacity:.3}
+.zone{position:absolute;top:25vh;left:7.3vw;right:7.3vw;bottom:12vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.dline{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:1vh 1.8vw;padding:1.1vh 0}
+.dkw{font-size:7.2vh;line-height:1.15;font-weight:800;letter-spacing:-.012em;text-wrap:balance;text-shadow:0 .5vh 2.4vh var(--ombre)}
+.dbig{font-size:28vh;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 .5vh 2.4vh var(--ombre)}
+.dkw.plain{color:var(--blanc)}
+.dkw.bleu{color:var(--bleu);text-shadow:0 0 3.2vh var(--halo-bleu),0 .5vh 2.4vh var(--ombre)}
+.dkw.vert{color:var(--vert);text-shadow:0 0 3.2vh var(--halo-vert),0 .5vh 2.4vh var(--ombre)}
+.dkw.or{color:var(--or);text-shadow:0 0 3.2vh var(--halo-or),0 .5vh 2.4vh var(--ombre)}
+.dkw.rouge{color:var(--rouge);text-shadow:0 0 3.2vh var(--halo-rouge),0 .5vh 2.4vh var(--ombre)}
+.dkw.dim{color:var(--gris);opacity:.6;font-size:3.8vh;text-shadow:none}
+.dsub{font-size:4.8vh;line-height:1.25;color:var(--bleu-clair);margin-top:1vh;text-wrap:balance;max-width:72vw}
+.darr{display:inline-block;font-size:6.4vh;line-height:1;color:var(--bleu);font-weight:900;text-shadow:0 0 2.8vh var(--halo-bleu)}
+/* versus : colonne gauche rappel grisé, colonne droite mise en avant ; filet central qui s'efface aux extrémités */
+.versus{display:flex;align-items:stretch;justify-content:center;gap:4vw;width:100%;padding:0 2vw}
+.vcol{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 1vw}
+.vcol.left .dkw.dim{font-size:5.4vh}
+.vsep{width:.4vh;border-radius:.4vh;background:linear-gradient(to bottom,rgba(91,156,246,0),var(--bleu) 20%,var(--bleu) 80%,rgba(91,156,246,0));opacity:.6;transform-origin:center top}
+.punch-text{text-align:center;font-size:11vh;line-height:1.16;text-wrap:balance;font-weight:900;letter-spacing:-.01em;color:var(--or);max-width:86vw;text-shadow:0 0 5vh var(--halo-or)}
+.punch-text .w{display:inline-block}
+/* Reference card (embed stylisé d'une page web) */
+.ref-card{position:absolute;top:12vh;left:8vw;right:8vw;bottom:10vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#0d1117;border:.25vh solid rgba(91,156,246,.35);border-top:.8vh solid var(--bleu);border-radius:1.6vh;padding:4vh 4vw;overflow:hidden;box-shadow:0 3vh 8vh rgba(0,0,0,.6)}
+.ref-source{font-size:3vh;letter-spacing:.18em;text-transform:uppercase;color:var(--bleu-clair);margin-bottom:1vh}
+.ref-author{font-size:3.4vh;font-weight:700;color:var(--blanc);margin-bottom:2vh}
+.ref-title{font-size:4.2vh;font-weight:800;color:var(--blanc);line-height:1.2;margin-bottom:3vh;max-width:80vw;text-wrap:balance}
+.ref-quote{font-size:5.2vh;line-height:1.4;color:var(--blanc);max-width:82vw;margin-bottom:3vh}
+/* extrait : surligné par balayage (fond et couleur pilotés par GSAP) */
+.ref-quote .hl{color:inherit;padding:.2vh .5vw;border-radius:.6vh;background:linear-gradient(rgba(240,180,41,.22),rgba(240,180,41,.22)) no-repeat left center/0% 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.ref-url{font-size:2.4vh;color:var(--bleu-clair);opacity:.8}
+/* Reference iframe (page web en plein écran) */
+.ref-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.ref-shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.diverge{display:flex;flex-direction:column;align-items:center}
+.trunk{font-size:6.4vh;font-weight:800;color:var(--blanc);text-align:center;text-shadow:0 .5vh 2.4vh var(--ombre)}
+.trunk::after{content:"";display:block;width:.4vh;height:3.4vh;margin:1.6vh auto 0;border-radius:.4vh;background:var(--bleu);opacity:.45}
+.dstrike{font-size:7.2vh;font-weight:800;color:var(--blanc);position:relative;display:inline-block;line-height:1;text-shadow:0 .5vh 2.4vh var(--ombre)}
+.dstrike .sline1,.dstrike .sline2{position:absolute;left:-2%;top:56%;width:104%;height:1.1vh;border-radius:1vh;background:var(--rouge);box-shadow:0 0 2.4vh var(--halo-rouge)}
+.dstrike .sline1{transform:rotate(-3.5deg)}
+.dstrike .sline2{transform:rotate(3.5deg)}
+.branches{display:flex;gap:7vw;justify-content:center;align-items:flex-start;margin-top:1vh}
+.branch{display:flex;flex-direction:column;align-items:center;gap:.8vh}
+.darr-big{font-size:7vh;line-height:1;font-weight:900}
+.branch .dsub{font-size:3.8vh;color:var(--bleu-clair);margin-top:0}
+.step-punch{z-index:4;display:flex;align-items:center;justify-content:center;background:var(--fond)}
+/* Branches de diverge : couleur du sens (↗ vert, ↘ rouge) */
+.branch.up .darr-big{color:var(--vert);text-shadow:0 0 3vh var(--halo-vert)}.branch.down .darr-big{color:var(--rouge);text-shadow:0 0 3vh var(--halo-rouge)}
+/* Chiffre-clé en or (bignum / count) */
+.dbig.or{color:var(--or);text-shadow:0 0 6vh var(--halo-or),0 .5vh 2.4vh var(--ombre)}
+/* Styles déduits de references/visual-language-joriel.md §3 : balisage documenté, CSS absent du dépôt d'origine. À valider. */
+.chip{display:inline-block;font-size:4.6vh;font-weight:800;padding:.7vh 1.5vw;border-radius:5vh;border:.25vh solid transparent;color:var(--blanc);margin:0 .8vw;letter-spacing:.01em}
+.chip.bleu{background:var(--bleu-sombre);border-color:rgba(91,156,246,.55)}.chip.vert{background:var(--vert-sombre);border-color:rgba(111,220,140,.5)}
+.stamp{display:inline-block;font-size:5.2vh;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:.8vh 1.6vw;border:.5vh solid currentColor;outline:.25vh solid currentColor;outline-offset:.5vh;border-radius:1vh;margin:1.6vh 1.4vw;background:rgba(0,0,0,.35);text-shadow:0 0 2.4vh currentColor}
+.stamp.vert{color:var(--vert)}.stamp.rouge{color:var(--rouge)}.stamp.or{color:var(--or)}
+.dico{display:inline-flex;align-items:center;justify-content:center;width:11vh;height:11vh;border-radius:50%;color:var(--bleu);margin:0 1.6vw;background:rgba(91,156,246,.12);box-shadow:0 0 0 .3vh rgba(91,156,246,.38),0 0 3.4vh var(--halo-bleu)}
+.dico svg{width:56%;height:56%}
+.dico.good{color:var(--vert);background:rgba(111,220,140,.12);box-shadow:0 0 0 .3vh rgba(111,220,140,.38),0 0 3.4vh var(--halo-vert)}
+.dico.bad{color:var(--rouge);background:rgba(229,72,77,.12);box-shadow:0 0 0 .3vh rgba(229,72,77,.4),0 0 3.4vh var(--halo-rouge)}
+.zone.cols2 .in{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:1.4vh 0;width:100%}
+.zone.cols2 .in::before{content:"";position:absolute;left:50%;top:4%;bottom:4%;width:.4vh;border-radius:.4vh;background:var(--bleu);opacity:.3}
+.zone.cols2 .dkw{font-size:4.8vh}
+.it{margin:.6vh 0}

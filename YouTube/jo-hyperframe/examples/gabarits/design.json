@@ -1,0 +1,58 @@
+{
+  "_note": "Exemples de `data/design.json` copiés de references/visual-language-joriel.md §9. Le HTML correspondant est produit par le builder du projet (non fourni). Seuls `versus` et `diverge` ont un rendu HTML dans la démo : examples/demo/compositions/i05.html, étapes I5.1#0 et I5.1#1.",
+  "diverge": {
+    "diverge": {
+      "trunk": "Face à l'IA",
+      "recall": "up",
+      "up": {
+        "kw": "…",
+        "cls": "vert",
+        "sub": "…"
+      },
+      "down": {
+        "kw": "…",
+        "cls": "rouge",
+        "sub": "…"
+      }
+    }
+  },
+  "seuil": {
+    "seuil": {
+      "fig": "F42",
+      "repere": "+2 % · enseignants stables",
+      "repere_val": 2,
+      "verdict": "DÉPASSEMENT",
+      "sens": "bad",
+      "sub": "non-enseignants"
+    }
+  },
+  "compare3": {
+    "compare3": {
+      "absorb": "S04.3#1",
+      "verdict": "DÉPASSEMENT",
+      "rows": [
+        {
+          "icon": "trend-down",
+          "kw": "−250 000 élèves",
+          "cls": "bleu",
+          "sub": "effectifs en baisse"
+        },
+        {
+          "icon": "arrow-r",
+          "kw": "≈ stables",
+          "cls": "bleu",
+          "sub": "+2 % · enseignants"
+        },
+        {
+          "icon": "trend-up",
+          "kw": "+57 %",
+          "cls": "rouge",
+          "sub": "non-enseignants"
+        }
+      ]
+    }
+  },
+  "cols2": {
+    "cols2": true
+  }
+}
