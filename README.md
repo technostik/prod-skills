@@ -10,7 +10,9 @@ prod-skills/
 └── YouTube/
     ├── jo-hyperframe/
     │   └── SKILL.md
-    └── jo-youtube-title/
+    ├── jo-youtube-title/
+    │   └── SKILL.md
+    └── tk-yt-editorial/
         └── SKILL.md
 ```
 
@@ -25,4 +27,4 @@ git log --graph --oneline          # l'arbre complet, branches fusionnées inclu
 git log --oneline HEAD^2           # uniquement l'historique importé
 ```
 
-Le dépôt d'origine est archivé ; ce dépôt en est la source de vérité.
+Le dépôt d'origine n'est plus maintenu : ce dépôt en est la source de vérité.
