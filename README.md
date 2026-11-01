@@ -20,9 +20,9 @@ prod-skills/
 │   └── jo-narration-serie/      # transforme un corpus en série narrative d'articles (pipeline 4 phases)
 │       └── SKILL.md
 └── YouTube/
-    ├── jo-hyperframe/            # produit une vidéo HyperFrames en mode auto/slides/webcam
+    ├── my-hyperframe-generator/            # produit une vidéo HyperFrames en mode auto/slides/webcam
     │   └── SKILL.md
-    ├── jo-youtube-title/         # génère un titre YouTube
+    ├── my-youtube-title-proposer/         # génère un titre YouTube
     │   └── SKILL.md
     ├── my-technostik-editorial-check/  # audite une idée/sujet vidéo selon la ligne éditoriale
     │   └── SKILL.md
@@ -34,7 +34,7 @@ Chaque skill vit dans un sous-répertoire de son domaine. Le répertoire `~/.age
 
 ## Historique
 
-`YouTube/jo-hyperframe` a été importé depuis [technostik/hyperframe-gen](https://github.com/technostik/hyperframe-gen) avec son historique complet via `git subtree`. Pour parcourir cet historique :
+`YouTube/my-hyperframe-generator` a été importé depuis [technostik/hyperframe-gen](https://github.com/technostik/hyperframe-gen) avec son historique complet via `git subtree`. Pour parcourir cet historique :
 
 ```bash
 git log --graph --oneline          # l'arbre complet, branches fusionnées incluses
