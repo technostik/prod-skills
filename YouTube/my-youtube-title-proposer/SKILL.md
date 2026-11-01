@@ -1,3 +1,8 @@
+---
+name: my-youtube-title-proposer
+description: Génère des titres YouTube à fort potentiel de clic pour une chaîne de veille sociétale. Extrait la promesse éditoriale la plus attractive d'un transcript ou d'un sujet, propose des variantes selon 7 leviers, et optimise pour le clic sans clickbait.
+---
+
 # PROMPT — Générateur de titres YouTube à fort potentiel de clic
 ## Chaîne sociétale — 7 leviers × 2 variantes
 
