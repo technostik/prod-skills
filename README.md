@@ -13,11 +13,11 @@ prod-skills/
 │   └── jo-email-vente/      # rédige un email ou une séquence de vente directe à partir d'un brief
 │       └── SKILL.md
 ├── Newsletter/
-│   ├── jo-narration-article/    # transforme une note de réflexion en article narratif (Substack, fil, LinkedIn)
+│   ├── my-joriel-narration-article/    # transforme une note de réflexion en article narratif (Substack, fil, LinkedIn)
 │   │   └── SKILL.md
-│   ├── jo-narration-relecture/  # audite et score un email ou une série sur critères narratifs et marketing
+│   ├── my-joriel-narration-relecture/  # audite et score un email ou une série sur critères narratifs et marketing
 │   │   └── SKILL.md
-│   └── jo-narration-serie/      # transforme un corpus en série narrative d'articles (pipeline 4 phases)
+│   └── my-joriel-narration-serie/      # transforme un corpus en série narrative d'articles (pipeline 4 phases)
 │       └── SKILL.md
 └── YouTube/
     ├── my-hyperframe-generator/            # produit une vidéo HyperFrames en mode auto/slides/webcam
