@@ -503,6 +503,43 @@ Termine par une recommandation concrète :
 - abandonner ;
 - conserver l'idée pour un autre format ou un autre moment.
 
+### 10. Proposition de titre — uniquement pour les sujets acceptés
+
+Si la décision est **ACCEPTÉ** ou **ACCEPTÉ SOUS CONDITIONS**, termine l'audit par une proposition de titres.
+
+Pour cela, utilise la skill dédiée dans le même répo :
+
+`YouTube/my-youtube-title-proposer/SKILL.md`
+
+Lis et applique cette skill pour générer et évaluer les titres. Ne réimplémente pas sa méthode dans cette skill éditoriale : la skill de titres reste la référence pour cette étape.
+
+**Adaptation obligatoire à la chaîne technologique :**
+
+La skill de titres est initialement conçue pour la chaîne sociétale. Tu dois donc conserver sa méthode de packaging, ses règles de qualité et ses sept leviers, mais adapter leur application à la ligne éditoriale, au public et au territoire de la chaîne technologique définis dans la présente skill.
+
+En particulier :
+- privilégie les enjeux professionnels, techniques, économiques et cognitifs liés aux technologies ;
+- utilise un vocabulaire accessible aux professionnels sans tomber dans la vulgarisation générique ;
+- valorise les expérimentations, les résultats concrets, les limites, les ruptures et les conséquences pratiques ;
+- ne transforme pas un sujet technique en sujet sociétal artificiel ;
+- ne promets jamais une démonstration, une découverte ou un résultat que la vidéo ne pourra pas tenir.
+
+Les titres doivent être construits à partir de **l'angle éditorial retenu**, et non simplement du sujet brut.
+
+Si la décision est **ACCEPTÉ SOUS CONDITIONS**, propose des titres correspondant à l'angle recommandé, en précisant qu'ils restent provisoires tant que les conditions éditoriales ne sont pas satisfaites.
+
+Si la décision est **REFUSÉ**, ne propose pas de titres. Ne cherche pas à rendre cliquable un sujet qui ne mérite pas d'être produit.
+
+Respecte le format de sortie de la skill de titres, notamment :
+- les 14 propositions réparties entre les sept leviers ;
+- le nombre exact de caractères ;
+- l'analyse des trois premiers mots ;
+- les trois finalistes ;
+- les propositions de couples titre-vignette ;
+- le choix d'un titre de départ et de deux alternatives.
+
+La proposition de titre est une étape de packaging, pas un motif pour modifier artificiellement le verdict éditorial.
+
 ---
 
 ## 7. Règles de comportement
