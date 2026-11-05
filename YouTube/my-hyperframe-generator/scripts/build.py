@@ -829,6 +829,28 @@ def scenes_json(scenes):
     return {"scenes": out}
 
 
+def posthoc_version(path):
+    """Numéro N de `voix-posthoc-vN.wav` (comparaison numérique : v10 > v9), None sinon."""
+    m = re.fullmatch(r"voix-posthoc-v(\d+)\.wav", Path(path).name)
+    return int(m.group(1)) if m else None
+
+
+def detect_audio(root):
+    """`assets/voix.wav` s'il existe (choix explicite), sinon la dernière passe de nettoyage
+    `voix-posthoc-vN.wav` (N le plus grand, numériquement), sinon un autre `voix-*.wav`."""
+    assets = root / "assets"
+    if (assets / "voix.wav").exists():
+        return "assets/voix.wav"
+    if not assets.exists():
+        return None
+    posthoc = [(posthoc_version(f), f) for f in assets.glob("voix-posthoc-v*.wav")]
+    posthoc = [(n, f) for n, f in posthoc if n is not None]
+    if posthoc:
+        return str(max(posthoc, key=lambda nf: nf[0])[1].relative_to(root))
+    found = sorted(assets.glob("voix-*.wav"))
+    return str(found[-1].relative_to(root)) if found else None
+
+
 def wav_duration(path):
     try:
         with wave.open(str(path), "rb") as w:
@@ -874,14 +896,7 @@ def main():
     # audio : option explicite, sinon détection
     audio = a.audio
     if not audio:
-        for cand in ("assets/voix.wav", "assets/voix-posthoc-v1.wav"):
-            if (root / cand).exists():
-                audio = cand
-                break
-        if not audio:
-            found = sorted((root / "assets").glob("voix-*.wav")) if (root / "assets").exists() else []
-            if found:
-                audio = str(found[-1].relative_to(root))
+        audio = detect_audio(root)
     if audio:
         apath = Path(audio)
         if not apath.is_absolute():
