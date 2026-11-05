@@ -41,6 +41,8 @@ copy_file "$ROOT/references/visual-language-joriel.md" "$COMMUN"
 # STORYBOARD — mode webcam
 # --------------------------------------------------
 
+copy_file "$ROOT/references/storyboard-format.md" "$STORYBOARD"
+copy_file "$ROOT/references/scenario-to-storyboard-prompt.md" "$STORYBOARD"
 copy_file "$ROOT/references/posthoc-video-conventions.md" "$STORYBOARD"
 copy_file "$ROOT/references/scenario-studio-conventions.md" "$STORYBOARD"
 
@@ -49,6 +51,7 @@ copy_file "$ROOT/references/scenario-studio-conventions.md" "$STORYBOARD"
 # --------------------------------------------------
 
 copy_file "$ROOT/references/primitives-joriel.md" "$COMPOSITION"
+copy_file "$ROOT/examples/storyboard.example.md" "$COMPOSITION"
 
 # Exemples HTML de composition
 mkdir -p "$COMPOSITION/compositions"

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.13.0
+
+- **`scripts/render_primitive.py`**, module commun de rendu des primitives, importé par `build.py` et `build_studio_anim.py`. Une primitive n'est plus écrite deux fois : le studio affiche le même balisage que la composition finale, et charge `style-joriel.css` + `style-joriel-ext.css`.
+- `scenes.json` transporte désormais les paramètres complets de chaque étape (`beats[].params`), donc `versus`, `strike`, `diverge`, `seuil`, `compare3`, `ref-card`… se rendent dans le studio sans second modèle.
+- Studio : plus aucun texte codé en dur. Le bloc sources vient des figures ou d'un paramètre `items` ; le libellé du waffle vient du storyboard ; les overlays ne pointent plus vers un dossier personnel par défaut. Un `versus` reste **une** étape (ses deux camps sont dans le même bloc), le nombre de pas du studio ne diverge plus du storyboard.
+
+## 1.12.0
+
+- **Scénario ≠ storyboard ≠ primitives.** `SCENARIO.md` est un texte libre (entrée) ; `assets/storyboard.md` est la mise en scène structurée produite par le LLM ; les primitives sont le vocabulaire visuel figé. Le LLM décide quel passage devient quelle primitive, le code ne décide plus rien.
+- **`scripts/build.py`**, builder unique et générique des trois modes : lit le storyboard, écrit `data/figures.json`, `refs.json`, `steps.json`, `design.json`, `scenes.json`, `index.html` et `compositions/iNN.html`. Sans transcript, il utilise les durées estimées ; avec `--transcript`, il recale chaque `cue` sur les mots de la voix. Audio (`assets/voix.wav`) et caméra (`assets/cam-clean.mkv`) détectés automatiquement.
+- **`references/storyboard-format.md`** : format canonique lisible par le parser (registres, scènes, étapes, catalogue des `kind`, caméra, format minuté, sorties du build). **`references/scenario-to-storyboard-prompt.md`** : prompt de transformation. **`examples/storyboard.example.md`** : exemple complet et parsable, toutes primitives.
+- Renommage : `assets/scenario-hyperframes.md` → `assets/storyboard.md` dans `post-render.py`, `inserts.md`, `test-post-render.sh`, `glossaire.md`, `data-schemas.md`, `README.md`.
+- `check-steps.py` réécrit : `--storyboard` (alias `--scenario`), slides et studio optionnels, étapes lues dans `data-step` et les labels GSAP, composition en un ou plusieurs fichiers.
+- `build_studio_anim.py` : le kicker tolère un nom de section libre (`KICK.get(...)` avec repli sur la casse de phrase).
+- Les builders du studio slides (`build_studio_anim.py`, `build_studio_slides.py`) sont conservés : ils produisent la vue d'enregistrement pas à pas et lisent `data/scenes.json` / `data/figures.json` écrits par `build.py`.
+
 ## 1.11.0
 
 - Primitives plus lisibles et mieux animées, vérifiées sur des captures réelles (`hyperframes snapshot`) et `hyperframes check` complet : halos de la couleur du sens, vignette, filet sous le titre, tailles de `count` (28 vh), de `stitle` et de `diverge` alignées sur la spec, `dkw.dim` plus grand dans `versus`, `punch` équilibré et centré, `chip` en pastille, `stamp` à double cadre, `icon` en pastille avec trait dessiné, `strike` plus fin, `cols2` avec filet, `ref-card` avec surlignage par balayage.

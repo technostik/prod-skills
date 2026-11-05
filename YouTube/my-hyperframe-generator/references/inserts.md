@@ -31,7 +31,7 @@ Exemple complet : `examples/inserts.example.json`.
 | Champ | Rôle | Défaut |
 |---|---|---|
 | `master`, `output` | entrée et sortie | `renders/full.mp4`, `renders/final.mp4` |
-| `scenario` | storyboard minuté (lignes `- \`I1.1#0\` t=… (…s)`) | `assets/scenario-hyperframes.md` |
+| `scenario` | storyboard minuté (lignes `- \`I1.1#0\` t=… (…s)`) | `assets/storyboard.md` |
 | `transform.pitch` | hauteur du son (×), durée inchangée | `1.05` |
 | `transform.rotate_deg` | rotation de l'image, avec un zoom calculé qui masque les coins | `1.0` |
 | `outro` | vidéo ajoutée à la fin (signature), ajustée en 1920×1080 sans transformation | aucune |

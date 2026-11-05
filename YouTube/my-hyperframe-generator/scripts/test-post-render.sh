@@ -9,7 +9,7 @@ F="-v error -y"
 ffmpeg $F -f lavfi -i testsrc2=s=1920x1080:r=30:d=14 -f lavfi -i sine=f=440:r=48000:d=14 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -shortest renders/full.mp4
 ffmpeg $F -f lavfi -i testsrc2=s=1280x720:r=60:d=6 -f lavfi -i sine=f=880:r=44100:d=6 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -shortest assets/src/a.mp4
 ffmpeg $F -f lavfi -i color=c=blue:s=1280x720:r=30:d=1 -f lavfi -i sine=f=300:r=48000:d=1 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -shortest assets/src/outro.mp4
-cat > assets/scenario-hyperframes.md <<'MD'
+cat > assets/storyboard.md <<'MD'
 ### I1 — Test
 - `I1.1#0` t=0.00 (6.0s) [off/kw] lorem
 - `I1.1#1` t=6.00 (4.0s) [pip/kw] ipsum

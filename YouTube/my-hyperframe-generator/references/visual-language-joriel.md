@@ -260,8 +260,8 @@ Le §5 seul ne produit **aucune différence visible** quand deux opérations se
 rabattent sur les mêmes blocs (ex. `compare` ≈ `contrast` → kw + bar).
 Chaque gabarit ci-dessous a une signature de mise en page propre.
 `versus` et `diverge` sont balisés dans `examples/demo/compositions/i05.html`
-(étapes `I5.1#0` et `I5.1#1`). `seuil` et `compare3` n'ont pas de balisage
-dans le dépôt (voir `SKILL.md`, « Ce que ce dépôt ne fournit pas »). Les utiliser dès que l'intention correspond.
+(étapes `I5.1#0` et `I5.1#1`). `seuil` et `compare3` sont rendus par
+`scripts/build.py` (styles dans `assets/style-joriel-ext.css`) : ils n'ont pas encore d'exemple dans la démo. Les utiliser dès que l'intention correspond.
 
 ### 9.1. `versus` — contrast / refute à deux camps
 

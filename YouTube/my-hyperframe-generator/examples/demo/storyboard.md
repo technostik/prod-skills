@@ -1,5 +1,7 @@
 # Storyboard minuté — catalogue des primitives (24 étapes, 9 scènes, 125.50 s)
 
+> Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
+
 Une étape = une primitive ou une situation, démontrée une seule fois. Texte : lorem ipsum. Le nom de la primitive est affiché à l'écran par `assets/demo-label.css`.
 
 ### I0 — Structure et texte [BG-00]

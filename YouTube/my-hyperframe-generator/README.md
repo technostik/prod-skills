@@ -7,8 +7,8 @@ Distribution du skill `hyperframe-joriel` : produire une vidéo HyperFrames au l
 Le skill vit dans [technostik/prod-skills](https://github.com/technostik/prod-skills), sous `YouTube/jo-hyperframe/`. Pour l'exposer aux agents, on clone le dépôt une fois et on lie le skill :
 
 ```bash
-git clone https://github.com/technostik/prod-skills.git ~/Code/prod-skills
-ln -s ~/Code/prod-skills/YouTube/jo-hyperframe ~/.agents/skills/jo-hyperframe
+git clone https://github.com/technostik/prod-skills.git "$HOME/Code/prod-skills"
+ln -s "$HOME/Code/prod-skills/YouTube/jo-hyperframe" "$HOME/.agents/skills/jo-hyperframe"
 ```
 
 Le nom du lien (`jo-hyperframe`) est celui sous lequel le skill est référencé ; c'est lui que les agents résolvent, pas une copie. Après un `git pull` dans `prod-skills`, le skill est à jour sans autre manipulation.
@@ -22,9 +22,10 @@ Prérequis et variables d'environnement : `SKILL.md` § Prérequis.
 | Chemin | Contenu |
 |---|---|
 | `SKILL.md` | point d'entrée : routeur, vocabulaire, étapes, format du storyboard, règles de rendu |
-| `references/` | langage visuel, primitives (balisage exact), conventions studio et webcam, schémas `data/`, glossaire |
-| `scripts/` | builders studio, `check-steps.py`, nettoyage webcam, `post-render.py` (inserts), `lint-repo.py` |
+| `references/` | langage visuel, primitives (balisage exact), format du storyboard, conventions studio et webcam, schémas `data/`, glossaire |
+| `scripts/` | `build.py` (composition finale), `render_primitive.py` (primitives partagées), builders studio, `check-steps.py`, nettoyage webcam, `post-render.py` (inserts), `lint-repo.py` |
 | `examples/demo/` | catalogue des primitives (9 scènes, lorem ipsum, nom affiché à l'écran) ; médias factices via `scripts/make-placeholders.sh` |
+| `examples/storyboard.example.md` | storyboard complet et parsable, couvre toutes les primitives |
 | `examples/gabarits/` | exemples JSON de `data/design.json` pour `diverge`, `seuil`, `compare3`, `cols2` |
 | `prepare-webcam-context.sh` | script ad hoc de préparation de contexte (voir ci-dessous) |
 
@@ -41,14 +42,15 @@ Il crée trois sous-répertoires :
 | Sortie | Contenu |
 |---|---|
 | `commun/` | `SKILL.md`, `references/visual-language-joriel.md` |
-| `storyboard/` | `references/posthoc-video-conventions.md`, `references/scenario-studio-conventions.md` |
-| `composition/` | `references/primitives-joriel.md`, `examples/demo/index.html`, `assets/style-joriel.css`, et `composition-examples.html` — toutes les sections des `examples/demo/compositions/i*.html` extraites et fusionnées en un seul fichier consultable |
+| `storyboard/` | `references/storyboard-format.md`, `references/scenario-to-storyboard-prompt.md`, `references/posthoc-video-conventions.md`, `references/scenario-studio-conventions.md` |
+| `composition/` | `references/primitives-joriel.md`, `examples/storyboard.example.md`, `examples/demo/index.html`, `assets/style-joriel.css`, et `composition-examples.html` — toutes les sections des `examples/demo/compositions/i*.html` extraites et fusionnées en un seul fichier consultable |
 
 Les fichiers sont **copiés**, pas liés : le répertoire produit est autonome et jetable. Le script s'arrête en erreur si un fichier source manque, si aucun exemple `i*.html` n'est trouvé, ou si la fusion ne produit pas de fichier non vide.
 
 ## Vérifier
 
 ```bash
+python3 scripts/build.py --root <projet>                              # storyboard -> index.html + compositions/
 python3 scripts/lint-repo.py                                          # chemins cités, termes obsolètes
 bash scripts/test-post-render.sh                                      # inserts : test de bout en bout, FFmpeg seul
 cd examples/demo && bash scripts/make-placeholders.sh && npm run check  # nécessite Node, FFmpeg, accès réseau

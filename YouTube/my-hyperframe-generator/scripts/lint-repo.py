@@ -38,7 +38,8 @@ def main():
                 bad.append(f"{f.relative_to(root)}:{n}: terme obsolète : {LEGACY.search(line).group(0)}")
             for m in PATH.finditer(line):
                 ref = m.group(1).rstrip(".")
-                if "*" in ref or "<" in ref or ref.endswith("/"):
+                # `examples/demo/compositions/i*.html` : le joker coupe le chemin, on l'ignore
+                if "*" in ref or "<" in ref or ref.endswith("/") or line[m.end():m.end() + 1] == "*":
                     continue
                 if any(s in line for s in ABSENT_OK):
                     continue

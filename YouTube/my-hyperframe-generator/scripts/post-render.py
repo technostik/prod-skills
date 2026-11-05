@@ -102,7 +102,7 @@ def load_manifest(path):
     m = json.loads(p.read_text(encoding="utf-8"))
     m.setdefault("master", "renders/full.mp4")
     m.setdefault("output", "renders/final.mp4")
-    m.setdefault("scenario", "assets/scenario-hyperframes.md")
+    m.setdefault("scenario", "assets/storyboard.md")
     m["transform"] = {**DEFAULTS, **m.get("transform", {})}
     ids = [i.get("id") for i in m.get("inserts", [])]
     if not ids:

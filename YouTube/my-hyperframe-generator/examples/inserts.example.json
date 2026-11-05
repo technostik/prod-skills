@@ -1,7 +1,7 @@
 {
   "master": "renders/full.mp4",
   "output": "renders/final.mp4",
-  "scenario": "assets/scenario-hyperframes.md",
+  "scenario": "assets/storyboard.md",
   "transform": { "pitch": 1.05, "rotate_deg": 1.0 },
   "outro": "assets/inserts/signature.mp4",
   "inserts": [

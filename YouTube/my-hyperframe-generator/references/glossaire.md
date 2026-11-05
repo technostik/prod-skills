@@ -4,8 +4,8 @@
 |---|---|---|
 | Mode A | mode slides | SKILL.md, references/ |
 | Mode B | mode webcam | SKILL.md, references/ |
-| guide oral | notes (`note:`) ou transcript | references/, scripts/ |
-| scénario (fichier d'écran) | storyboard (`assets/scenario-hyperframes.md`) | SKILL.md, references/ |
+| guide oral | notes (`notes:`) ou transcript | references/, scripts/ |
+| scénario (fichier d'écran) | storyboard (`assets/storyboard.md`) | SKILL.md, references/ |
 | scénario (l'histoire) | scénario (inchangé) | — |
 
 ## Skill compagne de scénarisation (à vérifier par le propriétaire)

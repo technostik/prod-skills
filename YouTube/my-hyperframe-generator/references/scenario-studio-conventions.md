@@ -126,8 +126,9 @@ rajouter au prompteur**. Chaque bloc = ancre minimale + « en plus » :
 
 - `studio.html` (manuel à enregistrer) + `index.html` (auto, mêmes labels) +
   `compositions/` (1/scène, indépendantes) + `studio-slides.html` (skill, conformité).
-- `scripts/` : `build.py` et `make-steps.py` (propres au projet, non fournis : voir `SKILL.md`),
-  `make-sfx.py`, `check-steps.py`, `studio_server.py`, `build_studio_slides.py`.
+- `scripts/` : `build.py` et `check-steps.py` (fournis par le skill, voir `SKILL.md`),
+  `build_studio_anim.py`, `build_studio_slides.py`, `studio_server.py`, plus les scripts propres
+  au projet (`make-sfx.py`…).
 - `README.md` (lancer, relier, contrôler, `?draft=1`, sons) + `BUILD-REPORT.md`
   (tableau étape ↔ label, BG à refaire, ⚠, écarts skill, vérifications manuelles).
 - Ne jamais rendre de mp4 sans feu vert : vérifier lancement, labels, contrôle.

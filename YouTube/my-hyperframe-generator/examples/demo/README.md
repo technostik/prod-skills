@@ -1,6 +1,6 @@
 # Catalogue des primitives (démo)
 
-Chaque primitive ou situation est montrée **une seule fois**, avec du lorem ipsum, et son nom s'affiche en haut à droite (calque `assets/demo-label.css`, propre à la démo). Le repère `I2.1#0` en bas à gauche est l'identifiant de l'étape (`.slideno`), repris dans `scenario.md`.
+Chaque primitive ou situation est montrée **une seule fois**, avec du lorem ipsum, et son nom s'affiche en haut à droite (calque `assets/demo-label.css`, propre à la démo). Le repère `I2.1#0` en bas à gauche est l'identifiant de l'étape (`.slideno`), repris dans `storyboard.md`.
 
 Pour corriger une primitive : repère son nom à l'écran, retrouve l'étape dans le tableau, modifie le balisage dans la composition et le style dans `assets/style-joriel.css`.
 

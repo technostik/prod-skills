@@ -23,7 +23,10 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+# Le projet est le répertoire courant (comme build.py --root .), pas le dépôt.
+ROOT = os.getcwd()
+
+from render_primitive import Primitives  # noqa: E402  (module voisin, script lancé depuis scripts/)
 
 FRAG_RE = re.compile(r"<!--\s*element\s+class\s*=\s*[\"']fragment[\"']\s*-->", re.I)
 COMMENT_RE = re.compile(r"<!--(.*?)-->", re.S)
@@ -54,6 +57,8 @@ def plain_preview(content, n=200):
 
 
 def parse_slides(path):
+    if not os.path.exists(path):
+        return []
     text = open(path, encoding="utf-8").read()
     lines = text.split("\n")
     start = 0
@@ -98,64 +103,9 @@ def map_slides(slides, scene_ids):
     return mapping
 
 
-def beat_step(s, b, k, figs):
-    """-> (html, anim) ; anim = dict kind + params pour le JS."""
-    cid = "a-%s" % s["id"]
-    head = ""
-    if b.get("kind") == "sources":
-        return ("""<div class="st-sources"><div class="st-srct">Sources</div>"""
-                """<div class="st-src">PISA 2025 (OCDE) · <i>Regards sur l'éducation</i> (OCDE) · """
-                """MEN-DEPP · ministères de l'Intérieur et de l'Éducation nationale · """
-                """déclaration de Students for Liberty France</div>"""
-                """<div class="st-sub">Substack : technosophie.substack.com</div></div>""",
-                {"kind": "fade"})
-    viz = b.get("viz") or {}
-    if viz.get("type") == "bars":
-        rows = []
-        for it in viz["items"]:
-            pct = min(100, it["v"] / viz["max"] * 100)
-            disp = it.get("display") or str(it["v"])
-            rows.append("""<div class="st-brow"><div class="st-blab">%s — %s</div>"""
-                        """<div class="st-btrack"><div class="st-bfill" data-w="%.1f"></div></div></div>"""
-                        % (esc(it["label"]), esc(disp), pct))
-        fl = b.get("text") or ""
-        return ("""<div class="st-fig">%s%s</div>""" % (
-            "".join(rows), ("<div class=\"st-flab\">%s</div>" % esc(fl)) if fl else ""),
-            {"kind": "bars"})
-    if viz.get("type") == "count":
-        f = figs.get(b.get("figure") or "", {})
-        lab = f.get("label", "") if f else (b.get("text") or "")
-        return ("""<div class="st-fig"><div class="st-bignum" data-to="%d" data-prefix="%s">0</div>"""
-                """<div class="st-flab">%s</div></div>""" % (
-                    viz["to"], esc(viz.get("prefix", "")), esc(lab)),
-                {"kind": "count", "to": viz["to"], "prefix": viz.get("prefix", "")})
-    if viz.get("type") == "waffle":
-        cells, filled = 100, round(viz["marked"] / viz["total"] * 100)
-        dots = "".join('<span class="%s"></span>' % ("on" if i < filled else "off") for i in range(cells))
-        f = figs.get(b.get("figure") or {}, {})
-        return ("""<div class="st-fig"><div class="st-fval">%s</div><div class="st-flab">%s</div>"""
-                """<div class="st-waffle">%s</div><div class="st-flab">≈ 1 lycée sur 10 touché</div></div>""" % (
-                    esc(f.get("value", "")), esc(f.get("label", "")), dots),
-                {"kind": "fade"})
-    if b.get("figure") and b.get("text"):
-        f = figs.get(b["figure"], {})
-        badge = " ⚠" if f.get("status") == "verify" else ""
-        return ("""<div class="st-row"><span class="st-chip">%s</span>"""
-                """<span class="st-rt">%s%s</span></div>""" % (
-                    esc(f.get("value", "")), esc(b["text"]), badge),
-                {"kind": "fade" if len((b.get("text") or "")) < 120 else "slide"})
-    if b.get("figure"):
-        fs = [figs.get(f, {}) for f in ([b["figure"]] + (b.get("figures") or []))]
-        return ("".join("""<div class="st-fig"><div class="st-fval">%s</div>"""
-                         """<div class="st-flab">%s%s</div></div>""" % (
-                             esc(f.get("value", "")), esc(f.get("label", "")),
-                             " ⚠" if f.get("status") == "verify" else "") for f in fs),
-                {"kind": "fade"})
-    return ("""<div class="st-row"><span class="st-rt">%s</span></div>""" % esc(b.get("text") or ""),
-            {"kind": "slide"})
-
-
-OVERLAY_SRC = os.path.expanduser(os.environ.get("HF_OVERLAYS_DIR", "~/Vidéos/OBS/assets"))
+# Dossier d'overlays : explicite (HF_OVERLAYS_DIR), sinon le dossier du projet.
+# Aucun chemin propre à un ancien projet n'est codé en dur.
+OVERLAY_SRC = os.environ.get("HF_OVERLAYS_DIR", "")
 IMG_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif")
 
 
@@ -168,17 +118,21 @@ def slug(nom):
 
 def collect_overlays(dst):
     overs = []
-    if os.path.isdir(OVERLAY_SRC):
+    src_dir = os.path.expanduser(OVERLAY_SRC) if OVERLAY_SRC else dst
+    if not os.path.isdir(src_dir):
+        return overs
+    same = os.path.abspath(src_dir) == os.path.abspath(dst)
+    if not same:
         os.makedirs(dst, exist_ok=True)
-        for nom in sorted(os.listdir(OVERLAY_SRC)):
-            if not nom.lower().endswith(IMG_EXTS):
-                continue
-            src = os.path.join(OVERLAY_SRC, nom)
-            d = os.path.join(dst, slug(nom))
-            if (not os.path.exists(d)) or (os.path.getsize(d) != os.path.getsize(src)):
-                shutil.copyfile(src, d)
-            label = re.sub(r"\s*-\s*kindle\s*$", "", os.path.splitext(nom)[0], flags=re.I)
-            overs.append({"label": label, "file": os.path.relpath(d, ROOT)})
+    for nom in sorted(os.listdir(src_dir)):
+        if not nom.lower().endswith(IMG_EXTS):
+            continue
+        src = os.path.join(src_dir, nom)
+        d = os.path.join(dst, slug(nom))
+        if (not same) and ((not os.path.exists(d)) or (os.path.getsize(d) != os.path.getsize(src))):
+            shutil.copyfile(src, d)
+        label = re.sub(r"\s*-\s*kindle\s*$", "", os.path.splitext(nom)[0], flags=re.I)
+        overs.append({"label": label, "file": os.path.relpath(d, ROOT)})
     return overs
 
 
@@ -189,41 +143,23 @@ PAGE = """<!DOCTYPE html>
 <title>Studio Anim — l'animation en pas-à-pas</title>
 <link rel="icon" href="data:,">
 <script src="assets/gsap.min.js"></script>
+<link rel="stylesheet" href="assets/style-joriel.css">
+<link rel="stylesheet" href="assets/style-joriel-ext.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
-  #present { position: fixed; inset: 0; background: #0d1117; cursor: none; }
+  #present { position: fixed; inset: 0; background: #0d1117; cursor: none; font-family: Verdana, Geneva, sans-serif; color: var(--blanc); }
   #present .scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; color: #f5f4f0; }
   #present .fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   #present .voile { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.78)); }
   #present .kicker { position: absolute; top: 4.4vh; left: 7.3vw; font-size: 2.8vh; letter-spacing: .22em; text-transform: uppercase; color: #fbbf24; }
   #present .title { position: absolute; top: 9.2vh; left: 7.3vw; right: 7.3vw; font-size: 5.4vh; line-height: 1.1; font-weight: 800; }
-  #present .zone { position: absolute; top: 21vh; left: 7.3vw; right: 7.3vw; bottom: 13vh; }
+  #present .zone { position: absolute; top: 21vh; left: 7.3vw; right: 7.3vw; bottom: 13vh;
+                   display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
   #present .src { position: absolute; left: 7.3vw; right: 7.3vw; bottom: 5vh; font-size: 2.6vh; color: #b8b2a7; }
-  #present .step { margin-bottom: 2.4vh; opacity: 0; }
-  #present .row { display: flex; align-items: baseline; gap: 1.5vw; padding: 1.2vh 0; border-bottom: 1px solid rgba(255,255,255,.18); }
-  #present .rt { font-size: 4vh; line-height: 1.25; }
-  #present .chip { font-size: 4vh; font-weight: 800; color: #fbbf24; white-space: nowrap; }
-  #present .fig { padding: 1vh 0; }
-  #present .fval { font-size: 10vh; line-height: 1; font-weight: 900; }
-  #present .bignum { font-size: 15vh; line-height: 1; font-weight: 900; color: #fbbf24; }
-  #present .flab { font-size: 3.4vh; color: #b8b2a7; margin-top: 1vh; }
-  #present .brow { margin: 1.6vh 0; }
-  #present .blab { font-size: 3.3vh; margin-bottom: 1vh; }
-  #present .btrack { height: 4vh; background: rgba(255,255,255,.12); border-radius: .8vh; overflow: hidden; }
-  #present .bfill { height: 100%; background: #fbbf24; transform: scaleX(0); transform-origin: left center; }
-  #present .waffle { display: grid; grid-template-columns: repeat(20, 1fr); gap: .5vh; width: 33vw; margin-top: 1.5vh; }
-  #present .waffle span { display: block; aspect-ratio: 1; border-radius: .4vh; }
-  #present .waffle .on { background: #fbbf24; }
-  #present .waffle .off { background: rgba(255,255,255,.14); }
-  #present .cols { display: flex; gap: 3vw; }
-  #present .col { flex: 1; }
+  #present .step { width: 100%; margin-bottom: 2.4vh; opacity: 0; }
   #present .punch { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 7.3vw; background: #0d1117; opacity: 0; }
   #present .pt { font-size: 8vh; line-height: 1.15; font-weight: 900; }
-  #present .st-sources { text-align: left; max-width: 80vw; }
-  #present .st-srct { font-size: 4vh; letter-spacing: .2em; text-transform: uppercase; color: #fbbf24; margin-bottom: 2vh; }
-  #present .st-src { font-size: 3.4vh; line-height: 1.5; }
-  #present .st-sub { font-size: 3.4vh; margin-top: 2vh; color: #fbbf24; }
   #present .fin { position: absolute; inset: 0; background: #000; display: none; z-index: 5; }
   #present .pastille { position: absolute; top: 2vh; right: 2vw; color: rgba(255,255,255,.55); font-size: 2vh; z-index: 6; }
   body.rec #present .pastille { display: none; }
@@ -308,7 +244,8 @@ var N = SCENES.length;
 var view = new URLSearchParams(location.search).get("view") || "present";
 var idx = 0, step = 0, fini = false, camMode = "off", mirror = true, overlay = null, recOn = false;
 
-function nsteps() { return SCENES[idx].steps.length + 1; } // beats + punch
+// beats + punch final seulement si la scène a un bloc punch hérité (pas une étape punch)
+function nsteps() { return SCENES[idx].steps.length + (SCENES[idx].has_punch ? 1 : 0); }
 var bc = null;
 try { bc = new BroadcastChannel("studio-anim"); } catch (e) { bc = null; }
 function emit() {
@@ -421,20 +358,28 @@ function applyOverlay(name, sounded) {
   }
   if (sounded) pop(true);
 }
-function grp(n) { return String(Math.round(n)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, " "); }
+function grp(n, dec) {
+  var s = dec ? Number(n).toFixed(dec) : Math.round(n).toString();
+  var p = s.split(".");
+  p[0] = p[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, " ");
+  return p.join(",");
+}
 function paintStep(i, k, animate) {
   var sc = document.getElementById("sc-" + i);
   if (!sc) return;
   var steps = sc.querySelectorAll(".step");
   for (var j = 0; j < steps.length; j++) {
     (function (el, sj) {
-      var meta = SCENES[i].steps[sj];
+      var meta = SCENES[i].steps[sj] || {};
       var show = sj < k, cur = sj === k;
-      var num = el.querySelector(".bignum");
-      var fills = el.querySelectorAll(".bfill");
+      var ctrs = el.querySelectorAll(".ctr");
+      var fills = el.querySelectorAll(".bfill, .sfill");
       function final() {
         el.style.opacity = 1;
-        if (num) num.textContent = (meta.prefix || "") + grp(meta.to);
+        for (var c = 0; c < ctrs.length; c++) {
+          var t = parseFloat(ctrs[c].getAttribute("data-target"));
+          if (isFinite(t)) ctrs[c].textContent = grp(t, parseInt(ctrs[c].getAttribute("data-dec") || "0", 10));
+        }
         for (var f = 0; f < fills.length; f++) fills[f].style.transform = "scaleX(" + (fills[f].getAttribute("data-w") / 100) + ")";
       }
       if (show) { if (window.gsap) gsap.set(el, { opacity: 1 }); else el.style.opacity = 1; final(); }
@@ -443,11 +388,18 @@ function paintStep(i, k, animate) {
           var kind = meta.kind || "fade";
           if (kind === "slide") gsap.fromTo(el, { opacity: 0, x: -160 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" });
           else gsap.fromTo(el, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-          if (meta.kind === "count") {
-            var o = { v: 0 };
-            gsap.to(o, { v: meta.to, duration: 1.2, ease: "power2.out", onUpdate: function () { if (num) num.textContent = (meta.prefix || "") + grp(o.v); } });
+          if (ctrs.length) {
+            for (var c = 0; c < ctrs.length; c++) {
+              (function (ctr) {
+                var target = parseFloat(ctr.getAttribute("data-target"));
+                var dec = parseInt(ctr.getAttribute("data-dec") || "0", 10);
+                if (!isFinite(target)) return;
+                var o = { v: 0 };
+                gsap.to(o, { v: target, duration: 1.2, ease: "power2.out", onUpdate: function () { ctr.textContent = grp(o.v, dec); } });
+              })(ctrs[c]);
+            }
           } else final();
-          if (meta.kind === "bars" && fills.length) {
+          if (fills.length) {
             for (var g = 0; g < fills.length; g++) {
               (function (fl) { gsap.fromTo(fl, { scaleX: 0 }, { scaleX: fl.getAttribute("data-w") / 100, duration: 1.0, ease: "power2.out", delay: 0.2 }); })(fills[g]);
             }
@@ -489,7 +441,7 @@ function buildDefile() {
       + '<div class="b-kick">SCÈNE ' + (i + 1) + "/" + N + " — " + escHtml(s.kicker) + " · " + escHtml(s.title) + "</div>"
       + '<div class="b-cues">déroulé : ' + escHtml(s.cues.join(" → ")) + "</div>"
       + slides
-      + ((i === idx) ? '<div class="b-step">pas ' + (step + 1) + "/" + nsteps() + (step >= s.steps.length ? " (punch)" : "") + "</div>" : "")
+      + ((i === idx) ? '<div class="b-step">pas ' + (step + 1) + "/" + nsteps() + (s.has_punch && step >= s.steps.length ? " (punch)" : "") + "</div>" : "")
       + "</div>";
   }
   document.getElementById("defile").innerHTML = html;
@@ -652,50 +604,127 @@ render();
 """
 
 
+def legacy_params(beat):
+    """Ancien `scenes.json` : reconstruit des paramètres depuis `viz`."""
+    kind = beat.get("kind") or "kw"
+    viz = beat.get("viz") or {}
+    p = {"kind": kind}
+    if viz.get("type") == "count":
+        p.update(kind="count", value=viz.get("to"), prefix=viz.get("prefix", ""))
+    elif viz.get("type") == "bars":
+        p.update(kind="bars", items=viz.get("items") or [], max=viz.get("max"))
+    elif viz.get("type") == "waffle":
+        p.update(kind="waffle", **{k: viz[k] for k in ("marked", "total", "label") if k in viz})
+    elif viz.get("type") == "versus":
+        p.update(kind="versus", left=viz.get("left") or [], right=viz.get("right") or [])
+    return p
+
+
+def beat_to_step(scene, beat, index):
+    """Reconstruit l'étape complète attendue par `Primitives.render_step`."""
+    p = beat.get("params")
+    if not isinstance(p, dict) or not p:
+        p = legacy_params(beat)
+    figs = []
+    if beat.get("figure"):
+        figs.append(beat["figure"])
+    figs.extend(beat.get("figures") or [])
+    return {
+        "id": beat.get("id") or "%s#%d" % (scene["id"], index),
+        "params": p,
+        "figures": figs,
+        "label": beat.get("text") or "",
+        "cue": beat.get("cue") or "",
+    }
+
+
+def anim_meta(anim):
+    anim = anim or {}
+    return {
+        "kind": anim.get("kind", "fade"),
+        "to": anim.get("to"),
+        "prefix": anim.get("prefix", ""),
+        "suffix": anim.get("suffix", ""),
+        "dec": anim.get("dec", 0),
+    }
+
+
 def build(out_path):
     scenes = json.load(open(os.path.join(ROOT, "data/scenes.json"), encoding="utf-8"))["scenes"]
     figs = json.load(open(os.path.join(ROOT, "data/figures.json"), encoding="utf-8"))["figures"]
+    refs_path = os.path.join(ROOT, "data/refs.json")
+    refs = (json.load(open(refs_path, encoding="utf-8"))["refs"]
+            if os.path.exists(refs_path) else {})
+    renderer = Primitives(ROOT, figs, refs)
     slides = parse_slides(os.path.join(ROOT, "assets/slides.md"))
-    mapping = map_slides(slides, [s["id"] for s in scenes])
-    orphan = [s["n"] for s in slides if not any(s in v for v in mapping.values())]
-    assert not orphan, "slides non mappées : %s" % orphan
+    mapping = map_slides(slides, [s["id"] for s in scenes]) if slides else {s["id"]: [] for s in scenes}
+    if slides:
+        orphan = [s["n"] for s in slides if not any(s in v for v in mapping.values())]
+        assert not orphan, "slides non mappées : %s" % orphan
 
     KICK = {"bilan": "Le bilan", "analyse": "L'analyse"}
+
+    def kicker(section):
+        s = (section or "").strip()
+        return KICK.get(s.lower(), s[:1].upper() + s[1:] if s else "Scène")
+
     data, html_scenes = [], []
     for i, s in enumerate(scenes):
-        steps, metas = [], []
+        steps, anims = [], []
         for k, b in enumerate(s["beats"]):
-            h, meta = beat_step(s, b, k, figs)
-            col = b.get("col", "full")
-            steps.append({"html": h, "col": col, **meta})
-            metas.append(meta)
-        # zone : colonnes versus ou flux simple
-        if s["type"] == "versus":
-            L = "".join('<div class="step">%s</div>' % st["html"] for st in steps if st["col"] == "left")
-            R = "".join('<div class="step">%s</div>' % st["html"] for st in steps if st["col"] == "right")
-            F = "".join('<div class="step">%s</div>' % st["html"] for st in steps if st["col"] == "full")
-            zone = '<div class="cols"><div class="col">%s</div><div class="col">%s</div></div>%s' % (L, R, F)
-        else:
-            zone = "".join('<div class="step">%s</div>' % st["html"] for st in steps)
+            step = beat_to_step(s, b, k)
+            html, opts = renderer.render_step(s, step)
+            steps.append({"html": html})
+            anims.append(anim_meta(opts.get("anim")))
+        # Une primitive = une étape, y compris `versus` : ses deux camps sont
+        # dans le même bloc HTML, pas dans deux beats séparés.
+        zone = "".join('<div class="step">%s</div>' % st["html"] for st in steps)
         used = sorted({f for b in s["beats"] for f in ([b.get("figure")] + (b.get("figures") or [])) if f})
-        src = ("Source : " + " · ".join(dict.fromkeys(figs[f]["source"] for f in used if f in figs))) if used else ""
+        sources = []
+        for f in used:
+            src = figs.get(f, {}).get("source")
+            if src and src not in sources:
+                sources.append(src)
+        src = ("Source : " + " · ".join(sources)) if sources else ""
         fond = (('<img class="fond" src="%s" alt=""><div class="voile"></div>' % s["illustration"])
                 if s.get("illustration") else "")
+        # Punchline : soit une étape `punch` du storyboard (elle a son temps),
+        # soit l'ancien bloc final ajouté après les beats.
+        has_punch_beat = any((b.get("kind") == "punch") for b in s["beats"])
+        has_punch = bool(s.get("punchline")) and not has_punch_beat
+        punch_html = ""
+        if has_punch:
+            punch_html = '<div class="punch"><div class="pt">%s</div></div>' % esc(s["punchline"])
         html_scenes.append(
             '<div class="scene" id="sc-' + str(i) + '">' + fond
-            + '<div class="kicker">' + esc(KICK[s["section"]]) + '</div>'
+            + '<div class="kicker">' + esc(kicker(s["section"])) + '</div>'
             + '<div class="title">' + esc(s["title"]) + '</div>'
             + '<div class="zone">' + zone + '</div>'
             + (('<div class="src">' + esc(src) + '</div>') if src else '')
-            + '<div class="punch"><div class="pt">' + esc(s["punchline"]) + '</div></div>'
+            + punch_html
             + '</div>')
         memo = [{"n": m["n"], "preview": m["preview"], "notes": m["notes"]} for m in mapping[s["id"]]]
-        cues = [b.get("cue") or ("▪ " + (b.get("text") or "")[:40]) for b in s["beats"]] + ["PUNCH"]
-        data.append({"id": s["id"], "kicker": KICK[s["section"]], "title": s["title"],
-                     "steps": [{"kind": st.get("kind", "fade"), "to": st.get("to"),
-                                "prefix": st.get("prefix", "")} for st in steps],
+        cues = [b.get("cue") or ("▪ " + (b.get("text") or "")[:40]) for b in s["beats"]]
+        if has_punch:
+            cues.append("PUNCH")
+        data.append({"id": s["id"], "kicker": kicker(s["section"]), "title": s["title"],
+                     "steps": anims,
+                     "has_punch": has_punch,
                      "cues": cues, "memo": memo,
                      "slides": [m["n"] for m in mapping[s["id"]]]})
+
+    overs = collect_overlays(os.path.join(ROOT, "assets/overlays"))
+    page = PAGE.replace("__SCENES__", "\n".join(html_scenes))
+    page = page.replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    page = page.replace("__OVERS__", json.dumps(overs, ensure_ascii=False))
+    page = page.replace("__OVERS_BTN__", "\n".join(
+        '      <button id="over-%d">%s</button>' % (k, esc(o["label"])) for k, o in enumerate(overs)))
+    open(out_path, "w", encoding="utf-8").write(page)
+    nonotes = [(s["id"], [m["n"] for m in mapping[s["id"]] if not m["notes"]]) for s in scenes]
+    print("scènes: %d | overlays: %d -> %s" % (len(scenes), len(overs), out_path))
+    for sid, sl in nonotes:
+        if sl:
+            print("  %s : slides sans notes %s" % (sid, sl))
 
     overs = collect_overlays(os.path.join(ROOT, "assets/overlays"))
     page = PAGE.replace("__SCENES__", "\n".join(html_scenes))
