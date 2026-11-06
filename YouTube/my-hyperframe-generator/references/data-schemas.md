@@ -30,7 +30,7 @@ Objet `{"scenes": [...]}`. Champs lus par `build_studio_anim.py` : `id`, `sectio
 
 ## `data/steps.json`
 
-Une entrée par étape : `id`, `scene`, `scene_title`, `slide`, `frag`, `cue`, `appear` (temps relatif à la scène), `t` et `end` (temps absolus), `type`, `fond`, `figures`, `duration`, `punch`, `camera` (`off`, `pip`, `full`), `kind`.
+Une entrée par étape : `id`, `scene`, `scene_title`, `slide`, `frag`, `cue`, `appear` (temps relatif à la scène), `t` et `end` (temps absolus), `type`, `fond`, `figures`, `duration`, `punch`, `camera` (`off`, `pip`, `full`, ou l'annotation `cast` ; jamais un état d'affichage : voir `data/camera.json`), `kind`.
 
 Sans transcript, les temps viennent des durées estimées du storyboard. Avec `--transcript`, chaque `cue` est recalé sur les mots de la voix.
 
@@ -45,3 +45,45 @@ Même forme que `figures.json`, clé = `Rxx`. Champs : `type` (`tweet`, `page`, 
 ```json
 {"refs": {"R01": {"type": "tweet", "source": "https://x.com/…", "file": "assets/references/R01-nom.png", "status": "ok"}}}
 ```
+
+## Mode webcam : fichiers de la chaîne de nettoyage et de Cast
+
+### `assets/chapters.json` (écrit par `scripts/concat-mkv.sh`)
+
+Un objet par tronçon d'origine, bornes **cumulées dans la vidéo concaténée originale** (`cam-original.mkv`, **avant nettoyage**). Ne pas les utiliser comme référence après nettoyage ni pour les intervalles Cast.
+
+```json
+{"concat": "assets/cam-original.mkv", "timebase": "cam-original (avant nettoyage)",
+ "troncons": [{"file": "chapitre-1.mkv", "start": 0.0, "end": 125.4, "duration": 125.4},
+              {"file": "chapitre-2.mkv", "start": 125.4, "end": 248.9, "duration": 123.5}]}
+```
+
+### `assets/clean-map-vN.json` (écrit par `scripts/clean-posthoc.py`)
+
+Carte des coupes d'**une** passe de nettoyage ; `N` est celui de `voix-posthoc-vN.wav` de la même passe. Champs : `version`, `src`, `clean` (le master, `assets/cam-clean.mkv`), `wav`, `noise`, `min_d`, `keep`, `keeps` (segments conservés, secondes de `cam-original`), `cuts` (silences coupés).
+
+### `assets/cast-segments.json` (écrit par `scripts/detect-cast.py`)
+
+Intervalles Cast, exprimés dans le référentiel de `assets/cam-clean.mkv`. Version 1, intervalles semi-ouverts `[start, end)`, temps en secondes depuis le début de la vidéo nettoyée, `end_frame` exclusif. Liste vide si aucun filet (cas normal).
+
+```json
+{"version": 1, "source": "assets/cam-clean.mkv", "source_size": 123456789, "source_mtime": 1767225600.123,
+ "duration": 245.6, "width": 1920, "height": 1080, "fps": 30.0, "frames": 7368,
+ "segments": [{"start": 42.35, "end": 78.9, "start_frame": 1271, "end_frame": 2367}],
+ "detector": {"zone_px": 20, "band_min_px": 6, "band_max_px": 16, "max_gap_s": 0.25, "min_segment_s": 0.5}}
+```
+
+| Champ | Sens |
+|---|---|
+| `version` | schéma ; `build.py` refuse une autre valeur que 1 |
+| `source`, `source_size`, `source_mtime` | média analysé ; `build.py` avertit si la taille ou la date de `cam-clean.mkv` ne correspondent plus (nettoyage refait sans nouvelle détection) |
+| `duration`, `width`, `height`, `fps`, `frames` | métadonnées du média ; `width`/`height` servent au calcul du crop, `fps` au calage des bornes sur la grille d'images |
+| `segments[].start`, `end` | secondes, arrondies à la milliseconde |
+| `segments[].start_frame`, `end_frame` | indices d'image (`end_frame` exclusif) ; **ce sont eux que `build.py` utilise** pour caler les bascules |
+| `detector` | seuils utilisés (traçabilité) |
+
+L'écriture est atomique (fichier temporaire puis remplacement). Le détecteur ne modifie jamais le média.
+
+### `data/camera.json` (écrit par `scripts/build.py`, seulement si `cast-segments.json` a des intervalles)
+
+Timeline caméra effective en temps absolu (celui de `cam-clean.mkv`), pour contrôle : `version`, `cast_segments` (nom du fichier lu), `crop_top_px`, `crop` (`scale`, `yPercent` appliqués à `.cam-content`), `timeline` : tuiles contiguës `{start, end, state, base}` où `state` ∈ `off`/`pip`/`full`/`cast` est ce qui s'affiche et `base` l'état de base en vigueur (celui qui revient à la fin d'un Cast). Les bornes Cast y sont décalées de 1/4 d'image avant l'image concernée (`CAST_FRAME_LEAD`).

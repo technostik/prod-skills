@@ -15,10 +15,19 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
 - **Nettoyage autorisé** (choix verrouillé) : concat → nettoyage
   (silences, loudnorm) → **re-transcription obligatoire** de l'audio nettoyé.
   Ne jamais réutiliser les timings d'avant nettoyage. Chaque nettoyage écrit
-  un **nouveau nom de fichier** (`voix-posthoc-v1.wav`, `-v2`, …) — jamais
-  d'écrasement en place (cache rendu).
+  un **nouveau nom de fichier** (`voix-posthoc-v1.wav`, `-v2`, …, et la carte
+  `clean-map-vN.json` du même N) — jamais d'écrasement en place (cache rendu).
+  `clean-posthoc.py` prend lui-même le prochain numéro libre ; `build.py`
+  retient le plus grand N (comparaison numérique : v10 > v9). Le master vidéo
+  `assets/cam-clean.mkv` garde un nom stable et est réécrit à chaque passe.
+- **Le nettoyage invalide aussi la détection Cast** : `assets/cast-segments.json`
+  est exprimé dans le référentiel de `cam-clean.mkv`. Après chaque nettoyage,
+  relancer `scripts/detect-cast.py` (références : references/webcam.md § Cast).
 - **Caméra = décision automatique de la skill** (agent, pendant la scénarisation —
-  jamais l'utilisateur) : le scénario déclare par étape `camera: off | pip | full`.
+  jamais l'utilisateur) : le scénario déclare par étape `camera: off | pip | full`
+  (états de base), plus l'annotation `camera: cast` pour une séquence de
+  screencast OBS (annotation seulement : les bornes de Cast viennent de
+  `cast-segments.json`, voir references/webcam.md § Cast).
   Géométrie, flou et moment d'usage : references/webcam.md.
   Surcharge utilisateur optionnelle (`camera!:`), jamais exigée.
 - **Zéro studio d'enregistrement** en mode webcam : pas de `studio-slides.html`,
@@ -30,8 +39,10 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
   `ffprobe` codec/résolution/fps/audio de chacun. Si hétérogènes → normaliser
   au concat (re-encode 1080p, 48 kHz stéréo), sinon concat lossless.
 - Script : `scripts/concat-mkv.sh` (ffmpeg concat demuxer) → `assets/cam-original.mkv`
-  (vidéo caméra conservée pour `pip`/`full`) + `assets/chapters.json`
-  (bornes de chaque tronçon d'origine, pour la scénarisation).
+  (vidéo caméra conservée pour `pip`/`full`/`cast`) + `assets/chapters.json`
+  (`start`, `end` cumulés et `duration` de chaque tronçon d'origine, pour la
+  scénarisation ; ces bornes décrivent la vidéo concaténée **avant nettoyage**
+  et ne servent jamais de référence après nettoyage ni pour Cast).
 - Extraire l'audio brut : `ffmpeg -i assets/cam-original.mkv -ar 48000 -ac 2 assets/voix-brut.wav`
   (nouveau nom à chaque passe, jamais d'écrasement).
 - Fonds photo : si l'utilisateur fournit ses images, les réutiliser
@@ -79,14 +90,15 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
   casse à la re-transcription. Chaque étape porte `t`/`end` absolus.
 - Champs `data/steps.json` : comme conventions §2 (`id, scene, slide, frag,
   cue, appear, type, fond, figures, duration, punch`) **plus**
-  `camera: off|pip|full` + `cam_src` (toujours `assets/cam-original.mkv`,
+  `camera: off|pip|full|cast` + `cam_src` (le master : `assets/cam-clean.mkv`,
   `media_start` = temps caméra = temps audio si A/V synchrones, sinon décalage
   noté). Le choix du mode et le rythme sont dans references/webcam.md.
 - `data/figures.json` : inchangé (registre unique, `ok`/`verify`, sources).
   `data/design.json` : inchangé (blocs §3 + gabarits §9 du langage).
 - Contrôle : `python3 scripts/check-steps.py` vert (étapes ↔ labels), comme §2c.
   Le champ `camera` n'est pas contrôlé par ce script : le build doit l'émettre
-  en CUES (voir §4).
+  en CUES (voir §4). Le contrôle Cast (annotation sans intervalle détecté) est
+  un avertissement de `build.py`.
 
 ## 4. Build index.html (natif HyperFrames — règles éprouvées)
 
@@ -116,7 +128,12 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
     Le cadre est un `div.cam-frame`, pas la balise vidéo. `tl.set` sur ce div.
   - Bandes noires cuites dans la source (pillarbox) : rognées côté CSS
     (`object-view-box:inset(0 8% 0 8%)`, cadre round intact, crop assumé),
-    pas de re-encode.
+    pas de re-encode. Ne pas généraliser : le filet vert de Cast, lui, est retiré
+    par un wrapper `.cam-content` transformé (jamais `object-view-box`) ;
+    voir references/webcam.md § Cast.
+  - `cast` : `build.py` fusionne les états de base et `cast-segments.json` en une
+    timeline effective ; pendant Cast le cadre est en vrai plein écran, le crop est
+    actif, les changements de base du storyboard sont retenus mais invisibles.
   - `data-media-start` = `data-start` (même timeline coupée ensemble).
     Miroir déjà baked dans le mkv — ne pas re-miroir. SFX 0.10–0.16,
   1 max/étape, `M` + `?mute=1`.
@@ -127,9 +144,10 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
 
 ## 5. Livrables mode webcam
 
-- `assets/cam-original.mkv`, `assets/voix-posthoc-vN.wav`,
+- `assets/cam-original.mkv`, `assets/cam-clean.mkv`, `assets/voix-posthoc-vN.wav`,
+  `assets/clean-map-vN.json`, `assets/cast-segments.json` (si screencasts OBS),
   `transcript.json`, `assets/chapters.json`,
-  `data/steps.json` (+`camera`) / `figures.json` / `design.json`,
+  `data/steps.json` (+`camera`) / `figures.json` / `design.json` / `camera.json` (si Cast),
   `index.html` + `compositions/`, `scripts/concat-mkv.sh` + `build.py` adapté,
   `README.md` + `BUILD-REPORT.md` (chaîne nettoyage, mapping étape ↔ t ↔ camera).
 - Interdit : timings pré-nettoyage, chiffres sans source, 2 accents concurrents,

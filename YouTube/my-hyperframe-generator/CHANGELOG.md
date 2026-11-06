@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.0
+
+- **Mode Cast (webcam).** Quatrième valeur de `camera` : `cast`, une séquence de screencast OBS affichée en vrai plein écran. OBS pose un filet vert `#00FF00` de 10 px en haut de l'image pendant les screencasts ; **`scripts/detect-cast.py`** le repère dans `cam-clean.mkv` (lecture FFmpeg de la seule bande supérieure, tolérance de couleur, de largeur, d'épaisseur et de durée) et écrit `assets/cast-segments.json` (schéma versionné, intervalles semi-ouverts, métadonnées du média). Il ne découpe ni ne réencode rien. À relancer après chaque nettoyage.
+- **Crop au rendu HyperFrames, sans réencodage** : DOM `cam-frame > cam-content > video`. Le wrapper `.cam-content` porte un `scale` + `yPercent` (12 px rognés par défaut, `CAST_CROP_TOP_PX`) ; le cadre `.cam-frame` découpe la vidéo native en preview et l'image injectée par le moteur au rendu. Cadre en 1920 × 1080 sans bordure, coins ni ombre pendant Cast.
+- `build.py` fusionne états de base et intervalles Cast en une timeline effective, déterministe, convertie en temps locaux par scène (`--cast-segments`, `--cast-crop-top-px`, `data/camera.json`). `camera: cast` n'est qu'une annotation : elle ne change jamais l'état de base. Sans `cast-segments.json`, la sortie est identique à l'octet près à celle de la 1.13.0.
+- Corrections : `clean-posthoc.py` écrit un `voix-posthoc-vN.wav` et un `clean-map-vN.json` par passe (prochain N libre, jamais d'écrasement) ; `build.py` retient le plus grand N numériquement ; `concat-mkv.sh` écrit `start`/`end` cumulés dans `chapters.json` ; `prepare-webcam-context.sh` copie `data-schemas.md` et `webcam.md` (et, avec `--project`, `cast-segments.json` et `transcript.json`) ; `references/webcam.md` décrit le vrai mécanisme du moteur (balise native masquée, image sœur injectée) au lieu d'un canvas.
+- HyperFrames : `hyperframes@0.9.15` partout (démo, `SKILL.md`). Démo : scène `i09` (webcam avec Cast).
+
 ## 1.13.0
 
 - **`scripts/render_primitive.py`**, module commun de rendu des primitives, importé par `build.py` et `build_studio_anim.py`. Une primitive n'est plus écrite deux fois : le studio affiche le même balisage que la composition finale, et charge `style-joriel.css` + `style-joriel-ext.css`.

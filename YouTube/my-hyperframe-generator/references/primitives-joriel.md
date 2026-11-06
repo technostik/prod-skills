@@ -26,7 +26,7 @@ Le style est dans `examples/demo/assets/style-joriel.css`, les animations dans l
 | `punch` | mot à mot (0,2 s), puis avancée lente ×1,035 sur l'étape | 0,1 | 0,45 |
 | `ref-card` | la carte, ses lignes (0,12 s), l'extrait surligné par balayage, zoom ×1,03 | 0 ; 0,2 ; 1,0 | 0,6 ; 0,45 ; 0,7 |
 | image, `ref-shot` | zoom lent (×1,07 ; ×1,04) pendant toute l'étape | 0 | l'étape |
-| webcam | tween du cadre et flou (`references/webcam.md`) | 0 | 0,55 |
+| webcam | tween du cadre et flou (`references/webcam.md`) ; Cast : cadre 0,35 s, crop instantané | 0 | 0,55 (Cast 0,35) |
 
 Les tweens d'un même élément portent sur des propriétés différentes ; quand un `fromTo` en suit un autre sur le même élément (zoom de la `ref-card`), il reçoit `immediateRender: false` (voir `hyperframes-check.md`).
 
@@ -219,7 +219,7 @@ Zoom lent : `tl.fromTo("#ref-xxx", { scale: 1 }, { scale: 1.04, duration: dur, e
 
 ## Webcam
 
-Les trois modes et `applyCam` sont dans `references/webcam.md`. Ne pas recopier un bloc plus ancien (coin haut, `className`, `visibility`).
+Les quatre valeurs de `camera` (`off`, `pip`, `full`, `cast`), `applyCam` et la timeline Cast sont dans `references/webcam.md`. Ne pas recopier un bloc plus ancien (coin haut, `className`, `visibility`). Pas de transform sur la balise `<video>` : le cadre `.cam-frame` est positionné, le wrapper `.cam-content` porte le crop Cast. Ce n'est pas une primitive visuelle : `render_primitive.py` n'émet pas la caméra (seul le CSS `.cam-frame` / `.cam-content` est dans `CSS_EXT`).
 
 ## Règle d'or
 

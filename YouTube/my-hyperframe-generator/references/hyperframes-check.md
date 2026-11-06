@@ -1,6 +1,6 @@
 # `hyperframes check` : avertissements connus et corrections
 
-`npx hyperframes@0.8.123 lint` est rapide et ne demande pas de navigateur. `check` ajoute le runtime, la mise en page et le contraste (Chrome requis). La démo (`examples/demo`) doit sortir de `lint` sans erreur ni avertissement.
+`npx hyperframes@0.9.15 lint` est rapide et ne demande pas de navigateur. `check` ajoute le runtime, la mise en page et le contraste (Chrome requis). La démo (`examples/demo`) doit sortir de `lint` sans **erreur**. Avec `hyperframes@0.9.15`, `lint` signale en plus un avertissement `subcomposition_linked_style_names_root_id` par composition (une règle `#root` dans `assets/style-joriel.css`, sans effet dans une sous-composition) : connu, présent avant l'ajout de Cast, à traiter séparément.
 
 | Code | Cause | Correction |
 |---|---|---|

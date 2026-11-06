@@ -14,10 +14,10 @@ Fichiers fournis **tels quels** (pas de résumé) :
 4. **references/primitives-joriel.md** — Patterns GSAP par primitive
 5. **references/storyboard-format.md** — Format de sortie attendu (CE FICHIER)
 6. **references/data-schemas.md** — Schémas `figures.json`, `refs.json`, `steps.json`, `design.json`
-7. **examples/demo/** — Exemples concrets de chaque primitive (`compositions/i00.html`…`i08.html`)
+7. **examples/demo/** — Exemples concrets de chaque primitive (`compositions/i00.html`…`i09.html`)
 
 Selon le mode :
-- **Webcam** : `references/posthoc-video-conventions.md`
+- **Webcam** : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` (intervalles de screencast OBS, dans le référentiel de `cam-clean.mkv`) et `transcript.json` (mots et temps de l'audio nettoyé)
 - **Conventions détaillées** : `references/scenario-studio-conventions.md`
 
 ---
@@ -51,6 +51,8 @@ Selon le mode :
 > 9. **Durées estimées**. Répartition cohérente : titre 5-10s, chiffre 8-15s, versus 15-25s, punch 5-10s, liste 20-40s. Total ≈ durée cible.
 >
 > 10. **Sortie = SEULEMENT le markdown STORYBOARD.md**. Pas de commentaire, pas d'explication.
+>
+> 11. **Webcam : `camera` ∈ `off` · `pip` · `full` · `cast`**. `off`, `pip`, `full` sont les états de base de chaque étape. `cast` est une **annotation** : si `cast-segments.json` est fourni, repérer (avec `transcript.json`) les étapes dont la durée recoupe un intervalle et les annoter `camera: cast` ; ne **jamais** inventer de bornes, `cast-segments.json` est la seule autorité sur les temps. Un intervalle détecté s'affichera de toute façon en Cast. Une étape annotée `cast` ne change pas l'état de base : lui donner malgré tout l'état de base qui doit revenir après le Cast, si l'étape suivante n'en pose pas. Sans `cast-segments.json` (ou avec une liste vide), ne pas annoter `cast`.
 
 ---
 
@@ -148,3 +150,4 @@ Selon le mode :
 - [ ] `pair` / `recall` cohérents avec l'ordre des étapes
 - [ ] Les listes JSON tiennent sur **une seule ligne** (`blocks`, `left`, `right`, `items`, `rows`, `up`, `down`)
 - [ ] Format markdown exact (tableaux, tirets, indentation)
+- [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape

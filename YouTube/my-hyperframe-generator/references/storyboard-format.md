@@ -127,7 +127,7 @@ Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
 |---|---|
 | `kind` | primitive visuelle (voir catalogue) |
 | `notes` / `note` | indication pour le locuteur, jamais affichée |
-| `camera` | `off` (défaut), `pip`, `full` (mode webcam) |
+| `camera` | `off` (défaut), `pip`, `full`, `cast` (mode webcam) |
 | `durée` / `duration` | durée de l'étape en secondes |
 | `t` | temps absolu explicite (storyboard minuté) |
 | `figure` / `figures` | IDs `Fxx` du registre §1 |
@@ -138,6 +138,30 @@ Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
 - Une étape peut aussi être écrite au **format minuté** (mode webcam) :
   ``- `I1.1#0` t=39.18 (3.6s) [off/count] 24 lycées``.
   `build.py` utilise alors `t`, la durée et l'état caméra ; sans transcript, ces temps sont conservés.
+  Une étape qui n'est qu'un état caméra, sans primitive, s'écrit `[cast]` (forme courte, `kind:` en sous-bullet).
+
+#### Valeurs de `camera`
+
+| Valeur | Sens |
+|---|---|
+| `off` | aucune webcam |
+| `pip` | webcam incrustée |
+| `full` | webcam pseudo-plein écran (50 %) |
+| `cast` | intention de présenter une séquence OBS en plein écran |
+
+```markdown
+- `I2.1#0` t=42.35 (8.2s) [cast] Démonstration
+  - kind: kw
+  - camera: cast
+```
+
+`cast` est une **annotation éditoriale**. Les bornes de Cast viennent **uniquement** de `assets/cast-segments.json` (produit par `scripts/detect-cast.py` sur `cam-clean.mkv`, après nettoyage). Conséquences :
+
+- un intervalle détecté s'affiche en Cast même si l'étape correspondante n'est pas annotée ;
+- une étape annotée `cast` sans intervalle détecté pendant sa durée donne un avertissement de `build.py` (et l'annotation est ignorée) ;
+- `camera: cast` n'écrase jamais l'état de base (`off`, `pip`, `full`) : à la fin d'un Cast, c'est l'état de base de cet instant qui revient. L'état caméra des étapes qui tombent pendant un Cast reste donc à renseigner normalement.
+
+L'agent qui rédige le storyboard lit `cast-segments.json` et `transcript.json` pour repérer quelles étapes tombent dans un intervalle ; il annote ces étapes `camera: cast` et leur donne un état de base (`off`, `pip` ou `full`) pour l'après-Cast.
 
 ### Registres
 
@@ -196,7 +220,8 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 |---|---|
 | `data/figures.json` | registre §1 (lu aussi par `build_studio_anim.py`) |
 | `data/refs.json` | registre §1b |
-| `data/steps.json` | une entrée par étape, temps absolus, caméra |
+| `data/steps.json` | une entrée par étape, temps absolus, caméra (`off`, `pip`, `full` ou l'annotation `cast`) |
+| `data/camera.json` | timeline caméra effective (base ∪ Cast) en temps absolu ; **écrit seulement si `cast-segments.json` contient des intervalles** |
 | `data/design.json` | le `kind` et ses paramètres, par étape |
 | `data/scenes.json` | scènes + beats (schéma attendu par `build_studio_anim.py`) |
 | `index.html` | composition racine : scènes, audio, durée totale |

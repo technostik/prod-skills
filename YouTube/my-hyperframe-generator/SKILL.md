@@ -4,7 +4,7 @@ description: Build a Joriel-styled HyperFrames video in one of three modes — a
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.13.0
+version: 1.14.0
 ---
 
 # Hyperframe-joriel
@@ -60,13 +60,13 @@ Variables d'environnement (valeurs par défaut entre parenthèses). Aucun chemin
 | `HF_VIDEOS_DIR` | sortie des prises studio | `~/Vidéos` |
 | `HF_OVERLAYS_DIR` | overlays lus par le studio | `$HF_VIDEOS_DIR/OBS/assets` |
 
-Dépendances : Node ≥ 22, `hyperframes@0.8.123`, FFmpeg, Python 3, Chrome ou Edge (prise studio), `yt-dlp` (inserts seulement). Skills compagnes : `thesvg`, `media-use`, `hyperframes`, `hyperframe-scenario` (optionnelle), `report` (diagnostic). CLI fast-market : `image`, `sound`.
+Dépendances : Node ≥ 22, `hyperframes@0.9.15`, FFmpeg, Python 3, Chrome ou Edge (prise studio), `yt-dlp` (inserts seulement). Skills compagnes : `thesvg`, `media-use`, `hyperframes`, `hyperframe-scenario` (optionnelle), `report` (diagnostic). CLI fast-market : `image`, `sound`.
 
 ## Projet
 
 ```bash
 cd "$HF_WORKDIR"
-npx --yes hyperframes@0.8.123 init <slug>
+npx --yes hyperframes@0.9.15 init <slug>
 cd <slug>
 ```
 
@@ -149,7 +149,7 @@ Le même fichier peut porter des temps absolus, ligne par ligne. `build.py` les 
 - `I1.1#1` t=42.76 (2.5s) [pip/enumerate] manque de profs
 ```
 
-`off`, `pip`, `full` : section Webcam. Après une coupe, on décale les temps et on ne réécrit pas les lignes.
+`off`, `pip`, `full` (états de base) et `cast` (annotation d'une séquence de screencast OBS) : section Webcam. Après une coupe, on décale les temps et on ne réécrit pas les lignes.
 
 ### Slides (mode slides seulement)
 
@@ -165,7 +165,7 @@ Format du deck (un `id:` par slide, un `fragment` = une étape `#k`, `note:` pou
 
 ### Webcam
 
-Trois états : `off`, `pip`, `full`. Rythme : un état dure au moins 2,5 s ; revoir le locuteur (`pip` ou `full`) au moins toutes les ~20 s. Détails (CSS, `applyCam`, règles de cadre) : `references/webcam.md`.
+Trois états de base : `off`, `pip`, `full`, plus `cast` : une séquence de screencast OBS (capture d'écran + webcam incrustée, filet vert `#00FF00` de 10 px en haut de l'image) affichée en vrai plein écran, filet retiré au rendu. Les intervalles Cast sont **détectés** (`scripts/detect-cast.py` → `assets/cast-segments.json`, après nettoyage) ; `camera: cast` dans le storyboard n'est qu'une annotation et ne change jamais l'état de base. Rythme : un état dure au moins 2,5 s ; revoir le locuteur (`pip` ou `full`) au moins toutes les ~20 s. Détails (CSS, `applyCam`, crop Cast, priorités, règles de cadre) : `references/webcam.md`.
 
 ### Règles absolues (spectateur final)
 
@@ -214,6 +214,7 @@ python3 scripts/build.py \
   [--transcript transcript.json] \
   [--audio assets/voix.wav] \
   [--camera assets/cam-clean.mkv] \
+  [--cast-segments assets/cast-segments.json] \
   [--slug mon-film]
 ```
 
@@ -223,17 +224,18 @@ python3 scripts/build.py \
 | `data/refs.json` | registre §1b |
 | `data/steps.json` | une entrée par étape, temps absolus, caméra, `kind` |
 | `data/design.json` | `kind` + paramètres, par étape |
+| `data/camera.json` | timeline caméra effective (base ∪ Cast), **seulement si** `cast-segments.json` a des intervalles |
 | `data/scenes.json` | scènes + beats, schéma attendu par `build_studio_anim.py` |
 | `index.html` | composition racine : scènes, audio, registre de timeline |
 | `compositions/iNN.html` | une sous-composition par scène |
 | `assets/style-joriel.css` | écrit **seulement s'il est absent** (copie de la démo) |
 | `assets/style-joriel-ext.css` | styles des primitives absentes de la démo (bars, seuil, compare3, caméra) |
 
-Le temps vient de `transcript.json` s'il est fourni : chaque `cue` est recalé sur les mots de la voix. Sinon, les durées estimées du storyboard font foi. L'audio (`assets/voix.wav`) et la caméra (`assets/cam-clean.mkv`) sont détectés automatiquement s'ils existent.
+Le temps vient de `transcript.json` s'il est fourni : chaque `cue` est recalé sur les mots de la voix. Sinon, les durées estimées du storyboard font foi. L'audio (`assets/voix.wav`, sinon le plus grand `assets/voix-posthoc-vN.wav`, N comparé numériquement), la caméra (`assets/cam-clean.mkv`) et `assets/cast-segments.json` sont détectés automatiquement s'ils existent. Sans `cast-segments.json`, le rendu webcam est exactement celui d'avant (trois états).
 
 **Nomenclature :** toujours deux chiffres avec zéro initial pour le numéro de scène — `i00.html`, `i01.html`, …, `i09.html`, `i10.html`. Jamais `i3.html`. Les identifiants (`data-composition-id`, `window.__timelines`, cadre caméra) suivent le même nommage (`i03`, etc.).
 
-Le HTML produit reprend le balisage et les classes de `examples/demo/` : le catalogue des primitives (9 scènes, `i00` à `i08`), une primitive par étape. Les ids du storyboard sont les labels GSAP. Contrôle : `python3 scripts/check-steps.py`, puis `npm run check`.
+Le HTML produit reprend le balisage et les classes de `examples/demo/` : le catalogue des primitives (10 scènes, `i00` à `i09` ; `i09` : webcam avec Cast), une primitive par étape. Les ids du storyboard sont les labels GSAP. Contrôle : `python3 scripts/check-steps.py`, puis `npm run check`.
 
 L'exemple se vérifie seul :
 
@@ -286,7 +288,7 @@ Commandes à copier, deux previews (deck, composition), serveur d'enregistrement
 
 La prise est déjà faite : le locuteur a lu le script (transcript chapitré), sans composition. Pas de prompteur. Les vidéos par chapitre sont concaténées, puis transcrites pour obtenir `transcript.json`. Le storyboard et la composition partent du transcript mesuré. Détail caméra, nettoyage et cues : `references/posthoc-video-conventions.md`.
 
-Même init que Projet, puis les commandes de `references/webcam.md` (§ Commandes) : concaténer, nettoyer, transcrire.
+Même init que Projet, puis les commandes de `references/webcam.md` (§ Commandes) : concaténer, nettoyer, **détecter les Cast** (si la prise contient des screencasts OBS), transcrire.
 
 Puis `transcript.json` (segments + mots) et le storyboard sur cet audio. Pas de slides.
 
@@ -295,7 +297,7 @@ python3 scripts/build.py --transcript transcript.json \
   --camera assets/cam-clean.mkv --audio assets/voix.wav
 ```
 
-La caméra est intégrée à chaque composition (`cam-frame` + `<video data-media-start>`), avec les états `off` / `pip` / `full`. `npm run check` vert, preview, snapshots, mp4 sur feu vert uniquement.
+La caméra est intégrée à chaque composition (`cam-frame` + `<video data-media-start>`, avec un wrapper `cam-content` quand il y a des Cast), avec les états `off` / `pip` / `full` et, pendant les intervalles détectés, `cast`. Le nettoyage décale les timecodes : relancer `detect-cast.py` après chaque nettoyage. `npm run check` vert, preview, snapshots, mp4 sur feu vert uniquement.
 
 L'audio nettoyé fait foi : tout timing se remesure après le nettoyage. Pas de cut sec.
 

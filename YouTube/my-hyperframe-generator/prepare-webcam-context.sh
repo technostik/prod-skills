@@ -1,14 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage : ./prepare-webcam-context.sh /chemin/vers/destination
+# Usage : ./prepare-webcam-context.sh /chemin/vers/destination [--project /chemin/vers/projet]
+#
+# --project (facultatif) : ajoute à storyboard/ les données du projet utiles à l'annotation des
+# séquences Cast : assets/cast-segments.json (s'il existe) et transcript.json.
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage : $0 <répertoire-de-destination>" >&2
+PROJECT=""
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --project)
+            [[ $# -ge 2 ]] || { echo "ERREUR : --project demande un répertoire" >&2; exit 1; }
+            PROJECT="$(realpath -m "$2")"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>]"
+            exit 0
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ ${#POSITIONAL[@]} -ne 1 ]]; then
+    echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>]" >&2
     exit 1
 fi
 
-DEST="$(realpath -m "$1")"
+DEST="$(realpath -m "${POSITIONAL[0]}")"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 COMMUN="$DEST/commun"
@@ -43,8 +66,27 @@ copy_file "$ROOT/references/visual-language-joriel.md" "$COMMUN"
 
 copy_file "$ROOT/references/storyboard-format.md" "$STORYBOARD"
 copy_file "$ROOT/references/scenario-to-storyboard-prompt.md" "$STORYBOARD"
+# Demandés par le prompt de scénarisation (schémas des fichiers de données ; caméra, dont Cast)
+copy_file "$ROOT/references/data-schemas.md" "$STORYBOARD"
+copy_file "$ROOT/references/webcam.md" "$STORYBOARD"
 copy_file "$ROOT/references/posthoc-video-conventions.md" "$STORYBOARD"
 copy_file "$ROOT/references/scenario-studio-conventions.md" "$STORYBOARD"
+
+# Données du projet pour les séquences Cast (facultatif)
+if [[ -n "$PROJECT" ]]; then
+    if [[ -f "$PROJECT/assets/cast-segments.json" ]]; then
+        cp "$PROJECT/assets/cast-segments.json" "$STORYBOARD/"
+    else
+        echo "AVERTISSEMENT : $PROJECT/assets/cast-segments.json absent (pas de Cast, ou lancer scripts/detect-cast.py)" >&2
+    fi
+    if [[ -f "$PROJECT/transcript.json" ]]; then
+        cp "$PROJECT/transcript.json" "$STORYBOARD/"
+    elif [[ -f "$PROJECT/assets/transcript.json" ]]; then
+        cp "$PROJECT/assets/transcript.json" "$STORYBOARD/"
+    else
+        echo "AVERTISSEMENT : transcript.json introuvable dans $PROJECT" >&2
+    fi
+fi
 
 # --------------------------------------------------
 # COMPOSITION
