@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import bisect
 import json
 import os
 import re
@@ -42,6 +43,20 @@ NUM_RE = re.compile(r"([+\-−]?)\s*(\d[\d\s\u00a0\u202f]*(?:[.,]\d+)?)\s*(.*)$"
 MD_LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 
 KICK = {"bilan": "Le bilan", "analyse": "L'analyse", "conclusion": "Conclusion"}
+
+# Caméra. `cast` = séquence OBS en plein écran (voir references/webcam.md). Les trois premiers
+# sont des états de base ; `cast` n'est jamais un état de base : il vient de cast-segments.json.
+CAM_MODES = ("off", "pip", "full")
+CAMERA_VALUES = CAM_MODES + ("cast",)
+# Lignes du haut de l'image (px source) repoussées hors du cadre pendant Cast : le filet OBS
+# mesure 10 px, +2 px de marge contre les artefacts de compression. À ajuster ici.
+CAST_CROP_TOP_PX = 12
+VIEWPORT_W, VIEWPORT_H = 1920, 1080
+CAM_TWEEN_S = 0.55          # transition de cadre entre deux états de base (inchangé)
+CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de Cast
+# Le crop bascule 1/4 d'image AVANT la borne : quelle que soit la fréquence de rendu, l'image
+# échantillonnée à l'instant exact `n / fps` est du bon côté de la borne (jamais une image de retard).
+CAST_FRAME_LEAD = 0.25
 
 from render_primitive import (ALIASES, CSS_EXT, ICONS, Primitives,
                               as_blocks, esc, num_parts, to_float)
@@ -74,7 +89,7 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
   const dur = parseFloat(step.getAttribute("data-duration"));
   const sel = "#" + step.id;
   const has = function (q) { return step.querySelector(q) !== null; };
-  if (document.querySelector("#__CAM__")) applyCam(tl, "#__CAM__", step.getAttribute("data-cam") || "off", t, sel);
+__CAMCALL__
   tl.addLabel(step.getAttribute("data-step"), t);
 
   // entrée de l'étape : le bloc glisse et apparaît
@@ -161,9 +176,51 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
   // image plein écran, capture : zoom lent
   var _img = step.querySelector("img.fond, img.ref-shot");
   if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
-});
+});__CASTCAM__
 window.__timelines = window.__timelines || {};
 window.__timelines["__ID__"] = tl;
+"""
+
+
+# Webcam sans Cast : appel historique, inchangé à l'octet près.
+JS_CAMCALL_LEGACY = '  if (document.querySelector("#__CAM__")) applyCam(tl, "#__CAM__", step.getAttribute("data-cam") || "off", t, sel);'
+
+# Webcam avec Cast : la timeline caméra est calculée par build.py (états de base du storyboard
+# fusionnés avec cast-segments.json) et injectée telle quelle. Aucun callback, aucune lecture
+# d'état : chaque tween porte ses valeurs de départ, donc un seek avant ou arrière est déterministe.
+JS_CASTCAM = r"""
+// webcam + Cast : événements calculés par build.py ; t = secondes locales, m = état, p = état précédent
+// (null au premier), s = étape courante, ss = début d'étape, d = durée de transition (0 = instantané).
+var CAMEV = __CAMEV__;
+var CAST_CROP = __CASTCROP__;
+CAM.cast = { left: 0, top: 0, width: 1920, height: 1080, opacity: 1 };
+// habillage du cadre, en px sur 1920x1080 : .3vh, 1.4vh et l'ombre de .cam-frame (style-joriel.css)
+var CAM_DECOR = {
+  normal: { borderWidth: 3.24, borderRadius: 15.12, boxShadow: "0px 17.28px 54px rgba(0,0,0,0.65)" },
+  cast: { borderWidth: 0, borderRadius: 0, boxShadow: "0px 0px 0px rgba(0,0,0,0)" }
+};
+function camGeom(m) { return Object.assign({}, CAM[m] || CAM.off, CAM_DECOR[m === "cast" ? "cast" : "normal"]); }
+function camBlur(m) { return m === "full" ? "blur(8px)" : "blur(0px)"; }
+// .cam-frame est le viewport (overflow: hidden) ; .cam-content porte le crop et contient la vidéo
+// ET l'image que le moteur injecte à côté d'elle au rendu. Jamais de transform sur la balise <video>.
+tl.set("#__CAMCONTENT__", { transformOrigin: "50% 0%", scale: 1, yPercent: 0 }, 0);
+CAMEV.forEach(function (e) {
+  var to = camGeom(e.m);
+  if (e.p === null) tl.set("#__CAM__", to, 0);
+  else if (e.m !== e.p) {
+    if (e.d > 0) tl.fromTo("#__CAM__", camGeom(e.p), Object.assign({ duration: e.d, ease: "power3.inOut", immediateRender: false }, to), e.t);
+    else tl.set("#__CAM__", to, e.t);
+  }
+  // le crop est instantané et collé aux bornes Cast : le filet n'apparaît jamais, la capture ne bouge pas
+  if ((e.m === "cast") !== (e.p === "cast"))
+    tl.set("#__CAMCONTENT__", e.m === "cast" ? CAST_CROP : { scale: 1, yPercent: 0 }, e.t);
+  var bf = camBlur(e.p === null ? "off" : e.p), bt = camBlur(e.m);
+  if (bf !== bt) tl.fromTo("#fond", { filter: bf }, { filter: bt, duration: 0.4, ease: "power2.inOut", immediateRender: false }, e.t);
+  if (e.s) {
+    var sf = e.ss ? "blur(0px)" : bf;
+    if (sf !== bt) tl.fromTo(e.s, { filter: sf }, { filter: bt, duration: 0.4, ease: "power2.inOut", immediateRender: false }, e.t);
+  }
+});
 """
 
 
@@ -435,9 +492,13 @@ def parse_step_head(sid, rest):
     if dm:
         step["duree"] = float(dm.group(1))
     km = re.search(r"\[([A-Za-z]+)/([A-Za-z0-9\-]+)\]", rest)
+    if not km:
+        # forme courte `[cast]` : un état caméra seul, sans primitive
+        km = re.search(r"\[(" + "|".join(CAMERA_VALUES) + r")()\]", rest, re.I)
     if km:
         step["camera"] = km.group(1).lower()
-        step["params"]["kind"] = km.group(2)
+        if km.group(2):
+            step["params"]["kind"] = km.group(2)
     if not step["label"]:
         tail = re.sub(r"^.*?\]\s*", "", rest) if km else rest
         tail = re.sub(r"cue\s*[«\"“][^»\"”]+[»\"”]", "", tail, flags=re.I)
@@ -640,6 +701,207 @@ def resolve_times(scenes, transcript):
 
 
 # --------------------------------------------------------------------------- #
+# Caméra : états de base + intervalles Cast
+# --------------------------------------------------------------------------- #
+#
+# Deux sources, une seule timeline effective :
+#   - états de base `off` / `pip` / `full`, posés par les étapes du storyboard ;
+#   - intervalles Cast, posés par assets/cast-segments.json (seule autorité sur les bornes).
+# À un instant t : Cast si t est dans un intervalle [début, fin), sinon l'état de base en vigueur.
+# `camera: cast` dans le storyboard est une annotation : elle ne change jamais l'état de base, donc
+# la sortie de Cast retrouve l'état de base de CET instant (pas celui d'avant le Cast).
+# Tout est calculé ici, en temps vidéo absolu (référentiel de cam-clean.mkv), puis converti en temps
+# local par scène ; le JS ne reçoit que des événements explicites.
+
+
+def load_cast_segments(root, option, camera_rel):
+    """Lit cast-segments.json. Retourne (segments, méta) ; ([], None) si le fichier est absent.
+
+    `segments` : liste triée de (début, fin) en secondes vidéo, déjà calées sur la grille d'images
+    (voir CAST_FRAME_LEAD). Les avertissements (JSON périmé, média différent) sont affichés ici.
+    """
+    path = Path(option) if option else root / "assets" / "cast-segments.json"
+    if not path.is_absolute():
+        path = root / path
+    if not path.exists():
+        if option:
+            die("cast-segments absent : %s" % path)
+        return [], None
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as e:
+        die("cast-segments illisible (%s) : %s" % (path, e))
+    if doc.get("version") != 1:
+        die("cast-segments : version %r non gérée (attendu 1) dans %s" % (doc.get("version"), path))
+    fps = float(doc.get("fps") or 30.0)
+    segs = []
+    for sg in doc.get("segments", []):
+        a, b = sg.get("start_frame"), sg.get("end_frame")
+        if a is not None and b is not None:
+            t0, t1 = (float(a) - CAST_FRAME_LEAD) / fps, (float(b) - CAST_FRAME_LEAD) / fps
+        else:
+            t0, t1 = float(sg["start"]) - CAST_FRAME_LEAD / fps, float(sg["end"]) - CAST_FRAME_LEAD / fps
+        if t1 > t0:
+            segs.append((max(0.0, t0), t1))
+    segs.sort()
+    merged = []
+    for a, b in segs:
+        if merged and a <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+        else:
+            merged.append((a, b))
+    meta = {"path": path, "width": int(doc.get("width") or VIEWPORT_W),
+            "height": int(doc.get("height") or VIEWPORT_H), "fps": fps, "doc": doc}
+
+    # le JSON doit décrire le média réellement utilisé
+    if camera_rel:
+        cam = root / camera_rel
+        src = doc.get("source")
+        if cam.exists():
+            st = cam.stat()
+            if doc.get("source_size") is not None and doc["source_size"] != st.st_size:
+                print("AVERTISSEMENT : cast-segments.json ne correspond plus à %s (taille différente) : "
+                      "relancer scripts/detect-cast.py après chaque nettoyage" % camera_rel, file=sys.stderr)
+            elif doc.get("source_mtime") is not None and abs(float(doc["source_mtime"]) - st.st_mtime) > 1.0:
+                print("AVERTISSEMENT : %s a été modifié depuis la détection Cast (date différente) : "
+                      "relancer scripts/detect-cast.py" % camera_rel, file=sys.stderr)
+        if src and Path(src).name != Path(camera_rel).name:
+            print("AVERTISSEMENT : cast-segments.json décrit %s mais la caméra utilisée est %s"
+                  % (src, camera_rel), file=sys.stderr)
+    return merged, meta
+
+
+def cast_crop(src_w, src_h, crop_px=CAST_CROP_TOP_PX, vw=VIEWPORT_W, vh=VIEWPORT_H):
+    """Transformation du wrapper intérieur `.cam-content` qui repousse les `crop_px` lignes du haut
+    hors du cadre, sans déformation (échelle uniforme, centrée en largeur).
+
+    On garde la plus grande fenêtre de la source au ratio du viewport, sous les `crop_px` premières
+    lignes. Le contenu est d'abord affiché comme le fait `.cam-frame video` (object-fit: cover) ;
+    on y compose une échelle `scale` d'origine (50 % 0) et une translation verticale exprimée en %
+    de la hauteur du contenu : elle reste juste pendant que le cadre change de taille.
+    Pour 1920×1080 et 12 px : scale = 1080/1068 = 1,01124 ; yPercent = −12/1068 × 100 = −1,1236.
+    """
+    crop_px = max(0.0, float(crop_px))
+    avail = src_h - crop_px
+    if avail <= 0:
+        die("CAST_CROP_TOP_PX (%s) >= hauteur de la source (%s)" % (crop_px, src_h))
+    win_h = min(avail, src_w * vh / float(vw))
+    top = crop_px + (avail - win_h) / 2.0
+    k = vh / win_h                              # px affichés par px source
+    d = max(vw / float(src_w), vh / float(src_h))   # échelle d'affichage object-fit: cover
+    scale = k / d
+    ty = -top * k + src_h * k / 2.0 - vh * scale / 2.0
+    return {"scale": round(scale, 6), "yPercent": round(ty / vh * 100.0, 6)}
+
+
+class CameraPlan:
+    """Timeline caméra effective (base ∪ Cast), en temps vidéo absolu."""
+
+    def __init__(self, scenes, segments):
+        self.segments = list(segments)
+        self.scenes = scenes
+        base = []
+        for sc in scenes:
+            s2 = round(float(sc["_start"]), 2)
+            for st in sc["steps"]:
+                cam = st.get("camera", "off")
+                if cam == "cast":
+                    continue                    # annotation : ne touche jamais l'état de base
+                if cam not in CAM_MODES:
+                    cam = "off"                 # valeur inconnue : `off`, comme le rendu historique
+                base.append((s2 + round(max(0.0, st["_t"] - sc["_start"]), 2), cam))
+        base.sort(key=lambda e: e[0])               # tri stable : à temps égal, la dernière étape gagne
+        self.base_t = [t for t, _ in base]
+        self.base_m = [m for _, m in base]
+
+    def base_at(self, t):
+        i = bisect.bisect_right(self.base_t, t + 1e-9) - 1
+        return self.base_m[i] if i >= 0 else "off"
+
+    def cast_at(self, t):
+        return any(a <= t < b for a, b in self.segments)
+
+    def state_at(self, t):
+        return "cast" if self.cast_at(t) else self.base_at(t)
+
+    # -- événements d'une scène (temps locaux) ---------------------------------------------------
+    def scene_events(self, sc):
+        s2, d2 = round(float(sc["_start"]), 2), round(float(sc["_dur"]), 2)
+        steps = []
+        for st in sc["steps"]:
+            sid = re.sub(r"[^A-Za-z0-9_-]+", "-", st["id"])
+            steps.append((round(max(0.0, st["_t"] - sc["_start"]), 2), "#step-" + sid))
+        cand = {0.0: False}
+        for rel, _ in steps:
+            cand[rel] = True
+        for a, b in self.segments:
+            for x in (a, b):
+                t = round(x - s2, 4)
+                if 1e-4 < t < d2 - 0.02:   # pas de bascule dans la dernière image de la scène
+                    cand.setdefault(t, False)
+        events, prev = [], None
+        for t in sorted(cand):
+            if t >= d2 and t > 0:
+                continue
+            m = self.state_at(s2 + t)
+            starts = cand[t]
+            blur_step = starts and m == "full"
+            if prev is not None and m == prev and not blur_step:
+                continue
+            cur = [sel for rel, sel in steps if rel <= t + 1e-9]
+            events.append({"t": t, "m": m, "p": prev, "s": cur[-1] if cur else "", "ss": 1 if starts else 0})
+            prev = m
+        for i, e in enumerate(events):
+            gap = (events[i + 1]["t"] if i + 1 < len(events) else d2) - e["t"]
+            dur = CAST_TWEEN_S if "cast" in (e["m"], e["p"]) else CAM_TWEEN_S
+            dur = min(dur, gap)
+            e["d"] = round(dur, 3) if dur >= 0.04 else 0
+            if e["m"] == "cast" and e["p"] == "off":
+                e["d"] = 0      # webcam absente : la capture apparaît tout de suite, sans fondu qui en mange le début
+        return events
+
+    # -- timeline globale (data/camera.json) -----------------------------------------------------
+    def global_timeline(self, total):
+        cuts = {0.0}
+        cuts.update(t for t in self.base_t if t < total)
+        for a, b in self.segments:
+            cuts.update(x for x in (a, b) if 0 < x < total)
+        cuts = sorted(cuts)
+        out = []
+        for i, t in enumerate(cuts):
+            end = cuts[i + 1] if i + 1 < len(cuts) else total
+            if end - t < 1e-6:
+                continue
+            m = self.state_at(t)
+            if out and out[-1]["state"] == m and out[-1]["base"] == self.base_at(t):
+                out[-1]["end"] = round(end, 4)
+                continue
+            out.append({"start": round(t, 4), "end": round(end, 4), "state": m, "base": self.base_at(t)})
+        return out
+
+
+def cast_warnings(scenes, segments, have_file):
+    """Annotations `camera: cast` sans intervalle détecté, et inversement (information)."""
+    warns, notes = [], []
+    annotated = []
+    for sc in scenes:
+        for st in sc["steps"]:
+            if st.get("camera") == "cast":
+                t0, t1 = st["_t"], st["_t"] + st["_abs_dur"]
+                annotated.append((t0, t1))
+                if not any(a < t1 and b > t0 for a, b in segments):
+                    why = ("aucun intervalle Cast détecté sur [%.1f ; %.1f) s" % (t0, t1)) if have_file \
+                        else "assets/cast-segments.json absent (lancer scripts/detect-cast.py)"
+                    warns.append("étape %s annotée `camera: cast` : %s ; l'annotation est ignorée" % (st["id"], why))
+    if annotated:
+        for a, b in segments:
+            if not any(a < t1 and b > t0 for t0, t1 in annotated):
+                notes.append("intervalle Cast [%.2f ; %.2f) s sans étape portant `camera: cast` : "
+                             "affiché en Cast quand même" % (a, b))
+    return warns, notes
+
+
+# --------------------------------------------------------------------------- #
 # Rendu des primitives
 # --------------------------------------------------------------------------- #
 
@@ -658,7 +920,8 @@ def scene_bg(scene):
     return "assets/bg/%s.jpg" % fond
 
 
-def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start):
+def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None):
+    """`cast` : None (rendu webcam historique) ou {"plan": CameraPlan, "crop": {...}}."""
     cid = comp_id(idx)
     dur = float(scene.get("_dur") or total_dur)
     start = float(scene.get("_start") or 0)
@@ -700,14 +963,34 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
                         zone_cls, sid, html))
 
     cam_html = ""
-    if camera_src:
+    cast = cast if camera_src else None
+    if camera_src and cast:
+        # Cast : .cam-frame = viewport (overflow: hidden, positionné par GSAP) ; .cam-content = wrapper
+        # intérieur qui porte le crop ; <video> n'est jamais transformé. Le moteur insère l'image de
+        # remplacement comme sœur de <video> : elle reste dans .cam-content.
+        cam_html = ('<div id="cam-frame-%s" class="cam-frame clip" '
+                    'data-track-index="2" data-layout-allow-occlusion="">'
+                    '<div id="cam-content-%s" class="cam-content" data-layout-allow-overflow="">'
+                    '<video id="cam-%s" src="%s" data-start="0" data-duration="%.2f" '
+                    'data-media-start="%.2f" data-track-index="2" muted playsinline></video></div></div>'
+                    % (cid, cid, cid, esc(camera_src), dur, max(0.0, camera_media_start)))
+    elif camera_src:
         cam_html = ('<div id="cam-frame-%s" class="cam-frame clip" '
                     'data-track-index="2" data-layout-allow-occlusion="">'
                     '<video id="cam-%s" src="%s" data-start="0" data-duration="%.2f" '
                     'data-media-start="%.2f" data-track-index="2" muted playsinline></video></div>'
                     % (cid, cid, esc(camera_src), dur, max(0.0, camera_media_start)))
 
-    js = (JS_TEMPLATE.replace("__DUR__", "%.2f" % dur)
+    if cast:
+        camcall, castcam = "", JS_CASTCAM.replace(
+            "__CAMEV__", json.dumps(cast["plan"].scene_events(scene), ensure_ascii=False)).replace(
+            "__CASTCROP__", json.dumps(cast["crop"]))
+    else:
+        camcall, castcam = JS_CAMCALL_LEGACY, ""
+    js = (JS_TEMPLATE.replace("__CAMCALL__", camcall)
+          .replace("__CASTCAM__", castcam)
+          .replace("__DUR__", "%.2f" % dur)
+          .replace("__CAMCONTENT__", "cam-content-" + cid)
           .replace("__CAM__", "cam-frame-" + cid if camera_src else "__none__")
           .replace("__ID__", cid))
 
@@ -870,6 +1153,10 @@ def main():
     ap.add_argument("--transcript", default=None)
     ap.add_argument("--audio", default=None)
     ap.add_argument("--camera", default=None)
+    ap.add_argument("--cast-segments", default=None,
+                    help="intervalles Cast (défaut : assets/cast-segments.json s'il existe)")
+    ap.add_argument("--cast-crop-top-px", type=float, default=CAST_CROP_TOP_PX,
+                    help="lignes du haut repoussées hors cadre pendant Cast (défaut %g)" % CAST_CROP_TOP_PX)
     ap.add_argument("--slug", default=None)
     a = ap.parse_args()
 
@@ -918,6 +1205,28 @@ def main():
     audio_dur = wav_duration(root / audio) if audio else 0.0
     total = max(total, audio_dur)
 
+    # caméra : valeurs inconnues, intervalles Cast
+    for sc in scenes:
+        for st in sc["steps"]:
+            if st.get("camera", "off") not in CAMERA_VALUES:
+                print("AVERTISSEMENT : camera inconnue %r à l'étape %s (traitée comme `off`)"
+                      % (st.get("camera"), st["id"]), file=sys.stderr)
+    cast_segs, cast_meta = load_cast_segments(root, a.cast_segments, camera)
+    if cast_segs and not camera:
+        print("AVERTISSEMENT : cast-segments.json présent mais aucune vidéo caméra : Cast ignoré",
+              file=sys.stderr)
+        cast_segs = []
+    cwarns, cnotes = cast_warnings(scenes, cast_segs, cast_meta is not None)
+    for w in cwarns:
+        print("AVERTISSEMENT : " + w, file=sys.stderr)
+    for n in cnotes:
+        print("NOTE : " + n, file=sys.stderr)
+    cast = None
+    if cast_segs:
+        plan = CameraPlan(scenes, cast_segs)
+        crop = cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px)
+        cast = {"plan": plan, "crop": crop}
+
     # sorties
     data = root / "data"
     comps = root / "compositions"
@@ -957,6 +1266,15 @@ def main():
         json.dumps({"steps": steps_out}, ensure_ascii=False, indent=2), encoding="utf-8")
     (data / "design.json").write_text(
         json.dumps({"steps": design_out}, ensure_ascii=False, indent=2), encoding="utf-8")
+    if cast:
+        # timeline caméra effective (base ∪ Cast), en temps vidéo absolu : pour contrôle et débogage
+        (data / "camera.json").write_text(json.dumps({
+            "version": 1,
+            "cast_segments": cast_meta["path"].name,
+            "crop_top_px": a.cast_crop_top_px,
+            "crop": cast["crop"],
+            "timeline": cast["plan"].global_timeline(total),
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
 
     renderer = Primitives(root, figs, refs)
     compositions = []
@@ -965,7 +1283,7 @@ def main():
         for st in sc["steps"]:
             st["_value"] = renderer.figure((st.get("figures") or [""])[0]).get("value", "")
         compositions.append(render_composition(renderer, sc, i, sc["_dur"], camera,
-                                               sc["_start"] if camera else 0))
+                                               sc["_start"] if camera else 0, cast))
     (data / "scenes.json").write_text(
         json.dumps(scenes_json(scenes), ensure_ascii=False, indent=2), encoding="utf-8")
 

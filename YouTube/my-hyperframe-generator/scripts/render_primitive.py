@@ -112,6 +112,8 @@ CSS_EXT = """
 /* Caméra (mode webcam) */
 .cam-frame{position:absolute;z-index:6;border-radius:1.4vh;overflow:hidden;border:.3vh solid var(--bleu);background:#000;box-shadow:0 1.6vh 5vh rgba(0,0,0,.65)}
 .cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* Cast : wrapper intérieur qui porte le crop (transform GSAP). Positionné : il est le parent de la vidéo ET de l'image que le moteur insère à son côté au rendu. */
+.cam-content{position:absolute;inset:0;transform-origin:50% 0}
 /* Statut de source non vérifiée : invisible par défaut, jamais un code à l'écran */
 [data-status="verify"]{outline:0}
 """
