@@ -23,7 +23,7 @@ Tous sont ignorés par git. `make-placeholders.sh` crée un aplat à la place de
 | `assets/bg/BG-01.jpg` | un second fond de scène, différent | 1920×1080, sombre, sans texte, logo ni personne identifiable |
 | `assets/images/image-plein-ecran.jpg` | image plein écran | 1920×1080, sans texte |
 | `assets/references/ref-capture.png` | capture d'une page web | 1920×1080, n'importe laquelle |
-| `assets/cam-clean.mkv` | toi face caméra | 16:9, au moins 16 s (30 s conseillé), le son n'est pas utilisé |
+| `assets/cam-clean.mkv` | toi face caméra | 16:9, au moins 22 s (30 s conseillé), le son n'est pas utilisé |
 
 Si tu as encore les fichiers du projet de maths, depuis `examples/demo/` :
 
@@ -64,6 +64,8 @@ cp <ancien>/assets/cam-clean.mkv assets/cam-clean.mkv     # les 30 premières se
 | `I8.1#0` | webcam · off | `compositions/i08.html` | dépôt d'origine |
 | `I8.1#1` | webcam · pip | `compositions/i08.html` | dépôt d'origine |
 | `I8.1#2` | webcam · full | `compositions/i08.html` | dépôt d'origine |
+| `I9.1#0` | webcam · pip avant Cast | `compositions/i09.html` | dépôt d'origine |
+| `I9.1#1` | webcam · cast (plein écran, crop du filet OBS) | `compositions/i09.html` | mode Cast de `scripts/build.py` |
 
 ## Primitives décrites mais absentes de la démo
 

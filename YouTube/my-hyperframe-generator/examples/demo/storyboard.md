@@ -1,4 +1,4 @@
-# Storyboard minuté — catalogue des primitives (24 étapes, 9 scènes, 125.50 s)
+# Storyboard minuté — catalogue des primitives (26 étapes, 10 scènes, 136.50 s)
 
 > Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
 
@@ -45,3 +45,7 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 - `I8.1#0` t=109.50 (5.0s) [off/webcam] Lorem ipsum
 - `I8.1#1` t=114.50 (5.0s) [pip/webcam] Lorem ipsum
 - `I8.1#2` t=119.50 (6.0s) [full/webcam] Lorem ipsum
+
+### I9 — Webcam (Cast) [BG-00]
+- `I9.1#0` t=125.50 (5.0s) [pip/webcam] Lorem ipsum
+- `I9.1#1` t=130.50 (6.0s) [cast/webcam] Lorem ipsum
