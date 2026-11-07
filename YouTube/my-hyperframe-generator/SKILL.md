@@ -54,7 +54,7 @@ Variables d'environnement (valeurs par défaut entre parenthèses). Aucun chemin
 
 | Variable | Rôle | Défaut |
 |---|---|---|
-| `SKILL_DIR` | dossier de cette skill | `~/.agents/skills/hyperframe-joriel` |
+| `SKILL_DIR` | dossier de cette skill | `~/.agents/skills/my-hyperframe-generator` |
 | `HF_WORKDIR` | dossier des projets HyperFrames | `~/Code/hyperframes` |
 | `FASTMARKET_DIR` | dépôt fast-market (CLI `image`, `sound`) | `~/Code/fast-market` |
 | `HF_VIDEOS_DIR` | sortie des prises studio | `~/Vidéos` |
@@ -197,7 +197,7 @@ La composition est vue par le spectateur, pas par l'auteur. Règles absolues :
 
 - **Image** : `image generate '<prompt>' -e flux29bcloud -w 1920 -h 1080 --output-format JPEG -o assets/ -F json` (équivalent `-e flux2cloud --cf-model 9b`). Pas de 4B. La CLI écrit toujours `<engine>_0.jpeg` : le renommer tout de suite. Erreur 400 : retirer les termes menaçants et reformuler. Fond par défaut `BG-00`. Noir pur seulement pour une punchline. Voile 55–70 % et zoom lent 3–6 % sur une photo.
 - **Audio (TTS)** : `npx hyperframes tts` (Kokoro) — utilisé en mode auto pour vocaliser le script. Voir skill `media-use`.
-- **Audio (STT)** : transcription Whisper via l'utilitaire fast-market (`sound transcribe … -F json -l fr -o …`) — utilisé en auto et en webcam pour produire `transcript.json`.
+- **Audio (STT)** : transcription Whisper via l'utilitaire fast-market (`video transcribe … -F json -l fr -o …`) — utilisé en auto et en webcam pour produire `transcript.json`.
 
 ### Règles
 
@@ -311,5 +311,5 @@ L'audio nettoyé fait foi : tout timing se remesure après le nettoyage. Pas de 
 Limites assumées :
 
 - La collecte des assets (Pexels, `thesvg`, captures, embeds) reste manuelle ou via les outils cités en § Assets.
-- Le TTS et le STT sont des commandes externes (`npx hyperframes tts`, fast-market `sound transcribe`) : le dépôt ne les réimplémente pas.
+- Le TTS et le STT sont des commandes externes (`npx hyperframes tts`, fast-market `video transcribe`) : le dépôt ne les réimplémente pas.
 - `examples/demo/` reste le chapitre de référence ; ses médias factices sont générés par le script de placeholders du dépôt source.
