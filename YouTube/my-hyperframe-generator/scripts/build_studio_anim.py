@@ -388,6 +388,15 @@ function paintStep(i, k, animate) {
           var kind = meta.kind || "fade";
           if (kind === "slide") gsap.fromTo(el, { opacity: 0, x: -160 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" });
           else gsap.fromTo(el, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+          if (kind === "spotlight") {
+            var _its = el.querySelectorAll(".spot .it");
+            for (var z = 0; z < _its.length; z++) {
+              (function (it, zi) {
+                gsap.fromTo(it, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", delay: zi * 0.12 });
+                gsap.fromTo(it, { scale: 1 }, { scale: 1.16, duration: 0.28, yoyo: true, repeat: 1, ease: "power2.inOut", delay: 0.7 + zi * 0.3 });
+              })(_its[z], z);
+            }
+          }
           if (ctrs.length) {
             for (var c = 0; c < ctrs.length; c++) {
               (function (ctr) {

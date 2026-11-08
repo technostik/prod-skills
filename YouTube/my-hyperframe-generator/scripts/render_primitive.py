@@ -313,8 +313,9 @@ class Primitives:
         return ""
 
     def strike(self, text):
-        return ('<span class="dstrike"><span>%s</span><span class="sline1"></span>'
-                '<span class="sline2"></span></span>' % esc(text))
+        return ('<span class="dstrike" data-layout-allow-occlusion=""><span data-layout-allow-occlusion="">%s</span>'
+                '<span class="sline1" data-layout-allow-occlusion=""></span>'
+                '<span class="sline2" data-layout-allow-occlusion=""></span></span>' % esc(text))
 
     def brand(self, name):
         p = self.root / "assets" / "brands" / (str(name) + ".svg")
@@ -421,6 +422,21 @@ class Primitives:
                                    + ([{"sub": it["sub"]}] if it.get("sub") else []))
                 out.append('<div class="it%s">%s</div>' % (cls, body))
             return "".join(out), opts
+
+        if kind == "spotlight":
+            # Liste affichée en entier, tous les items de la même couleur, chacun mis
+            # en relief tour à tour (zoom temporaire) au fil de l'étape. À la différence
+            # d'`enumerate`, rien n'est grisé et aucun item n'est désigné « nouveau ».
+            opts["anim"] = {"kind": "spotlight"}
+            items = as_blocks(p.get("items") or step.get("blocks") or [{"kw": label}])
+            cls = esc(p.get("cls") or "bleu")
+            out = []
+            for it in items:
+                it = it if isinstance(it, dict) else {"kw": str(it)}
+                body = self.blocks([{"kw": it.get("kw", ""), "cls": cls}]
+                                   + ([{"sub": it["sub"]}] if it.get("sub") else []))
+                out.append('<div class="it">%s</div>' % body)
+            return '<div class="spot">%s</div>' % "".join(out), opts
 
         if kind == "versus":
             opts["anim"] = {"kind": "versus"}

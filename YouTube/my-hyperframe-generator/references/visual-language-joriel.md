@@ -98,6 +98,7 @@ Chaque étape = combinaison de ces blocs. Le balisage HTML est
 | `stamp` | tampon verdict (VRAI / FAUX / SEUIL) | vert (valide) / rouge (invalide) / or (seuil) |
 | `check` / `cross` | preuve / réfutation | vert / rouge |
 | `enumerate` | liste progressive, 1 item / étape, lignes `kw` + `sub` | blanc / bleu-clair |
+| `spotlight` | liste entière (2–4 items), **une seule couleur**, chaque item mis en relief tour à tour (zoom ×1,16 temporaire) | `cls` (une seule couleur) |
 | `punch` | accroche plein écran, mot à mot | **or** |
 | `cols2` | mise en 2 colonnes (≥ 5 items, 3 rangées max à 1080p) | — (layout, pas de couleur) |
 | `define` | concept statué, puis `versus` morph vers sa redéfinition | blanc, puis règles `versus` |
@@ -160,6 +161,7 @@ prendre la ligne correspondante.** Ne pas choisir au faciès.
 ### B. Quantité et mesure (données de `figures.json` uniquement)
 
 - `enumerate` → lignes `kw` + `sub`, 1 / étape, synchro voix.
+- `spotlight` → liste entière (2–4 items), une seule couleur, chaque item zoomé tour à tour ; pour une liste où l'on ne veut désigner aucun « dernier ».
 - `count` → `bignum` compteur or + label. Format `{value, label, source,
   status}` ; `verify` = pastille `?draft=1` uniquement.
 - `proportion` → `bar` barre de proportion + dénominateur explicite
@@ -194,8 +196,8 @@ illustration qualitative signalée.
   écart (`bars` 2 valeurs), moyenne/min/max (`sub` annoté), séries multiples
   (`bars` groupées), tableau (`enumerate` tabulaire), matrice (`cols2`).
 - **Listes** : simple / numérotée / à puces / progressive synchro (`enumerate`),
-  catégorisée (`cols2` + kicker), pour/contre (bleu vs rouge), inventaire
-  (`chip` × N).
+  liste entière à relief tour à tour (`spotlight`), catégorisée (`cols2` + kicker),
+  pour/contre (bleu vs rouge), inventaire (`chip` × N).
 - **Temporalité** : chronologie (`causal-chain` datée), avant/après
   (`transform`), fréquence (`count` + `sub` /an), simultané (2 `kw` même
   étape, sans flèche).

@@ -20,6 +20,7 @@ Le style est dans `examples/demo/assets/style-joriel.css`, les animations dans l
 | `arrow` | glisse et se pose, 0,28 s entre deux | 0,3 | 0,5 |
 | `count` | compteur qui ralentit (`power3.out`), puis le libellé | 0,15 ; 0,9 | 1,1 ; 0,5 |
 | `enumerate` | le nouvel item entre, les précédents passent à 55 % | 0,1 | 0,5 |
+| `spotlight` | liste entière, même couleur ; chaque item est mis en relief tour à tour (zoom ×1,16 temporaire), sans grisage ni item désigné | 0,1 (entrée) puis séquentiel | 0,5 (entrée) ; 0,28 (zoom) |
 | `cols2` | ligne par ligne, 0,1 s entre deux | 0,15 | 0,45 |
 | `versus` | le filet se trace, la gauche passe à ×0,82, la droite à ×1,16 | 0,15 ; 0,3 | 0,5 ; 0,7 |
 | `diverge` | la flèche ↗ entre et pulse (×1,35, 1 fois), puis ↘ ; chaque sous-ligne suit | 0,35 à 1,35 | 0,25 à 0,45 |
@@ -285,7 +286,7 @@ Chaque étape du scénario doit produire **au moins un élément HTML non-textue
 ### Familles
 
 - **Stats** : valeur absolue (`count`), % (`proportion`), ratio (`bars`), écart (`bars` 2 valeurs), moyenne/min/max (`sub` annoté), séries multiples (`bars` groupées), tableau (`enumerate` tabulaire), matrice (`cols2`).
-- **Listes** : simple/numérotée/à puces/progressive (`enumerate`), catégorisée (`cols2` + kicker), pour/contre (bleu vs rouge), inventaire (`chip` × N).
+- **Listes** : simple/numérotée/à puces/progressive (`enumerate`, 1 item/étape), mise en relief tour à tour (`spotlight`, liste entière même couleur), catégorisée (`cols2` + kicker), pour/contre (bleu vs rouge), inventaire (`chip` × N).
 - **Temporalité** : chronologie (`causal-chain` datée), avant/après (`transform`), fréquence (`count` + `sub` /an), simultané (2 `kw` même étape, sans flèche).
 - **Systèmes** : réseau (`connect` N+N), flux (`arrow` épais), goulot (`bars` + `stamp` rouge), équilibre (2 `bars` égales).
 - **Argumentation** : question (`kw` + « ? »), hypothèse (`sub` « hypothèse »), objection (`strike` + `kw` adverse), concession (`check` vert + point accordé en `kw`), définition/équation (`define`), dilemme (`branch`), paradoxe (`contrast` + `stamp` or), analogie (2 `compare` parallèles).

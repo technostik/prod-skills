@@ -140,6 +140,21 @@ __CAMCALL__
     tl.fromTo(sel + " .it.new", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t + 0.1);
     if (has(".it:not(.new)")) tl.fromTo(sel + " .it:not(.new)", { opacity: 1 }, { opacity: 0.55, duration: 0.5, ease: "power2.out" }, t + 0.1);
   }
+  // spotlight : liste entière, même couleur ; chaque item est mis en relief tour à tour (zoom temporaire)
+  if (has(".spot")) {
+    var _spot = step.querySelectorAll(".spot .it");
+    tl.fromTo(sel + " .spot .it", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
+    var _sn = _spot.length;
+    if (_sn) {
+      var _lead = 0.1 + 0.5 + (_sn - 1) * 0.12;
+      var _per = Math.max(0.5, (dur - _lead - 0.3) / _sn);
+      _spot.forEach(function (el, i) {
+        var _st = t + _lead + i * _per;
+        tl.to(el, { scale: 1.16, duration: _per * 0.35, ease: "power2.out" }, _st);
+        tl.to(el, { scale: 1, duration: _per * 0.4, ease: "power2.inOut" }, _st + _per * 0.35);
+      });
+    }
+  }
   // cols2
   if (has(".cols2")) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
   // stamp

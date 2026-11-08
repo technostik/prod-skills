@@ -205,6 +205,7 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 | `strike` / `negate` | proposition barrée en rouge | `strike`, `kw`, `cls` |
 | `chain` / `causal-chain` | maillons et flèches | `blocks` |
 | `enumerate` / `list` | items successifs, focus-shift | `items`, `index` |
+| `spotlight` | liste entière, même couleur, relief tour à tour (zoom temporaire) | `items`, `cls` |
 | `versus` | deux camps face à face | `left`, `right` ; `recall` / `pair` = repères éditoriaux (non rendus) |
 | `diverge` | tronc + branches ↗ / ↘ | `trunk`, `up`, `down` ; `recall` éditorial |
 | `seuil` | valeur contre repère | `figure`, `repere`, `repere_val`, `sens`, `verdict`, `sub` |

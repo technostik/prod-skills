@@ -19,6 +19,13 @@ prod-skills/
 │   │   └── SKILL.md
 │   └── my-joriel-narration-serie/      # transforme un corpus en série narrative d'articles (pipeline 4 phases)
 │       └── SKILL.md
+├── Obsidian/
+│   ├── my-generate-image/          # génère une image de couverture pour un article Obsidian (Cloudflare Workers AI)
+│   │   └── SKILL.md
+│   ├── my-twitter-post/            # prépare un post X/Twitter depuis une note Obsidian
+│   │   └── SKILL.md
+│   └── my-substack-publish/        # publie un article Markdown Obsidian sur Substack
+│       └── SKILL.md
 └── YouTube/
     ├── my-hyperframe-generator/            # produit une vidéo HyperFrames en mode auto/slides/webcam
     │   └── SKILL.md
