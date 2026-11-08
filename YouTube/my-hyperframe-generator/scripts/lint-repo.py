@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Lint du dépôt :
-1. chaque chemin `examples/…`, `scripts/…`, `references/…` cité dans un .md ou un .py doit exister
+1. chaque chemin `examples/…`, `scripts/…`, `references/…`, `modes/…` cité dans un .md ou un .py doit exister
    (les chemins générés par projet — data/, assets/, compositions/ — sont ignorés) ;
 2. aucun terme obsolète (`lyceen…`, `hyperframe-slide`, `Mode A/B`, chemins `~/Code/…`) hors
    glossaire, changelog, notes et valeurs par défaut des variables d'environnement.
@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-PATH = re.compile(r"(?<![\w/.$~-])((?:examples|scripts|references)/[A-Za-z0-9_./-]*[A-Za-z0-9_])")
+PATH = re.compile(r"(?<![\w/.$~-])((?:examples|scripts|references|modes)/[A-Za-z0-9_./-]*[A-Za-z0-9_])")
 SKIP_PARTS = {".git", "__pycache__", "node_modules"}
 LEGACY = re.compile(r"lyceen|hyperframe-slide|\bMode [AB]\b|~/Code/|~/\.agents")
 LEGACY_OK_FILES = {"glossaire.md", "CHANGELOG.md", "REFACTOR-NOTES.md", "lint-repo.py"}

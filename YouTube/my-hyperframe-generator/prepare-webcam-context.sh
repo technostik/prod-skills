@@ -2,11 +2,15 @@
 set -euo pipefail
 
 # Usage : ./prepare-webcam-context.sh /chemin/vers/destination [--project /chemin/vers/projet]
+#                                      [--mode webcam|incrustation]
+#
+# --mode (défaut : webcam) : sous-skill ajouté à storyboard/ (modes/webcam.md ou modes/incrustation.md).
 #
 # --project (facultatif) : ajoute à storyboard/ les données du projet utiles à l'annotation des
 # séquences Cast : assets/cast-segments.json (s'il existe) et transcript.json.
 
 PROJECT=""
+MODE="webcam"
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -15,8 +19,13 @@ while [[ $# -gt 0 ]]; do
             PROJECT="$(realpath -m "$2")"
             shift 2
             ;;
+        --mode)
+            [[ $# -ge 2 ]] || { echo "ERREUR : --mode demande webcam ou incrustation" >&2; exit 1; }
+            MODE="$2"
+            shift 2
+            ;;
         -h|--help)
-            echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>]"
+            echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>] [--mode webcam|incrustation]"
             exit 0
             ;;
         *)
@@ -27,7 +36,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ ${#POSITIONAL[@]} -ne 1 ]]; then
-    echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>]" >&2
+    echo "Usage : $0 <répertoire-de-destination> [--project <répertoire-du-projet>] [--mode webcam|incrustation]" >&2
+    exit 1
+fi
+if [[ "$MODE" != "webcam" && "$MODE" != "incrustation" ]]; then
+    echo "ERREUR : --mode doit valoir webcam ou incrustation (reçu : $MODE)" >&2
     exit 1
 fi
 
@@ -69,6 +82,12 @@ copy_file "$ROOT/references/scenario-to-storyboard-prompt.md" "$STORYBOARD"
 # Demandés par le prompt de scénarisation (schémas des fichiers de données ; caméra, dont Cast)
 copy_file "$ROOT/references/data-schemas.md" "$STORYBOARD"
 copy_file "$ROOT/references/webcam.md" "$STORYBOARD"
+# Sous-skill du mode, sous un nom distinct (références/webcam.md porte déjà `webcam.md` dans ce dossier)
+if [[ -f "$ROOT/modes/$MODE.md" ]]; then
+    cp "$ROOT/modes/$MODE.md" "$STORYBOARD/mode-$MODE.md"
+else
+    echo "AVERTISSEMENT : $ROOT/modes/$MODE.md absent" >&2
+fi
 copy_file "$ROOT/references/posthoc-video-conventions.md" "$STORYBOARD"
 copy_file "$ROOT/references/scenario-studio-conventions.md" "$STORYBOARD"
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.15.0
+
+- **Mode `incrustation` (4ᵉ mode).** La vidéo (webcam plein écran ou screencast OBS) reste plein écran **sous** les visuels, qui sont posés par-dessus dans l'une de 9 zones (`place:` : coin = centre d'un quart d'écran, haut/bas/gauche/droite = centre d'une moitié, centre). Position automatique par défaut : un des deux quarts supérieurs, reproductible (dépend de l'id de l'étape), jamais deux fois de suite la même, avec zones à éviter (`--avoid`, `**Zones à éviter**`). Le storyboard n'y choisit pas la caméra ; les intervalles Cast détectés ajoutent le crop du filet comme en mode webcam. Seules les primitives lisibles dans un quart d'écran sont acceptées (le build refuse les autres avec un message clair). `build.py` lit `**Mode**` (ou `--mode`) ; forme courte `[kind]` dans le format minuté ; `data/steps.json` porte `place` / `place_source`. Les trois autres modes sont inchangés (compositions et index identiques à l'octet près). Tests : `scripts/test-incrustation.py`.
+- **Skill découpée en un routeur et 4 sous-skills.** `SKILL.md` garde le routeur et le socle commun ; `modes/auto.md`, `slides.md`, `webcam.md`, `incrustation.md` portent chacun les étapes, les règles et le contexte LLM propres à leur mode, et ne se lisent qu'une fois le mode choisi. `prepare-webcam-context.sh --mode` copie le sous-skill voulu.
+- Le mot « incrustation » désignait la webcam en coin : il devient « webcam incrustée » (`pip`) ; « incrustation » est réservé au nouveau mode.
+- `video transcribe` remplace `sound transcribe` dans les commandes restantes ; `lint-repo.py` vérifie aussi les chemins `modes/…` ; README aligné sur `SKILL_DIR`.
+
 ## 1.14.0
 
 - **Mode Cast (webcam).** Quatrième valeur de `camera` : `cast`, une séquence de screencast OBS affichée en vrai plein écran. OBS pose un filet vert `#00FF00` de 10 px en haut de l'image pendant les screencasts ; **`scripts/detect-cast.py`** le repère dans `cam-clean.mkv` (lecture FFmpeg de la seule bande supérieure, tolérance de couleur, de largeur, d'épaisseur et de durée) et écrit `assets/cast-segments.json` (schéma versionné, intervalles semi-ouverts, métadonnées du média). Il ne découpe ni ne réencode rien. À relancer après chaque nettoyage.
