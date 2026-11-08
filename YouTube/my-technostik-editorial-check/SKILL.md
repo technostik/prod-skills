@@ -1,6 +1,6 @@
 ---
 name: atelier-editorial
-description: Audite une idée, un sujet, un synopsis ou un script de vidéo YouTube pour la chaîne tech. Formule la promesse de valeur pour le spectateur, décide short ou vidéo longue, vérifie l'adéquation à la ligne éditoriale, au public et aux formats, teste l'accroche (titre, vignette, première phrase), signale l'absence de science cognitive, d'analogie ou de promotion dans les vidéos longues, puis décide : accepté, accepté sous conditions ou refusé. À utiliser dès que l'auteur soumet une idée de vidéo, un plan ou un script à valider, même sans demander explicitement un « audit ».
+description: Audite une idée, un sujet, un synopsis ou un script de vidéo YouTube pour la chaîne tech. Formule la promesse de valeur pour le spectateur, décide short ou vidéo longue, vérifie l'adéquation à la ligne éditoriale, au public et aux formats, teste l'accroche (titre, vignette, première phrase), signale l'absence de science cognitive, d'analogie ou de promotion dans les vidéos longues, puis décide - accepté, accepté sous conditions ou refusé. À utiliser dès que l'auteur soumet une idée de vidéo, un plan ou un script à valider, même sans demander explicitement un « audit ».
 ---
 
 # Skill — Atelier éditorial
