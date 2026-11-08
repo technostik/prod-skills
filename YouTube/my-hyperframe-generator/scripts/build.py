@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import ast
 import bisect
+import hashlib
 import json
 import os
 import re
@@ -47,7 +48,11 @@ KICK = {"bilan": "Le bilan", "analyse": "L'analyse", "conclusion": "Conclusion"}
 # Caméra. `cast` = séquence OBS en plein écran (voir references/webcam.md). Les trois premiers
 # sont des états de base ; `cast` n'est jamais un état de base : il vient de cast-segments.json.
 CAM_MODES = ("off", "pip", "full")
-CAMERA_VALUES = CAM_MODES + ("cast",)
+CAMERA_VALUES = CAM_MODES + ("cast", "plein")
+# Mode `incrustation` : la webcam (ou le screencast) est TOUJOURS plein écran, sous les visuels.
+# `plein` = état de base unique de ce mode (webcam plein écran, sans crop) ; `cast` s'y superpose
+# aux intervalles détectés. Le storyboard n'y choisit pas la caméra.
+INCRUST_BASE = "plein"
 # Lignes du haut de l'image (px source) repoussées hors du cadre pendant Cast : le filet OBS
 # mesure 10 px, +2 px de marge contre les artefacts de compression. À ajuster ici.
 CAST_CROP_TOP_PX = 12
@@ -58,8 +63,9 @@ CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de
 # échantillonnée à l'instant exact `n / fps` est du bon côté de la borne (jamais une image de retard).
 CAST_FRAME_LEAD = 0.25
 
-from render_primitive import (ALIASES, CSS_EXT, ICONS, Primitives,
-                              as_blocks, esc, num_parts, to_float)
+from render_primitive import (ALIASES, CSS_EXT, ICONS, OVERLAY_ANCHORS, OVERLAY_DEFAULTS,
+                              KINDS, OVERLAY_KINDS, Primitives, as_blocks, canonical, canonical_anchor,
+                              esc, num_parts, overlay_wrap, to_float)
 
 JS_TEMPLATE = r"""
 // Mouvements des primitives. Délais relatifs au début de l'étape.
@@ -184,6 +190,20 @@ window.__timelines["__ID__"] = tl;
 
 # Webcam sans Cast : appel historique, inchangé à l'octet près.
 JS_CAMCALL_LEGACY = '  if (document.querySelector("#__CAM__")) applyCam(tl, "#__CAM__", step.getAttribute("data-cam") || "off", t, sel);'
+
+# Mode incrustation : la vidéo est plein écran sous les visuels ; seul le crop du filet Cast bouge,
+# exactement aux bornes détectées. Pas de pip, de blur ni de transition de cadre.
+JS_INCRUSTCAM = r"""
+// incrustation : vidéo plein écran sous les visuels. t = secondes locales, m = plein | cast, p = état précédent.
+var CAMEV = __CAMEV__;
+var CAST_CROP = __CASTCROP__;
+tl.set("#__CAM__", { left: 0, top: 0, width: 1920, height: 1080, opacity: 1 }, 0);
+tl.set("#__CAMCONTENT__", { transformOrigin: "50% 0%", scale: 1, yPercent: 0 }, 0);
+CAMEV.forEach(function (e) {
+  if ((e.m === "cast") !== (e.p === "cast"))
+    tl.set("#__CAMCONTENT__", e.m === "cast" ? CAST_CROP : { scale: 1, yPercent: 0 }, e.t);
+});
+"""
 
 # Webcam avec Cast : la timeline caméra est calculée par build.py (états de base du storyboard
 # fusionnés avec cast-segments.json) et injectée telle quelle. Aucun callback, aucune lecture
@@ -492,13 +512,22 @@ def parse_step_head(sid, rest):
     if dm:
         step["duree"] = float(dm.group(1))
     km = re.search(r"\[([A-Za-z]+)/([A-Za-z0-9\-]+)\]", rest)
+    short = None
     if not km:
-        # forme courte `[cast]` : un état caméra seul, sans primitive
+        # formes courtes : `[cast]` (état caméra seul) ou `[kw]` (primitive seule, mode incrustation)
         km = re.search(r"\[(" + "|".join(CAMERA_VALUES) + r")()\]", rest, re.I)
+        if not km:
+            m2 = re.search(r"\[([A-Za-z0-9\-]+)\]", rest)
+            if m2 and (m2.group(1).lower() in KINDS or m2.group(1).lower() in ALIASES):
+                km = m2
+                short = "kind"
     if km:
-        step["camera"] = km.group(1).lower()
-        if km.group(2):
-            step["params"]["kind"] = km.group(2)
+        if short == "kind":
+            step["params"]["kind"] = km.group(1).lower()
+        else:
+            step["camera"] = km.group(1).lower()
+            if km.group(2):
+                step["params"]["kind"] = km.group(2)
     if not step["label"]:
         tail = re.sub(r"^.*?\]\s*", "", rest) if km else rest
         tail = re.sub(r"cue\s*[«\"“][^»\"”]+[»\"”]", "", tail, flags=re.I)
@@ -797,11 +826,13 @@ def cast_crop(src_w, src_h, crop_px=CAST_CROP_TOP_PX, vw=VIEWPORT_W, vh=VIEWPORT
 class CameraPlan:
     """Timeline caméra effective (base ∪ Cast), en temps vidéo absolu."""
 
-    def __init__(self, scenes, segments):
+    def __init__(self, scenes, segments, fixed_base=None):
+        """`fixed_base` : état de base unique (mode incrustation) ; les étapes n'en posent aucun."""
         self.segments = list(segments)
         self.scenes = scenes
+        self.fixed_base = fixed_base
         base = []
-        for sc in scenes:
+        for sc in (scenes if not fixed_base else []):
             s2 = round(float(sc["_start"]), 2)
             for st in sc["steps"]:
                 cam = st.get("camera", "off")
@@ -815,6 +846,8 @@ class CameraPlan:
         self.base_m = [m for _, m in base]
 
     def base_at(self, t):
+        if self.fixed_base:
+            return self.fixed_base
         i = bisect.bisect_right(self.base_t, t + 1e-9) - 1
         return self.base_m[i] if i >= 0 else "off"
 
@@ -909,6 +942,68 @@ def cast_warnings(scenes, segments, have_file):
 # HTML
 # --------------------------------------------------------------------------- #
 
+def parse_avoid(*values):
+    """`--avoid` / `**Zones à éviter**` : liste d'ancres canoniques ; inconnu -> avertissement."""
+    out, warns = [], []
+    for v in values:
+        for tok in re.split(r"[,;]", str(v or "")):
+            if not tok.strip():
+                continue
+            a = canonical_anchor(tok)
+            if a is None:
+                warns.append("zone à éviter inconnue : %r" % tok.strip())
+            elif a not in out:
+                out.append(a)
+    return out, warns
+
+
+def check_overlay_kinds(scenes):
+    """Mode incrustation : refuse les primitives trop denses pour un quart d'écran."""
+    bad = []
+    for sc in scenes:
+        for st in sc["steps"]:
+            kind = canonical(st["params"].get("kind") or "kw")
+            if kind not in OVERLAY_KINDS:
+                bad.append("%s : kind `%s`" % (st["id"], kind))
+    if bad:
+        die("mode incrustation : primitive(s) illisible(s) en surimpression, à remplacer par l'une de %s :\n  %s"
+            % (", ".join(sorted(OVERLAY_KINDS)), "\n  ".join(bad)))
+
+
+def assign_placements(scenes, avoid):
+    """Résout l'ancre de chaque étape (`_place`) et retourne les avertissements.
+
+    `place:` du storyboard fait foi. Sinon : automatique et reproductible, parmi les deux quarts
+    supérieurs hors zones à éviter, en évitant de répéter la position précédente ; le tirage ne
+    dépend que de l'id de l'étape (jamais d'un aléa à chaque build)."""
+    warns = []
+    defaults = [d for d in OVERLAY_DEFAULTS if d not in avoid]
+    if not defaults:
+        defaults = list(OVERLAY_DEFAULTS)
+        warns.append("les deux positions automatiques sont des zones à éviter : ignorées pour les étapes sans `place:`")
+    prev = None
+    for sc in scenes:
+        for st in sc["steps"]:
+            raw = st["params"].get("place")
+            anchor = None
+            if raw not in (None, "") and str(raw).strip().lower() != "auto":
+                anchor = canonical_anchor(raw)
+                if anchor is None:
+                    warns.append("étape %s : `place: %s` inconnu (attendu : %s), position automatique"
+                                 % (st["id"], raw, ", ".join(OVERLAY_ANCHORS)))
+                else:
+                    st["_place_src"] = "storyboard"
+                    if anchor in avoid:
+                        warns.append("étape %s : `place: %s` est une zone à éviter" % (st["id"], anchor))
+            if anchor is None:
+                cands = [d for d in defaults if d != prev] or defaults
+                anchor = cands[int(hashlib.sha1(st["id"].encode("utf-8")).hexdigest(), 16) % len(cands)]
+                st["_place_src"] = "auto"
+            st["_place"] = anchor
+            prev = anchor
+    return warns
+
+
 def comp_id(i):
     return "i%02d" % i
 
@@ -920,8 +1015,9 @@ def scene_bg(scene):
     return "assets/bg/%s.jpg" % fond
 
 
-def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None):
-    """`cast` : None (rendu webcam historique) ou {"plan": CameraPlan, "crop": {...}}."""
+def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None, incrust=None):
+    """`cast` : None (rendu webcam historique) ou {"plan": CameraPlan, "crop": {...}}.
+    `incrust` : None, ou {"plan": CameraPlan(base `plein`), "crop": {...}} : mode incrustation."""
     cid = comp_id(idx)
     dur = float(scene.get("_dur") or total_dur)
     start = float(scene.get("_start") or 0)
@@ -935,8 +1031,22 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
         rel = max(0.0, step["_t"] - start)
         sdur = max(0.4, min(step["_abs_dur"], dur - rel)) if dur > rel else max(0.4, step["_abs_dur"])
         sid = re.sub(r"[^A-Za-z0-9_-]+", "-", step["id"])
-        cam = step.get("camera", "off")
+        cam = INCRUST_BASE if incrust else step.get("camera", "off")
         cls = opts.get("class", "step")
+        if incrust and not opts.get("punch"):
+            anchor = step["_place"]
+            if opts.get("full"):
+                parts.append('<section class="clip step" id="step-%s" data-step="%s" data-start="%.2f" '
+                             'data-duration="%.2f" data-track-index="1" data-cam="%s" data-place="%s">%s%s</section>'
+                             % (sid, esc(step["id"]), rel, sdur, esc(cam), anchor,
+                                '<div class="slideno">%s</div>' % esc(step["id"]), overlay_wrap(html, anchor)))
+            else:
+                parts.append('<section class="clip %s" id="step-%s" data-step="%s" data-start="%.2f" '
+                             'data-duration="%.2f" data-track-index="1" data-cam="%s" data-place="%s">%s%s</section>'
+                             % (cls, sid, esc(step["id"]), rel, sdur, esc(cam), anchor,
+                                '<div class="slideno">%s</div>' % esc(step["id"]),
+                                overlay_wrap('<div class="zone"><div class="in" id="in-%s">%s</div></div>' % (sid, html), anchor)))
+            continue
         slideno = '<div class="slideno">%s</div>' % esc(step["id"])
         if opts.get("punch"):
             body = '<div class="zone">%s</div>' % html
@@ -964,7 +1074,16 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
 
     cam_html = ""
     cast = cast if camera_src else None
-    if camera_src and cast:
+    incrust = incrust if camera_src else None
+    if camera_src and incrust:
+        # Incrustation : même DOM que Cast (cadre > wrapper > vidéo), cadre plein écran SOUS les visuels.
+        cam_html = ('<div id="cam-frame-%s" class="cam-frame cam-under clip" '
+                    'data-track-index="2" data-layout-allow-occlusion="">'
+                    '<div id="cam-content-%s" class="cam-content" data-layout-allow-overflow="">'
+                    '<video id="cam-%s" src="%s" data-start="0" data-duration="%.2f" '
+                    'data-media-start="%.2f" data-track-index="2" muted playsinline></video></div></div>'
+                    % (cid, cid, cid, esc(camera_src), dur, max(0.0, camera_media_start)))
+    elif camera_src and cast:
         # Cast : .cam-frame = viewport (overflow: hidden, positionné par GSAP) ; .cam-content = wrapper
         # intérieur qui porte le crop ; <video> n'est jamais transformé. Le moteur insère l'image de
         # remplacement comme sœur de <video> : elle reste dans .cam-content.
@@ -981,7 +1100,11 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
                     'data-media-start="%.2f" data-track-index="2" muted playsinline></video></div>'
                     % (cid, cid, esc(camera_src), dur, max(0.0, camera_media_start)))
 
-    if cast:
+    if incrust:
+        camcall, castcam = "", JS_INCRUSTCAM.replace(
+            "__CAMEV__", json.dumps(incrust["plan"].scene_events(scene), ensure_ascii=False)).replace(
+            "__CASTCROP__", json.dumps(incrust["crop"]))
+    elif cast:
         camcall, castcam = "", JS_CASTCAM.replace(
             "__CAMEV__", json.dumps(cast["plan"].scene_events(scene), ensure_ascii=False)).replace(
             "__CASTCROP__", json.dumps(cast["crop"]))
@@ -994,24 +1117,27 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
           .replace("__CAM__", "cam-frame-" + cid if camera_src else "__none__")
           .replace("__ID__", cid))
 
+    if incrust:
+        fond_html = ""          # la vidéo plein écran est le fond
+    else:
+        fond_html = ('<div class="clip bg" id="fond" data-start="0" data-duration="%.2f" data-track-index="0" '
+                     'data-layout-allow-overflow="">\n  <img class="fond" id="fond-img" src="%s" alt="">\n'
+                     '  <div class="voile"></div>\n  <div class="vignette"></div>\n</div>' % (dur, esc(bg)))
+
     return """<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"></head><body>
 <template>
 <link rel="stylesheet" href="assets/style-joriel.css">
 <link rel="stylesheet" href="assets/style-joriel-ext.css">
 <div id="root" data-composition-id="{cid}" data-width="1920" data-height="1080" data-duration="{dur:.2f}">
-<div class="clip bg" id="fond" data-start="0" data-duration="{dur:.2f}" data-track-index="0" data-layout-allow-overflow="">
-  <img class="fond" id="fond-img" src="{bg}" alt="">
-  <div class="voile"></div>
-  <div class="vignette"></div>
-</div>
+{fond}
 {cam}
 {steps}
 </div>
 <script>{js}</script>
 </template>
 </body></html>
-""".format(cid=cid, dur=dur, bg=esc(bg), cam=cam_html, steps="\n".join(parts), js=js)
+""".format(cid=cid, dur=dur, fond=fond_html, cam=cam_html, steps="\n".join(parts), js=js)
 
 
 def render_index(title, slug, scenes, total_dur, audio_src, audio_dur):
@@ -1157,6 +1283,12 @@ def main():
                     help="intervalles Cast (défaut : assets/cast-segments.json s'il existe)")
     ap.add_argument("--cast-crop-top-px", type=float, default=CAST_CROP_TOP_PX,
                     help="lignes du haut repoussées hors cadre pendant Cast (défaut %g)" % CAST_CROP_TOP_PX)
+    ap.add_argument("--mode", default=None, choices=["auto", "slides", "webcam", "incrustation"],
+                    help="défaut : `**Mode**` de l'en-tête du storyboard. `incrustation` : visuels en "
+                         "surimpression d'une vidéo plein écran (sous-skill du mode incrustation)")
+    ap.add_argument("--avoid", default=None,
+                    help="incrustation : ancres à ne pas utiliser en automatique (ex. bas-droite) ; "
+                         "défaut : `**Zones à éviter**` de l'en-tête")
     ap.add_argument("--slug", default=None)
     a = ap.parse_args()
 
@@ -1205,12 +1337,30 @@ def main():
     audio_dur = wav_duration(root / audio) if audio else 0.0
     total = max(total, audio_dur)
 
-    # caméra : valeurs inconnues, intervalles Cast
+    # mode : option, sinon en-tête du storyboard
+    mode_raw = norm(a.mode or movie["meta"].get("mode", ""))
+    incrust_mode = "incrust" in mode_raw
+    avoid, avoid_warns = [], []
+    if incrust_mode:
+        meta_avoid = [v for k, v in movie["meta"].items() if "eviter" in norm(k)]
+        avoid, avoid_warns = parse_avoid(a.avoid, *meta_avoid)
+        check_overlay_kinds(scenes)
+        for w in avoid_warns + assign_placements(scenes, avoid):
+            print("AVERTISSEMENT : " + w, file=sys.stderr)
+        if not camera:
+            print("AVERTISSEMENT : mode incrustation sans vidéo (assets/cam-clean.mkv absent) : "
+                  "les visuels sont posés sur un fond noir", file=sys.stderr)
+
+    # caméra : valeurs inconnues, intervalles Cast (le storyboard ne choisit pas la caméra en incrustation)
     for sc in scenes:
         for st in sc["steps"]:
-            if st.get("camera", "off") not in CAMERA_VALUES:
+            cam_v = st.get("camera", "off")
+            if cam_v not in CAMERA_VALUES:
                 print("AVERTISSEMENT : camera inconnue %r à l'étape %s (traitée comme `off`)"
-                      % (st.get("camera"), st["id"]), file=sys.stderr)
+                      % (cam_v, st["id"]), file=sys.stderr)
+            elif cam_v == "plein" and not incrust_mode:
+                print("AVERTISSEMENT : camera `plein` à l'étape %s : état propre au mode incrustation "
+                      "(traitée comme `off`)" % st["id"], file=sys.stderr)
     cast_segs, cast_meta = load_cast_segments(root, a.cast_segments, camera)
     if cast_segs and not camera:
         print("AVERTISSEMENT : cast-segments.json présent mais aucune vidéo caméra : Cast ignoré",
@@ -1221,8 +1371,13 @@ def main():
         print("AVERTISSEMENT : " + w, file=sys.stderr)
     for n in cnotes:
         print("NOTE : " + n, file=sys.stderr)
-    cast = None
-    if cast_segs:
+    cast = incrust = None
+    if incrust_mode:
+        # base `plein` unique ; Cast = crop aux intervalles détectés (aucun intervalle : jamais de crop)
+        crop = (cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px)
+                if cast_meta and cast_segs else {})
+        incrust = {"plan": CameraPlan(scenes, cast_segs, fixed_base=INCRUST_BASE), "crop": crop}
+    elif cast_segs:
         plan = CameraPlan(scenes, cast_segs)
         crop = cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px)
         cast = {"plan": plan, "crop": crop}
@@ -1261,19 +1416,25 @@ def main():
                 "camera": st.get("camera", "off"),
                 "kind": design_for(st)["kind"],
             })
+            if incrust_mode:
+                steps_out[-1]["camera"] = INCRUST_BASE
+                steps_out[-1]["place"] = st["_place"]
+                steps_out[-1]["place_source"] = st["_place_src"]
             design_out[st["id"]] = design_for(st)
     (data / "steps.json").write_text(
         json.dumps({"steps": steps_out}, ensure_ascii=False, indent=2), encoding="utf-8")
     (data / "design.json").write_text(
         json.dumps({"steps": design_out}, ensure_ascii=False, indent=2), encoding="utf-8")
-    if cast:
+    cam_plan = incrust or cast
+    if cam_plan:
         # timeline caméra effective (base ∪ Cast), en temps vidéo absolu : pour contrôle et débogage
         (data / "camera.json").write_text(json.dumps({
             "version": 1,
-            "cast_segments": cast_meta["path"].name,
+            "mode": "incrustation" if incrust else "webcam",
+            "cast_segments": cast_meta["path"].name if cast_meta else None,
             "crop_top_px": a.cast_crop_top_px,
-            "crop": cast["crop"],
-            "timeline": cast["plan"].global_timeline(total),
+            "crop": cam_plan["crop"],
+            "timeline": cam_plan["plan"].global_timeline(total),
         }, ensure_ascii=False, indent=2), encoding="utf-8")
 
     renderer = Primitives(root, figs, refs)
@@ -1283,7 +1444,7 @@ def main():
         for st in sc["steps"]:
             st["_value"] = renderer.figure((st.get("figures") or [""])[0]).get("value", "")
         compositions.append(render_composition(renderer, sc, i, sc["_dur"], camera,
-                                               sc["_start"] if camera else 0, cast))
+                                               sc["_start"] if camera else 0, cast, incrust))
     (data / "scenes.json").write_text(
         json.dumps(scenes_json(scenes), ensure_ascii=False, indent=2), encoding="utf-8")
 

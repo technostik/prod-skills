@@ -61,6 +61,64 @@ ICONS = {
     "brain": '<path d="M9 4a3 3 0 00-3 3 3 3 0 00-2 5 3 3 0 002 5 3 3 0 003 3h1V4z"/><path d="M15 4a3 3 0 013 3 3 3 0 012 5 3 3 0 01-2 5 3 3 0 01-3 3h-1V4z"/>',
 }
 
+# --------------------------------------------------------------------------- #
+# Incrustation (mode `incrustation`) : un visuel posé SUR la vidéo plein écran
+# --------------------------------------------------------------------------- #
+# Une ancre est le centre d'un sous-rectangle de l'écran : un coin = le centre d'un quart,
+# haut / bas / gauche / droite = le centre d'une moitié, centre = le centre de l'écran.
+# Le visuel est rendu comme en plein cadre (même balisage, mêmes classes) dans une scène de
+# 1920×1080 réduite par `scale` et centrée dans son sous-rectangle (voir `.ov*` dans CSS_EXT).
+# nom canonique -> (classe CSS, échelle). L'échelle est à ajuster ici.
+OVERLAY_ANCHORS = {
+    "haut-gauche": ("ov-tl", 0.5), "haut-droite": ("ov-tr", 0.5),
+    "bas-gauche": ("ov-bl", 0.5), "bas-droite": ("ov-br", 0.5),
+    "haut": ("ov-t", 0.5), "bas": ("ov-b", 0.5),
+    "gauche": ("ov-l", 0.5), "droite": ("ov-r", 0.5),
+    "centre": ("ov-c", 0.75),
+}
+OVERLAY_SCALE_CLASS = {0.5: "ov-s50", 0.75: "ov-s75", 1.0: "ov-s100"}
+# Positions automatiques par défaut : le milieu des deux quarts supérieurs.
+OVERLAY_DEFAULTS = ("haut-gauche", "haut-droite")
+# Écritures acceptées dans le storyboard (`place:`), sans accents ni casse.
+OVERLAY_ALIASES = {
+    "tl": "haut-gauche", "hg": "haut-gauche", "coin-haut-gauche": "haut-gauche",
+    "coin-superieur-gauche": "haut-gauche", "haut-gauche": "haut-gauche",
+    "tr": "haut-droite", "hd": "haut-droite", "coin-haut-droite": "haut-droite",
+    "coin-superieur-droite": "haut-droite", "haut-droite": "haut-droite",
+    "bl": "bas-gauche", "bg": "bas-gauche", "coin-bas-gauche": "bas-gauche",
+    "coin-inferieur-gauche": "bas-gauche", "bas-gauche": "bas-gauche",
+    "br": "bas-droite", "bd": "bas-droite", "coin-bas-droite": "bas-droite",
+    "coin-inferieur-droite": "bas-droite", "bas-droite": "bas-droite",
+    "t": "haut", "haut": "haut", "b": "bas", "bas": "bas",
+    "l": "gauche", "gauche": "gauche", "r": "droite", "droite": "droite",
+    "c": "centre", "centre": "centre", "milieu": "centre", "plein-centre": "centre",
+}
+# `kind` lisibles dans un quart d'écran (grands textes, peu d'éléments). Les autres sont refusés
+# par build.py : un visuel dense réduit de moitié ne se lit plus.
+OVERLAY_KINDS = {"kw", "count", "strike", "enumerate", "stamp", "define", "brand", "chain",
+                 "image", "ref-shot", "ref-card"}
+
+
+# Tous les `kind` rendus par `render_step` (hors alias) : sert au format minuté `[kind]`.
+KINDS = {"kw", "punch", "image", "ref-shot", "title", "count", "strike", "chain", "enumerate", "versus",
+         "diverge", "seuil", "bars", "compare3", "stamp", "define", "ref-card", "brand", "cols2", "waffle",
+         "sources"}
+
+
+def canonical_anchor(value):
+    """`place:` du storyboard -> nom canonique, ou None si inconnu."""
+    key = re.sub(r"[\s_]+", "-", str(value or "").strip().lower())
+    key = key.translate(str.maketrans("éèêëàâùûôîï", "eeeeaauuoii"))
+    return OVERLAY_ALIASES.get(key)
+
+
+def overlay_wrap(html, anchor):
+    """Enveloppe le balisage d'une primitive dans le sous-rectangle de l'ancre."""
+    cls, scale = OVERLAY_ANCHORS[anchor]
+    return ('<div class="ov %s %s"><div class="ovstage">%s</div></div>'
+            % (cls, OVERLAY_SCALE_CLASS[scale], html))
+
+
 # Styles des primitives absentes de la démo. Ce bloc est écrit tel quel dans
 # `assets/style-joriel-ext.css` par build.py ; le studio le charge aussi.
 CSS_EXT = """
@@ -114,6 +172,20 @@ CSS_EXT = """
 .cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 /* Cast : wrapper intérieur qui porte le crop (transform GSAP). Positionné : il est le parent de la vidéo ET de l'image que le moteur insère à son côté au rendu. */
 .cam-content{position:absolute;inset:0;transform-origin:50% 0}
+/* Incrustation : la vidéo est sous les visuels (z-index 2 < .step 4), cadre plein écran, sans habillage. */
+.cam-frame.cam-under{z-index:2;left:0;top:0;width:1920px;height:1080px;border:0;border-radius:0;box-shadow:none}
+/* Ancres : sous-rectangle de l'écran (px sur 1920×1080) ; la scène réduite y est centrée. */
+.ov{position:absolute;overflow:visible}
+.ov-tl{left:0;top:0;width:960px;height:540px}.ov-tr{left:960px;top:0;width:960px;height:540px}
+.ov-bl{left:0;top:540px;width:960px;height:540px}.ov-br{left:960px;top:540px;width:960px;height:540px}
+.ov-t{left:0;top:0;width:1920px;height:540px}.ov-b{left:0;top:540px;width:1920px;height:540px}
+.ov-l{left:0;top:0;width:960px;height:1080px}.ov-r{left:960px;top:0;width:960px;height:1080px}
+.ov-c{left:0;top:0;width:1920px;height:1080px}
+.ovstage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;margin:-540px 0 0 -960px}
+.ov-s50 .ovstage{transform:scale(.5)}.ov-s75 .ovstage{transform:scale(.75)}.ov-s100 .ovstage{transform:scale(1)}
+/* dans la scène réduite, le contenu est centré sans l'espace réservé au titre, sur un fond sombre translucide */
+.ovstage .zone{top:0;bottom:0}
+.ovstage .in{background:rgba(6,10,18,.62);border-radius:3vh;padding:3vh 3vw}
 /* Statut de source non vérifiée : invisible par défaut, jamais un code à l'écran */
 [data-status="verify"]{outline:0}
 """
