@@ -22,7 +22,7 @@ Le LLM décide **quel passage devient quelle primitive** (éditorial). Le code n
 
 **Source** : SCENARIO.md
 **Langage visuel** : references/visual-language-joriel.md
-**Mode** : auto | slides | webcam
+**Mode** : auto | slides | webcam | incrustation
 **Durée estimée** : ≈ N min
 **Format** : 1920×1080 @ 30 fps
 
@@ -163,6 +163,25 @@ Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
 
 L'agent qui rédige le storyboard lit `cast-segments.json` et `transcript.json` pour repérer quelles étapes tombent dans un intervalle ; il annote ces étapes `camera: cast` et leur donne un état de base (`off`, `pip` ou `full`) pour l'après-Cast.
 
+#### Mode `incrustation`
+
+`**Mode** : incrustation` (et, facultatif, `**Zones à éviter** : bas-droite`). La vidéo reste plein écran ; le storyboard n'écrit **aucun** `camera` (ignoré). Une étape s'écrit avec sa primitive seule, en format minuté, et un `place:` facultatif :
+
+```markdown
+- `I1.1#0` t=39.18 (3.6s) [count] 24 lycées
+- `I1.1#1` t=42.76 (2.5s) [kw] manque de profs
+  - place: coin inférieur gauche
+```
+
+| `place:` | Zone (centre d'un sous-rectangle de l'écran) |
+|---|---|
+| `haut-gauche` `haut-droite` `bas-gauche` `bas-droite` | centre des quatre quarts |
+| `haut` `bas` `gauche` `droite` | centre des quatre moitiés |
+| `centre` | centre de l'écran |
+| `auto` ou absent | automatique : un des deux quarts supérieurs, reproductible, jamais deux fois de suite la même |
+
+Seules les primitives lisibles en surimpression sont acceptées (`kw`, `count`, `strike`, `enumerate`, `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card`) ; le build refuse les autres. Détails : `modes/incrustation.md`.
+
 ### Registres
 
 - Tableaux Markdown. Colonnes reconnues par leur nom, pas par leur position.
@@ -221,7 +240,7 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 | `data/figures.json` | registre §1 (lu aussi par `build_studio_anim.py`) |
 | `data/refs.json` | registre §1b |
 | `data/steps.json` | une entrée par étape, temps absolus, caméra (`off`, `pip`, `full` ou l'annotation `cast`) |
-| `data/camera.json` | timeline caméra effective (base ∪ Cast) en temps absolu ; **écrit seulement si `cast-segments.json` contient des intervalles** |
+| `data/camera.json` | timeline caméra effective (base ∪ Cast) en temps absolu ; **écrit seulement si `cast-segments.json` contient des intervalles, ou en mode incrustation** |
 | `data/design.json` | le `kind` et ses paramètres, par étape |
 | `data/scenes.json` | scènes + beats (schéma attendu par `build_studio_anim.py`) |
 | `index.html` | composition racine : scènes, audio, durée totale |

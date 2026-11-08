@@ -84,6 +84,10 @@ Intervalles Cast, exprimés dans le référentiel de `assets/cam-clean.mkv`. Ver
 
 L'écriture est atomique (fichier temporaire puis remplacement). Le détecteur ne modifie jamais le média.
 
-### `data/camera.json` (écrit par `scripts/build.py`, seulement si `cast-segments.json` a des intervalles)
+### `data/camera.json` (écrit par `scripts/build.py`, si `cast-segments.json` a des intervalles, ou en mode incrustation)
 
-Timeline caméra effective en temps absolu (celui de `cam-clean.mkv`), pour contrôle : `version`, `cast_segments` (nom du fichier lu), `crop_top_px`, `crop` (`scale`, `yPercent` appliqués à `.cam-content`), `timeline` : tuiles contiguës `{start, end, state, base}` où `state` ∈ `off`/`pip`/`full`/`cast` est ce qui s'affiche et `base` l'état de base en vigueur (celui qui revient à la fin d'un Cast). Les bornes Cast y sont décalées de 1/4 d'image avant l'image concernée (`CAST_FRAME_LEAD`).
+Timeline caméra effective en temps absolu (celui de `cam-clean.mkv`), pour contrôle : `version`, `mode` (`webcam` ou `incrustation`), `cast_segments` (nom du fichier lu, `null` s'il n'y en a pas), `crop_top_px`, `crop` (`scale`, `yPercent` appliqués à `.cam-content`), `timeline` : tuiles contiguës `{start, end, state, base}` où `state` ∈ `off`/`pip`/`full`/`cast` (mode webcam) ou `plein`/`cast` (mode incrustation) est ce qui s'affiche et `base` l'état de base en vigueur (celui qui revient à la fin d'un Cast). Les bornes Cast y sont décalées de 1/4 d'image avant l'image concernée (`CAST_FRAME_LEAD`).
+
+### Mode incrustation : champs ajoutés à `data/steps.json`
+
+En mode `incrustation` seulement, chaque étape porte `place` (zone résolue : `haut-gauche`, `haut-droite`, `bas-gauche`, `bas-droite`, `haut`, `bas`, `gauche`, `droite`, `centre`) et `place_source` (`storyboard` si l'étape avait `place:`, `auto` sinon) ; `camera` vaut toujours `plein`. Les autres modes n'ont pas ces champs.

@@ -16,8 +16,8 @@ Fichiers fournis **tels quels** (pas de résumé) :
 6. **references/data-schemas.md** — Schémas `figures.json`, `refs.json`, `steps.json`, `design.json`
 7. **examples/demo/** — Exemples concrets de chaque primitive (`compositions/i00.html`…`i09.html`)
 
-Selon le mode :
-- **Webcam** : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` (intervalles de screencast OBS, dans le référentiel de `cam-clean.mkv`) et `transcript.json` (mots et temps de l'audio nettoyé)
+Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
+- **Webcam** et **incrustation** : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` (intervalles de screencast OBS, dans le référentiel de `cam-clean.mkv`) et `transcript.json` (mots et temps de l'audio nettoyé)
 - **Conventions détaillées** : `references/scenario-studio-conventions.md`
 
 ---
@@ -52,7 +52,9 @@ Selon le mode :
 >
 > 10. **Sortie = SEULEMENT le markdown STORYBOARD.md**. Pas de commentaire, pas d'explication.
 >
-> 11. **Webcam : `camera` ∈ `off` · `pip` · `full` · `cast`**. `off`, `pip`, `full` sont les états de base de chaque étape. `cast` est une **annotation** : si `cast-segments.json` est fourni, repérer (avec `transcript.json`) les étapes dont la durée recoupe un intervalle et les annoter `camera: cast` ; ne **jamais** inventer de bornes, `cast-segments.json` est la seule autorité sur les temps. Un intervalle détecté s'affichera de toute façon en Cast. Une étape annotée `cast` ne change pas l'état de base : lui donner malgré tout l'état de base qui doit revenir après le Cast, si l'étape suivante n'en pose pas. Sans `cast-segments.json` (ou avec une liste vide), ne pas annoter `cast`.
+> 11. **Webcam : `camera` ∈ `off` · `pip` · `full` · `cast`**. `off`, `pip`, `full` sont les états de base de chaque étape. `cast` est une **annotation** : si `cast-segments.json` est fourni, repérer (avec `transcript.json`) les étapes dont la durée recoupe un intervalle et les annoter `camera: cast` ; ne **jamais** inventer de bornes, `cast-segments.json` est la seule autorité sur les temps. Un intervalle détecté s'affichera de toute façon en Cast. Une étape annotée `cast` ne change pas l'état de base : lui donner malgré tout l'état de base qui doit revenir après le Cast, si l'étape suivante n'en pose pas. Sans `cast-segments.json` (ou avec une liste vide), ne pas annoter `cast`. *(Mode `incrustation` : voir la règle 12.)*
+>
+> 12. **Mode `incrustation`** (`**Mode** : incrustation` dans l'en-tête, décidé par l'utilisateur, jamais par toi) : la vidéo reste plein écran, **n'écris aucun `camera`**. Choisis pour chaque étape une primitive lisible en surimpression, parmi `kw`, `count`, `strike`, `enumerate`, `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card` : `versus`, `diverge`, `seuil`, `bars`, `compare3`, `waffle`, `title`, `punch` sont refusés par le build. N'écris `place:` que si l'utilisateur t'a demandé une zone précise ; sinon laisse la position automatique. Format d'étape : ``- `I1.1#0` t=39.18 (3.6s) [count] 24 lycées``. Zones et détails : `references/storyboard-format.md` § Mode `incrustation`.
 
 ---
 
@@ -151,3 +153,4 @@ Selon le mode :
 - [ ] Les listes JSON tiennent sur **une seule ligne** (`blocks`, `left`, `right`, `items`, `rows`, `up`, `down`)
 - [ ] Format markdown exact (tableaux, tirets, indentation)
 - [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape
+- [ ] Incrustation : aucun `camera`, primitives lisibles en surimpression uniquement, `place:` seulement sur demande

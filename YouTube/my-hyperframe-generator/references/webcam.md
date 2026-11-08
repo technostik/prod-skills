@@ -1,5 +1,7 @@
 # Webcam
 
+Référence technique de la caméra, partagée par le mode `webcam` (`modes/webcam.md`) et le mode `incrustation` (`modes/incrustation.md`). L'incrustation réutilise le § Cast (détection, wrapper, crop) ; elle n'utilise ni `pip`, ni `full`, ni `off`.
+
 Un seul master vidéo (`assets/cam-clean.mkv`), quatre valeurs de `camera` : trois états de base posés par les étapes du storyboard (`off`, `pip`, `full`) et un quatrième, `cast`, pour les séquences de screencast OBS (§ Cast). La définition de la prise ne tient pas un vrai plein écran : `full` est un pseudo plein écran. Seul `cast` occupe vraiment 1920 × 1080.
 
 | Valeur | Sens | Origine des bornes |
@@ -10,7 +12,7 @@ Un seul master vidéo (`assets/cam-clean.mkv`), quatre valeurs de `camera` : tro
 | `cast` | séquence OBS en vrai plein écran, filet vert retiré | **`assets/cast-segments.json`**, jamais le storyboard |
 
 - `off` — rien à l'écran. Le visuel porte l'argument. Obligatoire sur une punchline (noir, texte or) et sur un gabarit dense (`versus`, `diverge`, `seuil`, `compare3`, barres).
-- `pip` — incrustation en bas à droite, 22 % de la largeur. Le schéma reste lisible, le locuteur reste là. Chiffre isolé, preuve, explication.
+- `pip` — webcam incrustée en bas à droite, 22 % de la largeur. Le schéma reste lisible, le locuteur reste là. Chiffre isolé, preuve, explication.
 - `full` — fond et étapes floutés, webcam centrée sur la moitié de l'écran (50 % × 50 %). Entrée de scène, question ouverte, conclusion, moment où le visage porte le propos.
 
 Rythme : un état dure au moins 2,5 s. Le changement de mode est un tween du cadre (position, taille, opacité, 0,55 s) avec un flou de 0,4 s sur le fond et l'étape ; le tout premier état se pose en `tl.set` à `t = 0`. Jamais de cut sec. Revoir le locuteur (`pip` ou `full`) au moins toutes les ~20 s.
@@ -117,7 +119,7 @@ bash scripts/concat-mkv.sh assets/cam-original.mkv <troncon1.mkv> [<troncon2.mkv
 python3 scripts/clean-posthoc.py assets/cam-original.mkv
 # → assets/cam-clean.mkv (nom stable) + assets/voix-posthoc-vN.wav + assets/clean-map-vN.json (N = prochain numéro libre)
 python3 scripts/detect-cast.py assets/cam-clean.mkv --output assets/cast-segments.json   # APRÈS chaque nettoyage
-sound transcribe assets/voix-posthoc-vN.wav -F json -l fr -o /tmp/tr.json              # N = dernière passe
+video transcribe assets/voix-posthoc-vN.wav -F json -l fr -o /tmp/tr.json              # N = dernière passe
 ```
 
 `build.py` détecte seul le dernier `voix-posthoc-vN.wav` (N comparé numériquement) et `assets/cast-segments.json` ; `--cast-segments` force un autre fichier.

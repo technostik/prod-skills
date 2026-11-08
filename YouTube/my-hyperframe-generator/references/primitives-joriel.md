@@ -221,6 +221,10 @@ Zoom lent : `tl.fromTo("#ref-xxx", { scale: 1 }, { scale: 1.04, duration: dur, e
 
 Les quatre valeurs de `camera` (`off`, `pip`, `full`, `cast`), `applyCam` et la timeline Cast sont dans `references/webcam.md`. Ne pas recopier un bloc plus ancien (coin haut, `className`, `visibility`). Pas de transform sur la balise `<video>` : le cadre `.cam-frame` est positionné, le wrapper `.cam-content` porte le crop Cast. Ce n'est pas une primitive visuelle : `render_primitive.py` n'émet pas la caméra (seul le CSS `.cam-frame` / `.cam-content` est dans `CSS_EXT`).
 
+## Incrustation (mode `incrustation`)
+
+Une primitive peut être posée *sur* la vidéo plein écran, dans l'une des 9 zones de `modes/incrustation.md`. Le balisage est le même qu'en plein cadre ; il est enveloppé par `overlay_wrap()` (`render_primitive.py`) dans `.ov > .ovstage`, une scène de 1920×1080 réduite (échelle 0,5 ; 0,75 au centre) et centrée dans le sous-rectangle de la zone. Aucune primitive n'a de variante dédiée. Seules les primitives de `OVERLAY_KINDS` (`kw`, `count`, `strike`, `enumerate`, `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card`) sont acceptées : `build.py` refuse les autres, trop denses pour un quart d'écran. Ce n'est pas une primitive visuelle de plus : le catalogue ne change pas.
+
 ## Règle d'or
 
 Chaque étape du scénario doit produire **au moins un élément HTML non-textuel** (image, SVG, primitive visuelle) qui illustre le concept. Jamais de sous-titre seul.

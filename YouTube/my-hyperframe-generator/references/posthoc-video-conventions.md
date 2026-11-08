@@ -65,7 +65,7 @@ seule la source des timings change (transcription de l'audio final, pas prompteu
    `trim`/`atrim` conjoint, seule méthode fiable.
 3. **Re-transcrire l'audio NETTOYÉ** (jamais le brut) :
    ```bash
-   sound transcribe assets/voix-posthoc-v1.wav -F json -l fr -o /tmp/tr.json
+   video transcribe assets/voix-posthoc-v1.wav -F json -l fr -o /tmp/tr.json
    ```
    Construire `transcript.json` comme skill `hyperframe` §4 (`segments`
    mesurés + `words` interpolés, `source` = nom exact de l'audio nettoyé).
