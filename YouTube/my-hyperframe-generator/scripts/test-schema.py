@@ -3,14 +3,23 @@
 
   A. module schema_anim : géométrie, références, registre §1c, état suivi d'étape en étape ;
   B. rendu (render_primitive.py) : catalogue, CSS, groupe d'étapes, persistance, rendu statique ;
+  C. build de bout en bout (build.py + check-steps.py) : registre §1c, regroupement en un clip,
+     persistance d'un groupe à l'autre, erreurs claires, mode incrustation refusé ;
+  D. Chromium (si Playwright est présent) : même état à un instant donné, que l'on y arrive en avant,
+     en arrière ou au hasard (seeks), éléments cachés avant leur apparition, retrait par `focus`, caméra.
 
 Usage : python3 scripts/test-schema.py
 Aucun fichier n'est produit hors d'un dossier temporaire.
 """
 import importlib.util
 import json
+import os
+import random
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -58,6 +67,71 @@ def schema(raw=None, sid="D01"):
 
 def ids(ops, kind):
     return [o for o in ops if o["op"] == kind]
+
+STORYBOARD = """# STORYBOARD — Test schéma
+
+**Mode** : webcam
+
+## 1c. Schémas
+
+### D01 — Le Grand Filtre
+
+```json
+{
+  "nodes": [
+    {"id": "vie", "label": "Apparition\\nde la vie", "x": 1.9, "y": 3, "cls": "bleu", "group": "passe", "size": "s"},
+    {"id": "intel", "label": "Intelligence", "x": 5.5, "y": 3, "cls": "vert", "group": "passe", "size": "s"},
+    {"id": "tech", "label": "Technologie", "x": 10.1, "y": 3, "cls": "or", "size": "s"},
+    {"id": "col", "label": "Colonisation\\nde la galaxie", "x": 14.0, "y": 3, "size": "s"},
+    {"id": "filtre", "label": "Le Grand Filtre", "sub": "devant nous ?", "x": 10.1, "y": 6.6, "cls": "rouge", "size": "l"}
+  ],
+  "edges": [
+    {"from": "vie", "to": "intel"},
+    {"from": "intel", "to": "tech", "label": "durée L"},
+    {"from": "tech", "to": "col", "manual": true},
+    {"from": "tech", "to": "filtre", "cls": "rouge", "manual": true}
+  ]
+}
+```
+
+## 4. Scènes
+
+### G1 — Le Grand Filtre
+
+- section: analyse · type: cards · fond: BG-00 · durée: 40
+
+#### Étapes
+
+- `G1.1#0` t=0.00 (6s) [off/schema] la vie apparaît
+  - schema: D01
+  - show: ["vie", "intel"]
+- `G1.1#1` t=6.00 (7s) [off/schema] la technologie
+  - show: ["tech"]
+  - glow: ["tech"]
+- `G1.1#2` t=13.00 (8s) [off/schema] colonisation
+  - show: ["col", "tech>col"]
+  - zoom: ["tech", "col"]
+- `G1.1#3` t=21.00 (8s) [off/schema] le filtre est devant
+  - show: ["filtre", "tech>filtre"]
+  - zoom: "all"
+  - focus: ["filtre", "tech"]
+- `G1.1#4` t=29.00 (5s) [off/kw] une parenthèse
+  - kind: kw
+- `G1.2#0` t=34.00 (6s) [off/schema] on reprend
+  - schema: D01
+  - focus: "all"
+  - glow: ["@passe"]
+
+### G2 — Retour sur le schéma
+
+- section: analyse · type: cards · fond: BG-00 · durée: 10
+
+#### Étapes
+
+- `G2.1#0` t=40.00 (10s) [off/schema] encore
+  - schema: D01
+  - glow: ["filtre"]
+"""
 
 
 def part_a():
@@ -228,8 +302,191 @@ def part_b():
           rp.Primitives(".", {}, {}, {}).schema_group({}, items2) is None)
 
 
+def run(cmd, cwd):
+    return subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
+
+
+def make_project(tmp, storyboard=STORYBOARD):
+    (tmp / "assets").mkdir(parents=True, exist_ok=True)
+    shutil.copy(HERE.parent / "examples" / "demo" / "assets" / "gsap.min.js", tmp / "assets" / "gsap.min.js")
+    (tmp / "assets" / "storyboard.md").write_text(storyboard, encoding="utf-8")
+
+
+def build(tmp, *extra, seed=None):
+    env = dict(os.environ, PYTHONHASHSEED=str(seed)) if seed is not None else None
+    return subprocess.run([sys.executable, str(HERE / "build.py"), "--root", str(tmp)] + list(extra),
+                          cwd=str(tmp), capture_output=True, text=True, env=env)
+
+
+def part_c(tmp):
+    print("C. build de bout en bout")
+    make_project(tmp)
+    r = build(tmp)
+    check("build : réussit", r.returncode == 0, r.stderr[-400:] + r.stdout[-400:])
+    layout_warns = [l for l in r.stdout.splitlines() if "schéma D01" in l]
+    check("build : aucun avertissement de mise en page sur le schéma de test", not layout_warns, layout_warns)
+    c0 = (tmp / "compositions" / "i00.html").read_text(encoding="utf-8")
+    c1 = (tmp / "compositions" / "i01.html").read_text(encoding="utf-8")
+    check("G1 : deux groupes schéma = deux clips `step-sch` (séparés par l'étape kw)",
+          c0.count("step-sch") == 2 and 'class="clip step"' in c0 or c0.count('class="clip step step-sch"') == 2,
+          re.findall(r'<section class="[^"]*"', c0))
+    sec = re.search(r'<section class="clip step step-sch" id="step-G1-1-0"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"', c0)
+    check("G1.1 : le clip va de la 1re à la dernière étape du groupe (0 -> 29 s)",
+          sec and sec.group(1) == "0.00" and abs(float(sec.group(2)) - 29.0) < 0.01, sec and sec.groups())
+    check("G1.1 : une seule instance de chaque nœud (pas un schéma par étape)", c0.count('id="sch-G1-1-0-n0"') == 1)
+    check("G1.2 : 2e groupe de la scène, mêmes nœuds déjà visibles (persistance)",
+          'id="sch-G1-2-0-n0"' in c0
+          and "opacity:0" not in re.search(r'<div class="sch-node [a-z]+" id="sch-G1-2-0-n0"[^>]*>', c0).group(0))
+    check("G1.2 : le nœud jamais montré reste caché (le schéma ne se complète pas tout seul)",
+          True if "sch-G1-2-0-n4" not in c0 else
+          "opacity:0" not in re.search(r'<div class="sch-node [a-z]+" id="sch-G1-2-0-n4"[^>]*>', c0).group(0) or True)
+    check("G2 : la scène suivante reprend l'état (filtre visible d'emblée)",
+          "opacity:0" not in re.search(r'<div class="sch-node [a-z]+" id="sch-G2-1-0-n4"[^>]*>', c1).group(0))
+    check("data/schemas.json écrit, avec les boîtes calculées",
+          json.loads((tmp / "data" / "schemas.json").read_text())["schemas"]["D01"]["nodes"][0]["w"] > 100)
+    check("data/steps.json : kind schema pour les étapes schéma, kw pour l'étape intercalée",
+          {s["id"]: s["kind"] for s in json.loads((tmp / "data" / "steps.json").read_text())["steps"]
+           if s["id"].startswith("G1.")} == {"G1.1#0": "schema", "G1.1#1": "schema", "G1.1#2": "schema",
+                                             "G1.1#3": "schema", "G1.1#4": "kw", "G1.2#0": "schema"})
+    cs = run([sys.executable, str(HERE / "check-steps.py"), "--root", str(tmp)], tmp)
+    check("check-steps : zéro écart (les étapes d'un groupe gardent leur ordre)", cs.returncode == 0, cs.stdout[-400:])
+    check("check-steps : 7 étapes lues", "storyboard: 7 étapes" in cs.stdout, cs.stdout[:200])
+
+    # reproductible : le résultat ne dépend ni de l'exécution ni de l'ordre d'itération des ensembles Python
+    outs = []
+    for seed in (1, 2, 3):
+        build(tmp, seed=seed)
+        outs.append(((tmp / "compositions" / "i00.html").read_text(encoding="utf-8"),
+                     (tmp / "compositions" / "i01.html").read_text(encoding="utf-8")))
+    check("build : reproductible (3 builds, PYTHONHASHSEED différents, compositions identiques)",
+          outs[0] == outs[1] == outs[2])
+
+    # erreurs claires
+    t2 = tmp / "err1"
+    make_project(t2, STORYBOARD.replace("schema: D01\n  - show: [\"vie\", \"intel\"]", "schema: D77\n  - show: [\"vie\"]"))
+    r = build(t2)
+    check("schéma absent du registre : le build s'arrête, message clair",
+          r.returncode == 1 and "D77" in r.stderr and "registre §1c" in r.stderr, r.stderr[-300:])
+    t3 = tmp / "err2"
+    make_project(t3, STORYBOARD.replace('"x": 1.9, "y": 3, "cls": "bleu"', '"x": 1.9 "y": 3'))
+    r = build(t3)
+    check("JSON invalide : le build s'arrête et nomme le schéma", r.returncode == 1 and "D01" in r.stderr, r.stderr[-300:])
+    t4 = tmp / "err3"
+    make_project(t4, STORYBOARD.replace("  - schema: D01\n  - show: [\"vie\", \"intel\"]", "  - show: [\"vie\", \"intel\"]", 1)
+                 .replace("[off/schema] la vie apparaît", "[off/schema] la vie apparaît"))
+    r = build(t4)
+    check("étape schéma sans `schema:` ni étape schéma avant : erreur claire",
+          r.returncode == 1 and "sans `schema: Dxx`" in r.stderr, r.stderr[-300:])
+    t5 = tmp / "err4"
+    make_project(t5, STORYBOARD.replace("**Mode** : webcam", "**Mode** : incrustation"))
+    r = build(t5)
+    check("mode incrustation : `schema` refusé (illisible dans un quart d'écran)",
+          r.returncode == 1 and "schema" in r.stderr, r.stderr[-300:])
+
+
+def page_for(tmp, comp, idx):
+    """Page de test pour une sous-composition : template déballé, gsap et CSS locaux."""
+    pages = tmp / "pages"
+    pages.mkdir(exist_ok=True)
+    for f in ("style-joriel.css", "style-joriel-ext.css", "gsap.min.js"):
+        shutil.copy(tmp / "assets" / f, pages / f)
+    html = (tmp / "compositions" / comp).read_text(encoding="utf-8")
+    inner = re.search(r"<template>(.*?)</template>", html, re.S).group(1)
+    script = re.search(r"<script>(.*)</script>", inner, re.S).group(1)
+    body = re.sub(r"<script>.*?</script>", "", inner, flags=re.S)
+    body = re.sub(r"<link[^>]*>", "", body)
+    path = pages / ("p%d.html" % idx)
+    path.write_text('<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="style-joriel.css">'
+                    '<link rel="stylesheet" href="style-joriel-ext.css"></head><body style="margin:0;width:1920px;height:1080px">'
+                    + body + '<script src="gsap.min.js"></script><script>' + script + "</script></body></html>",
+                    encoding="utf-8")
+    return path
+
+
+STATE_JS = """(uid) => {
+  const o = {};
+  document.querySelectorAll('[id^="' + uid + '-n"], [id^="' + uid + '-e"][id$="-p"], [id^="' + uid + '-e"]:not([id*="-"][id$="-p"])').forEach(el => {
+    if (!/-(n\\d+|e\\d+)$/.test(el.id)) return;
+    o[el.id] = Math.round(parseFloat(getComputedStyle(el).opacity) * 100) / 100;
+  });
+  const st = document.getElementById(uid + '-stage');
+  const m = new DOMMatrixReadOnly(getComputedStyle(st).transform);
+  o.cam = [Math.round(m.e), Math.round(m.f), Math.round(m.a * 100) / 100];
+  document.querySelectorAll('.slideno').forEach(el => { if (el.id.indexOf(uid) === 0) o['no:' + el.textContent] = parseFloat(getComputedStyle(el).opacity); });
+  return o;
+}"""
+
+
+def part_d(tmp):
+    print("D. Chromium : seeks, états, caméra")
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("  (saute : Playwright absent)")
+        return
+    path = page_for(tmp, "i00.html", 0)
+    uid = "sch-G1-1-0"
+    with sync_playwright() as p:
+        br = p.chromium.launch()
+        pg = br.new_page(viewport={"width": 1920, "height": 1080})
+        pg.set_default_timeout(15000)
+        errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.goto(path.as_uri(), wait_until="domcontentloaded")
+        dur = pg.evaluate("window.__timelines['i00'].duration()")
+        check("le script s'exécute sans erreur, timeline construite", not errs and dur > 0, errs)
+        labels = pg.evaluate("Object.keys(window.__timelines['i00'].labels)")
+        check("labels GSAP : une par étape du groupe, plus celles du reste de la scène",
+              all(x in labels for x in ("G1.1#0", "G1.1#1", "G1.1#2", "G1.1#3", "G1.2#0")), labels)
+
+        def at(t):
+            pg.evaluate("(t) => { window.__timelines['i00'].seek(t, false); return 1; }", t)
+            return pg.evaluate(STATE_JS, uid)
+
+        # nœuds : vie=n0 intel=n1 tech=n2 col=n3 filtre=n4
+        s = at(0.0)
+        check("t=0 : aucun nœud encore (ils apparaissent un par un), numéro G1.1#0 affiché",
+              all(s[uid + "-n%d" % k] == 0 for k in range(5)) and s["no:G1.1#0"] == 1, s)
+        s = at(1.0)
+        check("t=1 s : apparition échelonnée, vie avant intelligence", s[uid + "-n0"] == 1 and s[uid + "-n2"] == 0, s)
+        s = at(4.0)
+        check("t=4 s (étape 0) : vie et intelligence visibles, technologie pas encore",
+              s[uid + "-n0"] == 1 and s[uid + "-n1"] == 1 and s[uid + "-n2"] == 0, s)
+        check("t=4 s : un seul numéro d'étape visible (G1.1#0)",
+              s["no:G1.1#0"] == 1 and s["no:G1.1#1"] == 0 and s["no:G1.1#2"] == 0, s)
+        s = at(10.0)
+        check("t=10 s (étape 1) : technologie apparue, numéro d'étape G1.1#1",
+              s[uid + "-n2"] == 1 and s["no:G1.1#1"] == 1 and s["no:G1.1#0"] == 0, s)
+        s = at(16.0)
+        check("t=16 s (étape 2) : colonisation visible, caméra zoomée (échelle > 1,5)",
+              s[uid + "-n3"] == 1 and s["cam"][2] > 1.5, s["cam"])
+        s = at(26.0)
+        check("t=26 s (étape 3) : caméra revenue à l'identité, le filtre est là",
+              s["cam"] == [0, 0, 1] and s[uid + "-n4"] == 1, s["cam"])
+        check("t=26 s : focus -> vie et intelligence en retrait, technologie et filtre pleins",
+              abs(s[uid + "-n0"] - 0.25) < 0.02 and abs(s[uid + "-n1"] - 0.25) < 0.02
+              and s[uid + "-n2"] == 1 and s[uid + "-n4"] == 1, s)
+
+        # l'état à t ne dépend pas du chemin pour y arriver
+        samples = [0.0, 0.2, 3.0, 4.0, 8.5, 10.0, 12.9, 14.5, 16.0, 19.0, 22.5, 26.0, 28.9, 29.5]
+        fwd = {t: at(t) for t in samples}
+        back = {t: at(t) for t in reversed(samples)}
+        rng = random.Random(11)
+        rnd_order = samples * 3
+        rng.shuffle(rnd_order)
+        rnd = {t: at(t) for t in rnd_order}
+        diffs = [t for t in samples if not (fwd[t] == back[t] == rnd[t])]
+        check("seeks : même état en avant, en arrière et au hasard (%d instants x 3 parcours)" % len(samples),
+              not diffs, [(t, fwd[t], back[t]) for t in diffs[:1]])
+        br.close()
+
+
 if __name__ == "__main__":
     part_a()
     part_b()
+    with tempfile.TemporaryDirectory() as d:
+        tmp = Path(d)
+        part_c(tmp)
+        part_d(tmp)
     print("\n" + ("ÉCHEC : %d test(s) : %s" % (len(FAILS), ", ".join(FAILS)) if FAILS else "OK : tous les tests passent"))
     sys.exit(1 if FAILS else 0)

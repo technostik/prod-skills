@@ -63,6 +63,7 @@ CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de
 # échantillonnée à l'instant exact `n / fps` est du bon côté de la borne (jamais une image de retard).
 CAST_FRAME_LEAD = 0.25
 
+import schema_anim
 from render_primitive import (ALIASES, CSS_EXT, ICONS, OVERLAY_ANCHORS, OVERLAY_DEFAULTS,
                               KINDS, OVERLAY_KINDS, Primitives, as_blocks, canonical, canonical_anchor,
                               esc, num_parts, overlay_wrap, to_float)
@@ -447,10 +448,12 @@ def parse_storyboard(path):
             cur.append(ln)
     sections[name] = cur
 
-    fig_lines, ref_lines, scene_lines = [], [], []
+    fig_lines, ref_lines, scene_lines, schema_lines = [], [], [], []
     for h, body in sections.items():
         hh = norm(h)
-        if re.match(r"^##\s*1b", h) or "references" in hh and "registre" in hh:
+        if re.match(r"^##\s*1c", h):
+            schema_lines = body
+        elif re.match(r"^##\s*1b", h) or "references" in hh and "registre" in hh:
             ref_lines = body
         elif re.match(r"^##\s*1\b", h) or ("registre" in hh and "chiffre" in hh):
             fig_lines = body
@@ -464,7 +467,11 @@ def parse_storyboard(path):
     scenes = parse_scenes(scene_lines)
     if not scenes:
         die("aucune scène trouvée dans %s (attendu : §4 avec des en-têtes `### I1 — Titre`)" % path)
-    return {"title": title or "film", "meta": meta, "figures": figs, "refs": refs, "scenes": scenes}
+    schemas, schema_warns, schema_errs = schema_anim.schemas_from_lines(schema_lines)
+    if schema_errs:
+        die("\n  ".join(schema_errs))
+    return {"title": title or "film", "meta": meta, "figures": figs, "refs": refs, "scenes": scenes,
+            "schemas": schemas, "schema_warnings": schema_warns}
 
 
 def parse_scenes(lines):
@@ -972,6 +979,59 @@ def parse_avoid(*values):
     return out, warns
 
 
+def resolve_schema_steps(scenes, schemas):
+    """`kind: schema` : fixe `_schema` sur chaque étape. Une étape sans `schema:` reprend celui de
+    l'étape schéma précédente de la scène. Un schéma absent du registre §1c arrête le build."""
+    for sc in scenes:
+        last = None
+        for st in sc["steps"]:
+            if canonical(st["params"].get("kind") or "kw") != "schema":
+                continue
+            sid = str(st["params"].get("schema") or last or "").strip()
+            if not sid:
+                die("étape %s : `kind: schema` sans `schema: Dxx` (et aucune étape schéma avant dans la scène)"
+                    % st["id"])
+            if sid not in schemas:
+                die("étape %s : schéma `%s` absent du registre §1c (déclarés : %s)"
+                    % (st["id"], sid, ", ".join(sorted(schemas)) or "aucun"))
+            st["_schema"] = last = sid
+
+
+def schema_groups(scene):
+    """{id d'étape: groupe}. Un groupe = étapes consécutives d'une scène portant le même schéma ;
+    il devient UN clip, sinon l'état du schéma ne persisterait pas d'une étape à l'autre."""
+    groups, cur = {}, None
+    for st in scene["steps"]:
+        sid = st.get("_schema")
+        if sid is None:
+            cur = None
+            continue
+        if cur is not None and cur[0]["_schema"] == sid:
+            cur.append(st)
+        else:
+            cur = [st]
+        groups[st["id"]] = cur
+    return groups
+
+
+def schema_clip(renderer, scene, group, start, dur, cam_frame):
+    """Clip d'un groupe d'étapes schéma -> (HTML de la section, JS à ajouter à la composition)."""
+    items = [{"step": st, "rel": max(0.0, st["_t"] - start), "camera": st.get("camera", "off")}
+             for st in group]
+    first, last = items[0], items[-1]
+    sdur = (max(0.4, min(last["step"]["_abs_dur"], dur - last["rel"])) if dur > last["rel"]
+            else max(0.4, last["step"]["_abs_dur"]))
+    sid = re.sub(r"[^A-Za-z0-9_-]+", "-", first["step"]["id"])
+    out = renderer.schema_group(scene, items, cam_frame=cam_frame, sel="#step-" + sid)
+    if out is None:
+        return "", ""
+    html = ('<section class="clip step step-sch" id="step-%s" data-step="%s" data-start="%.2f" '
+            'data-duration="%.2f" data-track-index="1" data-cam="%s">%s</section>'
+            % (sid, esc(first["step"]["id"]), first["rel"], last["rel"] + sdur - first["rel"],
+               esc(first["camera"]), out["inner"]))
+    return html, out["js"]
+
+
 def check_overlay_kinds(scenes):
     """Mode incrustation : refuse les primitives trop denses pour un quart d'écran."""
     bad = []
@@ -1041,7 +1101,17 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
     slideno = ""
 
     parts = []
+    schema_js = ""
+    sch_groups = schema_groups(scene)
+    sch_cam = ("#cam-frame-" + cid) if (camera_src and not cast and not incrust) else None
     for step in scene["steps"]:
+        grp = sch_groups.get(step["id"])
+        if grp is not None:          # étape d'un schéma : tout le groupe est rendu avec sa première étape
+            if grp[0] is step:
+                sec, js_part = schema_clip(renderer, scene, grp, start, dur, sch_cam)
+                parts.append(sec)
+                schema_js += js_part
+            continue
         html, opts = renderer.render_step(scene, step)
         rel = max(0.0, step["_t"] - start)
         sdur = max(0.4, min(step["_abs_dur"], dur - rel)) if dur > rel else max(0.4, step["_abs_dur"])
@@ -1125,6 +1195,7 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
             "__CASTCROP__", json.dumps(cast["crop"]))
     else:
         camcall, castcam = JS_CAMCALL_LEGACY, ""
+    castcam += schema_js
     js = (JS_TEMPLATE.replace("__CAMCALL__", camcall)
           .replace("__CASTCAM__", castcam)
           .replace("__DUR__", "%.2f" % dur)
@@ -1317,6 +1388,8 @@ def main():
     movie = parse_storyboard(sb_path)
     scenes = movie["scenes"]
     figs, refs = movie["figures"], movie["refs"]
+    schemas = movie["schemas"]
+    resolve_schema_steps(scenes, schemas)
 
     transcript = None
     if a.transcript:
@@ -1452,7 +1525,11 @@ def main():
             "timeline": cam_plan["plan"].global_timeline(total),
         }, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    renderer = Primitives(root, figs, refs)
+    if schemas:
+        (data / "schemas.json").write_text(
+            json.dumps({"schemas": {k: v.as_dict() for k, v in schemas.items()}}, ensure_ascii=False, indent=2),
+            encoding="utf-8")
+    renderer = Primitives(root, figs, refs, schemas)
     compositions = []
     for i, sc in enumerate(scenes):
         # valeur des figures pour le studio
@@ -1481,7 +1558,7 @@ def main():
             die("assets/style-joriel.css absent et modèle de démo introuvable")
     (root / "assets" / "style-joriel-ext.css").write_text(CSS_EXT, encoding="utf-8")
 
-    for w in renderer.warnings:
+    for w in movie["schema_warnings"] + renderer.warnings:
         print("AVERTISSEMENT : " + w)
     missing = []
     for sc in scenes:
