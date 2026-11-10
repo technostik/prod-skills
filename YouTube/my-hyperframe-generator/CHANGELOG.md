@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.16.0
+
+- **Schémas animés (`kind: schema`).** Un schéma se déclare une fois dans un nouveau registre §1c du storyboard (un bloc JSON : nœuds posés sur une grille 16 × 9, liens), puis les étapes le pilotent : `show` (apparition), `glow` (relief), `focus` (le reste passe en retrait), `zoom` (cadrage caméra). Contrairement aux autres primitives, **l'état persiste d'une étape à la suivante** : le schéma se construit au fil de la voix, et un schéma qui revient dans une autre scène retrouve ce qui était déjà affiché.
+- Les étapes schéma consécutives d'une scène sont rendues dans **un seul clip** ; chaque étape garde son identifiant, son numéro d'étape et son label GSAP (`check-steps.py` inchangé). Sans schéma dans le storyboard, la sortie de `build.py` est identique à l'octet près.
+- Nouveau module `scripts/schema_anim.py` (pur, sans E/S) : boîtes dimensionnées d'après le texte (estimation déterministe), flèches clippées aux boîtes, liens courbes, avertissements de mise en page (hors scène, chevauchement, étiquette plus large que le lien), état suivi en Python : le JS ne reçoit que des opérations avec valeurs de départ et d'arrivée, donc la timeline se rejoue à l'identique quel que soit l'ordre des seeks.
+- Refusé en mode `incrustation` (illisible dans un quart d'écran). `Primitives(root, figures, refs, schemas=None)` : 4ᵉ argument optionnel, le studio pas à pas ne change pas. `data/schemas.json` est écrit quand le storyboard contient des schémas.
+- Documentation : `references/schemas-animes.md` (format, grille, règles de mise en scène), règle 13 du prompt scénario → storyboard. Tests : `scripts/test-schema.py` (logique, build de bout en bout, rendu Chromium avec seeks avant / arrière / au hasard).
+
 ## 1.15.0
 
 - **Mode `incrustation` (4ᵉ mode).** La vidéo (webcam plein écran ou screencast OBS) reste plein écran **sous** les visuels, qui sont posés par-dessus dans l'une de 9 zones (`place:` : coin = centre d'un quart d'écran, haut/bas/gauche/droite = centre d'une moitié, centre). Position automatique par défaut : un des deux quarts supérieurs, reproductible (dépend de l'id de l'étape), jamais deux fois de suite la même, avec zones à éviter (`--avoid`, `**Zones à éviter**`). Le storyboard n'y choisit pas la caméra ; les intervalles Cast détectés ajoutent le crop du filet comme en mode webcam. Seules les primitives lisibles dans un quart d'écran sont acceptées (le build refuse les autres avec un message clair). `build.py` lit `**Mode**` (ou `--mode`) ; forme courte `[kind]` dans le format minuté ; `data/steps.json` porte `place` / `place_source`. Les trois autres modes sont inchangés (compositions et index identiques à l'octet près). Tests : `scripts/test-incrustation.py`.

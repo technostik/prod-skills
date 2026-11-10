@@ -370,6 +370,17 @@ Chaque gabarit ci-dessous a une signature de mise en page propre.
 - Exemple validé : `S04.3#2` (élèves ↓ / enseignants → / non-enseignants ↗,
   absorb `S04.3#1`).
 
+### 9.5. `schema` — schéma qui se construit
+
+Toutes les autres primitives repartent de zéro à chaque étape ; `schema` est la seule dont **l'état
+persiste** : les éléments déjà montrés restent, la caméra et l'isolement (`focus`) se prolongent.
+Les nœuds reprennent les couleurs de ce langage (`plain`, `bleu`, `vert`, `or`, `rouge`, `dim`),
+fond sombre translucide, bordure de la couleur du nœud, typographie la plus grande possible
+(`size` s / m / l). Un élément nouveau apparaît en *pop*, un lien se trace, le reste passe en
+retrait (25 %) sous `focus`. Un schéma complet est petit : on le **cadre** (`zoom`) sur la zone dont
+on parle plutôt que de réduire le texte. Règles de conception, grille et exemple :
+`references/schemas-animes.md`.
+
 ---
 
 *V1 : tokens + mapping sur le moteur existant. V1.1 : 3 gabarits à

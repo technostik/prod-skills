@@ -38,6 +38,26 @@ F03 reste `verify` tant que la source n'est pas confirmée.
 | R01 | tweet | https://x.com/exemple/status/1 | assets/references/R01-tweet.png | ok |
 | R02 | page | https://www.lemonde.fr/exemple | assets/references/R02-page.png | ok |
 
+## 1c. Registre des schémas
+
+### D01 — La chaîne de la dépense
+
+```json
+{
+  "nodes": [
+    {"id": "budget", "label": "Budget", "x": 2.4, "y": 3, "cls": "bleu", "size": "s"},
+    {"id": "postes", "label": "Postes", "x": 6.4, "y": 3, "cls": "or", "size": "s"},
+    {"id": "classe", "label": "Heures de cours", "x": 11.2, "y": 3, "cls": "vert", "size": "s"},
+    {"id": "niveau", "label": "Niveau des élèves", "x": 11.2, "y": 6.6, "cls": "rouge", "size": "m"}
+  ],
+  "edges": [
+    {"from": "budget", "to": "postes"},
+    {"from": "postes", "to": "classe", "label": "?", "manual": true},
+    {"from": "classe", "to": "niveau", "cls": "rouge", "manual": true}
+  ]
+}
+```
+
 ## 2. Vigilance
 
 Ne pas transformer la corrélation dépense/résultats en causalité unique.
@@ -172,11 +192,42 @@ Ne pas transformer la corrélation dépense/résultats en causalité unique.
   - camera: off
   - notes: laisser le silence après.
 
+### S05 — Où va l'argent
+
+- section: analyse · type: cards · fond: BG-00 · durée: 28
+
+#### Étapes
+
+- `S05.1#0` · cue « budget » → **le budget, puis les postes**
+  - kind: schema
+  - schema: D01
+  - show: ["budget", "postes"]
+  - notes: poser le point de départ.
+
+- `S05.1#1` · cue « classe » → **l'argent arrive-t-il en classe ?**
+  - kind: schema
+  - show: ["classe", "postes>classe"]
+  - zoom: ["postes", "classe"]
+  - notes: le « ? » est la question de la vidéo.
+
+- `S05.1#2` · cue « résultat » → **le niveau, isolé**
+  - kind: schema
+  - show: ["niveau", "classe>niveau"]
+  - zoom: "all"
+  - focus: ["classe", "niveau"]
+  - notes: on revient à la vue d'ensemble, on isole la fin de chaîne.
+
+- `S05.1#3` · cue « au total » → **tout reprend sa place**
+  - kind: schema
+  - focus: "all"
+  - glow: ["postes>classe"]
+  - notes: rétablir, puis souligner le maillon douteux.
+
 ## 5. Fonds
 
 | ID | Description | Scènes |
 |---|---|---|
-| BG-00 | noir + voile (défaut, punchlines) | I0, S04 |
+| BG-00 | noir + voile (défaut, punchlines) | I0, S04, S05 |
 | BG-01 | salle de classe vide | I1 |
 | BG-02 | cour d'école | S01 |
 | BG-03 | couloir | S02 |

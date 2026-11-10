@@ -57,7 +57,7 @@ Par défaut : le milieu d'un des deux quarts supérieurs (`haut-gauche`, `haut-d
 
 ### Primitives autorisées
 
-Dans un quart d'écran, un visuel dense réduit de moitié ne se lit plus. Autorisées : `kw`, `count`, `strike`, `enumerate` (court), `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card` (et leurs alias). **Refusées** (le build s'arrête avec un message qui nomme l'étape et la primitive) : `versus`, `diverge`, `seuil`, `bars`, `compare3`, `waffle`, `sources`, `cols2`, `title`, `punch`. Une idée qui demande une de ces primitives passe en mode webcam, ou se découpe en étapes simples.
+Dans un quart d'écran, un visuel dense réduit de moitié ne se lit plus. Autorisées : `kw`, `count`, `strike`, `enumerate` (court), `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card` (et leurs alias). **Refusées** (le build s'arrête avec un message qui nomme l'étape et la primitive) : `versus`, `diverge`, `seuil`, `bars`, `compare3`, `waffle`, `sources`, `cols2`, `title`, `punch`, `schema` (un schéma qui se construit demande le plein cadre). Une idée qui demande une de ces primitives passe en mode webcam, ou se découpe en étapes simples.
 
 ## Rendu
 

@@ -56,6 +56,15 @@ Les figures `verify` restent dans le registre (elles sont dites), mais ne passen
 | R01 | tweet | https://x.com/…/status/… | assets/references/R01-tweet.png | ok |
 | R02 | page | https://… | assets/references/R02-page.png | à capturer |
 
+## 1c. Registre des schémas
+
+### D01 — Titre du schéma
+
+```json
+{"nodes": [{"id": "a", "label": "A", "x": 4, "y": 4}, {"id": "b", "label": "B", "x": 11, "y": 4}],
+ "edges": [{"from": "a", "to": "b"}]}
+```
+
 ## 2. Vigilance
 
 Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
@@ -188,6 +197,7 @@ Seules les primitives lisibles en surimpression sont acceptées (`kw`, `count`, 
 - `§1` : `ID`, `Valeur` (ou `Chiffre`), `Label`, `Source`, `Statut`, `Note`.
 - `§1b` : `ID`, `Type`, `Source`, `Fichier local`, `Statut`.
 - Statut chiffre : `ok` · `verify`. Statut référence : `ok` · `à capturer` · `bloquée`.
+- `§1c` : un en-tête `### Dxx — Titre` puis **un bloc JSON** par schéma (nœuds, liens). Optionnel ; absent, rien ne change. Format et mise en page : `references/schemas-animes.md`.
 - Les lignes d'une sous-section « Écartés » ne sont **jamais** importées.
 - Un `Rxx` ne s'affiche jamais à l'écran : seule l'attribution lisible apparaît.
 
@@ -219,6 +229,7 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 | `punch` | punchline mot à mot, noir pur | `text` |
 | `brand` | logo local | `brand` (nom de `assets/brands/<nom>.svg`) |
 | `cols2` | mise en deux colonnes | `blocks` |
+| `schema` / `diagram` | schéma animé qui se construit d'une étape à l'autre (plein cadre ; refusé en incrustation) | `schema` (`Dxx` du registre §1c), `show`, `glow`, `focus`, `zoom` : voir `references/schemas-animes.md` |
 
 **Blocs** (dans `blocks`, `left`, `right`, `items`, `rows`) : `kw`, `sub`, `arrow`, `strike`, `icon`, `brand`, `chip`, `stamp`, `check`, `cross`, `nl`, `darr`, `darr-big`. Les clés `cls` acceptent `plain`, `bleu`, `vert`, `or`, `rouge`, `dim`.
 

@@ -30,3 +30,7 @@ La caméra est intégrée à chaque composition (`cam-frame` + `<video data-medi
 ## Contexte LLM (scénario → storyboard)
 
 Fichiers communs (`SKILL.md` § Contexte LLM), plus : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` et `transcript.json`. `prepare-webcam-context.sh` les rassemble dans un dossier (option `--project`).
+
+## Schémas animés
+
+`kind: schema` (voir `references/schemas-animes.md`) est un visuel plein cadre comme les autres : choisir `camera: off` ou `pip` pendant le schéma (`full` recouvre son centre, le build avertit). Les étapes consécutives d'un schéma sont un seul clip ; la caméra de chaque étape y est appliquée comme ailleurs.

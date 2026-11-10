@@ -226,6 +226,16 @@ Les quatre valeurs de `camera` (`off`, `pip`, `full`, `cast`), `applyCam` et la 
 
 Une primitive peut être posée *sur* la vidéo plein écran, dans l'une des 9 zones de `modes/incrustation.md`. Le balisage est le même qu'en plein cadre ; il est enveloppé par `overlay_wrap()` (`render_primitive.py`) dans `.ov > .ovstage`, une scène de 1920×1080 réduite (échelle 0,5 ; 0,75 au centre) et centrée dans le sous-rectangle de la zone. Aucune primitive n'a de variante dédiée. Seules les primitives de `OVERLAY_KINDS` (`kw`, `count`, `strike`, `enumerate`, `stamp`, `define`, `brand`, `chain`, `image`, `ref-shot`, `ref-card`) sont acceptées : `build.py` refuse les autres, trop denses pour un quart d'écran. Ce n'est pas une primitive visuelle de plus : le catalogue ne change pas.
 
+## Schéma animé (`schema`)
+
+Rendu par `scripts/schema_anim.py` (appelé via `Primitives.schema_group`), pas par un balisage figé :
+le schéma est déclaré dans le registre §1c et les étapes le pilotent. Les étapes consécutives d'un
+même schéma sont rendues dans **un seul** `<section class="clip step step-sch">` (un `.sch-stage`
+1920×1080 contenant un `<svg>` pour les liens et des `<div class="sch-node …">` pour les nœuds),
+chaque étape gardant son numéro (`.slideno` + `data-step`). La caméra est un `x`/`y`/`scale` GSAP
+sur `.sch-stage` (origine en haut à gauche). Pas de balisage à recopier : voir
+`references/schemas-animes.md`.
+
 ## Règle d'or
 
 Chaque étape du scénario doit produire **au moins un élément HTML non-textuel** (image, SVG, primitive visuelle) qui illustre le concept. Jamais de sous-titre seul.

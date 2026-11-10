@@ -136,6 +136,9 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 | F09 | −16 | points maths PISA | PISA 2025 | ok | |
 ```
 
+>
+> 13. **Schémas animés** (`kind: schema`). Quand une explication a une structure (processus, causes et effets, boucle, composants), conçois **un schéma** : déclare-le une fois dans §1c (`### Dxx`, bloc JSON : nœuds placés sur la grille 16 × 9, liens), puis pilote-le avec des étapes `kind: schema` consécutives (`show`, `glow`, `focus`, `zoom`). Construis-le **dans l'ordre de la parole**, deux ou trois éléments par étape, `zoom` sur la zone dont on parle, `camera` `off` ou `pip`. Pas de schéma en mode `incrustation`. Respecte les largeurs de nœuds et la grille de `references/schemas-animes.md` : `build.py` avertit des débordements et chevauchements.
+
 ---
 
 ## Checklist de validation (à passer avant de rendre le STORYBOARD.md)
@@ -153,4 +156,5 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 - [ ] Les listes JSON tiennent sur **une seule ligne** (`blocks`, `left`, `right`, `items`, `rows`, `up`, `down`)
 - [ ] Format markdown exact (tableaux, tirets, indentation)
 - [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape
+- [ ] Schémas : déclarés en §1c (JSON valide, nœuds dans la scène et sans chevauchement), `Dxx` cité par la 1re étape, éléments montrés dans l'ordre de la parole, `zoom` / `focus` ramenés à `"all"` quand on revient à l'ensemble
 - [ ] Incrustation : aucun `camera`, primitives lisibles en surimpression uniquement, `place:` seulement sur demande

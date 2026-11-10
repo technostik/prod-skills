@@ -4,7 +4,7 @@ description: Build a Joriel-styled HyperFrames video in one of four modes — au
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.15.0
+version: 1.16.0
 ---
 
 # Hyperframe-joriel
@@ -283,7 +283,7 @@ Chaque mode a son sous-skill, à lire une fois le mode choisi (§ Routeur) : `mo
 
 - `scripts/build.py` : builder générique des quatre modes, source unique `assets/storyboard.md`. Il ne remplace pas les builders du studio (mode slides, `modes/slides.md`), qui gardent la vue d'enregistrement pas à pas.
 - `scripts/render_primitive.py` : module commun de rendu des primitives, importé par `build.py` et `build_studio_anim.py`. Une primitive n'est écrite qu'une fois.
-- Les primitives sont dans `references/primitives-joriel.md` et rendues par `render_primitive.py`. `seuil`, `bars`, `compare3`, `brand`, la caméra et l'incrustation sont couverts ; leurs styles manquants sont écrits dans `assets/style-joriel-ext.css` au build.
+- Les primitives sont dans `references/primitives-joriel.md` et rendues par `render_primitive.py`. Les **schémas animés** (`kind: schema`, registre §1c, état qui persiste d'une étape à l'autre) sont décrits dans `references/schemas-animes.md` et rendus par `scripts/schema_anim.py`. `seuil`, `bars`, `compare3`, `brand`, la caméra et l'incrustation sont couverts ; leurs styles manquants sont écrits dans `assets/style-joriel-ext.css` au build.
 - Un `kind` absent du catalogue ne s'invente pas : on l'ajoute d'abord à `visual-language-joriel.md`, `primitives-joriel.md`, `examples/demo/` et `render_primitive.py`, puis on l'utilise.
 
 Limites assumées :
