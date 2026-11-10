@@ -244,7 +244,7 @@ Le temps vient de `transcript.json` s'il est fourni : chaque `cue` est recalé s
 
 **Nomenclature :** toujours deux chiffres avec zéro initial pour le numéro de scène — `i00.html`, `i01.html`, …, `i09.html`, `i10.html`. Jamais `i3.html`. Les identifiants (`data-composition-id`, `window.__timelines`, cadre caméra) suivent le même nommage (`i03`, etc.).
 
-Le HTML produit reprend le balisage et les classes de `examples/demo/` : le catalogue des primitives (10 scènes, `i00` à `i09` ; `i09` : webcam avec Cast), une primitive par étape. Les ids du storyboard sont les labels GSAP. Contrôle : `python3 scripts/check-steps.py`, puis `npm run check`.
+Le HTML produit reprend le balisage et les classes de `examples/demo/` : le catalogue des primitives (12 scènes, `i00` à `i11` ; `i09` : webcam avec Cast ; `i10` et `i11` : un même schéma déployé sur deux compositions), une primitive par étape. Les ids du storyboard sont les labels GSAP. Contrôle : `python3 scripts/check-steps.py`, puis `npm run check`.
 
 L'exemple se vérifie seul :
 

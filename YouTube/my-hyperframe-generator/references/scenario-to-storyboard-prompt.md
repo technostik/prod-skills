@@ -14,7 +14,7 @@ Fichiers fournis **tels quels** (pas de résumé) :
 4. **references/primitives-joriel.md** — Patterns GSAP par primitive
 5. **references/storyboard-format.md** — Format de sortie attendu (CE FICHIER)
 6. **references/data-schemas.md** — Schémas `figures.json`, `refs.json`, `steps.json`, `design.json`
-7. **examples/demo/** — Exemples concrets de chaque primitive (`compositions/i00.html`…`i09.html`)
+7. **examples/demo/** — Exemples concrets de chaque primitive (`compositions/i00.html`…`i11.html` ; `i10` et `i11` : un même schéma déployé sur deux compositions)
 
 Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 - **Webcam** et **incrustation** : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` (intervalles de screencast OBS, dans le référentiel de `cam-clean.mkv`) et `transcript.json` (mots et temps de l'audio nettoyé)

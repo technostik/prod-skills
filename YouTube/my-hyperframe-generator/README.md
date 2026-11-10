@@ -27,7 +27,7 @@ Prérequis et variables d'environnement : `SKILL.md` § Prérequis.
 | `modes/` | un sous-skill par mode, lu seulement une fois le mode choisi : `auto.md`, `slides.md`, `webcam.md`, `incrustation.md` |
 | `references/` | langage visuel, primitives (balisage exact), format du storyboard, conventions studio et webcam, schémas `data/`, glossaire |
 | `scripts/` | `build.py` (composition finale), `render_primitive.py` (primitives partagées), `schema_anim.py` (schémas animés), builders studio, `check-steps.py`, nettoyage webcam (`concat-mkv.sh`, `clean-posthoc.py`), détection des screencasts OBS (`detect-cast.py`), `post-render.py` (inserts), `lint-repo.py` ; tests : `test-detect-cast.py`, `test-cast-build.py`, `test-schema.py`, `test-post-render.sh` |
-| `examples/demo/` | catalogue des primitives (10 scènes dont la webcam avec Cast, lorem ipsum, nom affiché à l'écran) ; médias factices via `scripts/make-placeholders.sh` |
+| `examples/demo/` | catalogue des primitives (12 scènes dont la webcam avec Cast et un schéma déployé sur deux compositions, lorem ipsum, nom affiché à l'écran) ; médias factices via `scripts/make-placeholders.sh` |
 | `examples/storyboard.example.md` | storyboard complet et parsable, couvre toutes les primitives |
 | `examples/gabarits/` | exemples JSON de `data/design.json` pour `diverge`, `seuil`, `compare3`, `cols2` |
 | `prepare-webcam-context.sh` | script ad hoc de préparation de contexte (voir ci-dessous) |

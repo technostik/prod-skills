@@ -1,0 +1,80 @@
+
+/* ------------------------------------------------------------------ *
+ * style-joriel-ext.css — primitives absentes de la démo.
+ * Fichier généré par scripts/build.py ; ne pas éditer à la main.
+ * ------------------------------------------------------------------ */
+/* Barres comparatives (échelle commune, base 100) */
+.bars{width:100%;max-width:78vw}
+.brow{margin:1.4vh 0;text-align:left}
+.blab{font-size:3.4vh;line-height:1.2;color:var(--bleu-clair);margin-bottom:.7vh}
+.btrack{height:3.2vh;border-radius:2vh;background:rgba(255,255,255,.09);overflow:hidden}
+.bfill{height:100%;width:100%;border-radius:2vh;background:var(--bleu);transform-origin:left center;transform:scaleX(0)}
+.bfill.vert{background:var(--vert)}.bfill.rouge{background:var(--rouge)}.bfill.or{background:var(--or)}
+.bflab{margin-top:2vh;font-size:3.4vh;color:var(--gris);text-align:center}
+/* Seuil : valeur contre repère */
+.seuil{width:100%;max-width:78vw}
+.srow{display:flex;align-items:baseline;justify-content:center;gap:1.2vw}
+.srow .dbig{font-size:23vh}
+.seuil .dbig.bad{color:var(--rouge);text-shadow:0 0 6vh var(--halo-rouge),0 .5vh 2.4vh var(--ombre)}
+.seuil .dbig.good{color:var(--vert);text-shadow:0 0 6vh var(--halo-vert),0 .5vh 2.4vh var(--ombre)}
+.seuil .dbig.neutre{color:var(--or);text-shadow:0 0 6vh var(--halo-or),0 .5vh 2.4vh var(--ombre)}
+.spiste{position:relative;height:3.2vh;border-radius:2vh;background:rgba(255,255,255,.09);margin:2.6vh 0 5vh}
+.sfill{height:100%;width:100%;border-radius:2vh;background:var(--or);transform-origin:left center;transform:scaleX(0)}
+.seuil.bad .sfill{background:var(--rouge)}.seuil.good .sfill{background:var(--vert)}
+.stick{position:absolute;top:-1.2vh;bottom:-1.2vh;width:.4vh;background:var(--blanc);opacity:.9}
+.stick span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:1vh;white-space:nowrap;font-size:2.6vh;color:var(--gris)}
+/* Compare3 : trois séries hétérogènes */
+.compare3{width:100%;max-width:84vw}
+.crow{display:flex;align-items:center;gap:2vw;padding:1.5vh 0;border-bottom:.2vh solid rgba(255,255,255,.1);text-align:left}
+.crow:last-child{border-bottom:0}
+.crow .dico{width:8vh;height:8vh;margin:0}
+.c3body{flex:1;min-width:0}
+.c3kw{font-size:5.2vh;line-height:1.15;font-weight:800;text-shadow:0 .5vh 2.4vh var(--ombre)}
+.c3kw.bleu{color:var(--bleu)}.c3kw.vert{color:var(--vert)}.c3kw.or{color:var(--or)}.c3kw.rouge{color:var(--rouge)}
+/* Waffle : proportion sur 100 cases */
+.waffle-wrap{width:100%;max-width:78vw;text-align:center}
+.waffle{display:grid;grid-template-columns:repeat(20,1fr);gap:.55vh;width:36vw;margin:2vh auto 0}
+.waffle span{display:block;aspect-ratio:1;border-radius:.3vh;background:rgba(255,255,255,.1)}
+.waffle span.on{background:var(--or)}
+/* Sources : bloc neutre, alimenté par les figures ou par `items` */
+.sources{text-align:left;max-width:80vw}
+.srct{font-size:3.6vh;letter-spacing:.2em;text-transform:uppercase;color:var(--or);margin-bottom:2vh}
+.sources .src{font-size:3.4vh;line-height:1.5;color:var(--blanc)}
+.sources .snote{font-size:3vh;line-height:1.4;margin-top:2vh;color:var(--bleu-clair)}
+/* Marque (logo local, jamais chargé du réseau) */
+.brand{height:8vh;width:auto;vertical-align:middle;background:var(--blanc);border-radius:1.2vh;padding:.8vh 1.2vw}
+.brand-text{display:inline-block;font-size:4.6vh;font-weight:800;padding:.6vh 1.4vw;border-radius:1vh;background:var(--blanc);color:#111}
+/* Schémas animés (kind schema) : un schéma 1920×1080 posé sur la scène, cadré par la caméra GSAP */
+.sch-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.sch-svg{position:absolute;left:0;top:0;overflow:visible}
+.sch-edge path{fill:none;stroke:var(--c);stroke-width:5;stroke-linecap:round;stroke-dasharray:1}
+.sch-edge .sch-head{fill:var(--c);stroke:none}
+.sch-edge.plain{--c:#C9D1DC}.sch-edge.bleu{--c:var(--bleu)}.sch-edge.vert{--c:var(--vert)}
+.sch-edge.or{--c:var(--or)}.sch-edge.rouge{--c:var(--rouge)}.sch-edge.dim{--c:var(--gris)}
+.sch-node{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:4px solid var(--c);border-radius:26px;background:rgba(6,10,18,.74);color:var(--c);font-weight:800;line-height:1.22;white-space:nowrap;box-shadow:0 0 0 0 rgba(0,0,0,0);text-shadow:0 0 28px var(--halo),0 5px 24px var(--ombre)}
+.sch-node.plain{--c:var(--blanc);--halo:rgba(244,246,249,.18)}.sch-node.bleu{--c:var(--bleu);--halo:var(--halo-bleu)}
+.sch-node.vert{--c:var(--vert);--halo:var(--halo-vert)}.sch-node.or{--c:var(--or);--halo:var(--halo-or)}
+.sch-node.rouge{--c:var(--rouge);--halo:var(--halo-rouge)}.sch-node.dim{--c:var(--gris);--halo:rgba(154,164,178,.2)}
+.sch-s{font-weight:400;color:var(--bleu-clair);text-shadow:none;margin-top:8px}
+.sch-elab{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;font-size:32px;color:var(--bleu-clair);background:rgba(0,0,0,.6);border-radius:12px;white-space:nowrap}
+/* Caméra (mode webcam) */
+.cam-frame{position:absolute;z-index:6;border-radius:1.4vh;overflow:hidden;border:.3vh solid var(--bleu);background:#000;box-shadow:0 1.6vh 5vh rgba(0,0,0,.65)}
+.cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* Cast : wrapper intérieur qui porte le crop (transform GSAP). Positionné : il est le parent de la vidéo ET de l'image que le moteur insère à son côté au rendu. */
+.cam-content{position:absolute;inset:0;transform-origin:50% 0}
+/* Incrustation : la vidéo est sous les visuels (z-index 2 < .step 4), cadre plein écran, sans habillage. */
+.cam-frame.cam-under{z-index:2;left:0;top:0;width:1920px;height:1080px;border:0;border-radius:0;box-shadow:none}
+/* Ancres : sous-rectangle de l'écran (px sur 1920×1080) ; la scène réduite y est centrée. */
+.ov{position:absolute;overflow:visible}
+.ov-tl{left:0;top:0;width:960px;height:540px}.ov-tr{left:960px;top:0;width:960px;height:540px}
+.ov-bl{left:0;top:540px;width:960px;height:540px}.ov-br{left:960px;top:540px;width:960px;height:540px}
+.ov-t{left:0;top:0;width:1920px;height:540px}.ov-b{left:0;top:540px;width:1920px;height:540px}
+.ov-l{left:0;top:0;width:960px;height:1080px}.ov-r{left:960px;top:0;width:960px;height:1080px}
+.ov-c{left:0;top:0;width:1920px;height:1080px}
+.ovstage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;margin:-540px 0 0 -960px}
+.ov-s50 .ovstage{transform:scale(.5)}.ov-s75 .ovstage{transform:scale(.75)}.ov-s100 .ovstage{transform:scale(1)}
+/* dans la scène réduite, le contenu est centré sans l'espace réservé au titre, sur un fond sombre translucide */
+.ovstage .zone{top:0;bottom:0}
+.ovstage .in{background:rgba(6,10,18,.62);border-radius:3vh;padding:3vh 3vw}
+/* Statut de source non vérifiée : invisible par défaut, jamais un code à l'écran */
+[data-status="verify"]{outline:0}

@@ -141,6 +141,51 @@ groupe : ses nœuds et les liens entre eux) · `"all"` (tout). Une liste JSON, o
 8. Un schéma illustre ce qui est dit : **aucun texte éditorial n'est écrit par le script**. Les
    libellés viennent du registre ; le texte dit reste dans `notes`.
 
+## Exemple : un schéma sur deux compositions
+
+Un schéma peut traverser une frontière de scène. Chaque scène reste une composition séparée
+(`compositions/iNN.html`), mais `build.py` reporte les éléments déjà montrés : la seconde scène
+réaffiche le schéma avec **ce qui était là**, sans le redessiner. Le zoom et le focus, eux,
+repartent de zéro (leurs valeurs ne sont pas reportées).
+
+```markdown
+### I10 — La chaîne (1/2)
+
+- `I10.1#0` · cue « budget » → **le budget, puis les postes**
+  - kind: schema
+  - schema: D01
+  - show: ["budget", "postes"]
+
+- `I10.1#1` · cue « classe » → **l'argent arrive-t-il en classe ?**
+  - kind: schema
+  - show: ["classe", "postes>classe"]
+  - zoom: ["postes", "classe"]
+
+### I11 — La chaîne (2/2)
+
+- `I11.1#0` · cue « résultat » → **le niveau, isolé**
+  - kind: schema
+  - schema: D01
+  - show: ["niveau", "classe>niveau"]
+  - zoom: "all"
+  - focus: ["classe", "niveau"]
+
+- `I11.1#1` · cue « au total » → **tout reprend sa place**
+  - kind: schema
+  - focus: "all"
+  - glow: ["postes>classe"]
+```
+
+Points à retenir :
+
+- La première étape schéma de chaque scène **nomme** le schéma (`schema: D01`) ; le `last` qui
+  permet de l'omettre ne vaut que dans une scène.
+- `I11.1#0` ne montre que `niveau` et `classe>niveau` : `budget`, `postes`, `classe` et les liens
+  déjà tracés sont visibles d'emblée.
+- Le rendu coupe d'une composition à l'autre : si la scène précédente finissait zoomée, la
+  suivante rouvre en vue d'ensemble. Écrire `zoom: "all"` quand on veut être sûr de la reprise.
+- Exemple vivant : `examples/demo/` scènes `I10` et `I11` (`compositions/i10.html`, `i11.html`).
+
 ## Ce que `build.py` fait
 
 - Les étapes schéma consécutives d'une même scène et d'un même schéma deviennent **un seul clip**

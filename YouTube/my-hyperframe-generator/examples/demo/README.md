@@ -25,6 +25,8 @@ Tous sont ignorés par git. `make-placeholders.sh` crée un aplat à la place de
 | `assets/references/ref-capture.png` | capture d'une page web | 1920×1080, n'importe laquelle |
 | `assets/cam-clean.mkv` | toi face caméra | 16:9, au moins 22 s (30 s conseillé), le son n'est pas utilisé |
 
+`assets/style-joriel-ext.css` n'est **pas** ignoré : il porte les styles des primitives rendues par `build.py` qui ne sont pas dans `style-joriel.css` (dont les schémas animés, `.sch-*`). C'est le même fichier que `scripts/build.py` écrit dans un projet.
+
 Si tu as encore les fichiers du projet de maths, depuis `examples/demo/` :
 
 ```bash
@@ -66,9 +68,17 @@ cp <ancien>/assets/cam-clean.mkv assets/cam-clean.mkv     # les 30 premières se
 | `I8.1#2` | webcam · full | `compositions/i08.html` | dépôt d'origine |
 | `I9.1#0` | webcam · pip avant Cast | `compositions/i09.html` | dépôt d'origine |
 | `I9.1#1` | webcam · cast (plein écran, crop du filet OBS) | `compositions/i09.html` | mode Cast de `scripts/build.py` |
+| `I10.1#0` | schéma · 1/2 (Budget, Postes) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
+| `I10.1#1` | schéma · 1/2 (Heures de cours, zoom) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
+| `I11.1#0` | schéma · 2/2 (reprise de l'état, Niveau) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
+| `I11.1#1` | schéma · 2/2 (focus « all », glow) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
+
+Le même schéma `D01` (registre §1c de `storyboard.md`) **se déploie sur deux compositions** : `i10` construit sa première moitié, `i11` retrouve les nœuds déjà affichés et termine le schéma. C'est le cas à regarder pour vérifier la persistance de l'état d'une scène à l'autre.
 
 ## Primitives décrites mais absentes de la démo
 
 Leur balisage n'existe pas dans le dépôt, je ne l'ai pas inventé : `bar` / `bars`, `seuil`, `compare3`, `define` (morph vers `versus`), `brand` (SVG `thesvg`), `doc-crop`, `ref-iframe`, `nl`. Pour les ajouter, il suffit de fournir le HTML et le CSS que tu utilises dans ton projet.
+
+Le `kind: schema` n'est pas dans cette liste : il est rendu par `scripts/schema_anim.py` et sa démonstration sur deux compositions est en `i10` / `i11` (styles dans `assets/style-joriel-ext.css`).
 
 Les lignes marquées « déduit de la spec » (`cols2`, `stamp`, `chip`, `icon`, `check / cross`) ont un balisage documenté dans `references/primitives-joriel.md`, mais leur CSS n'existait pas : il est déduit de `references/visual-language-joriel.md` §3, signalé « à valider » à l'écran.

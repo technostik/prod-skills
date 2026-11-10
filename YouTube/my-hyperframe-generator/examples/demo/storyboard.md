@@ -1,8 +1,32 @@
-# Storyboard minuté — catalogue des primitives (26 étapes, 10 scènes, 136.50 s)
+# Storyboard minuté — catalogue des primitives (30 étapes, 12 scènes, 162.50 s)
 
 > Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
+>
+> Les scènes `I10` et `I11` montrent **un même schéma qui se déploie sur deux compositions** : le schéma est déclaré une fois dans le registre §1c, `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
 
 Une étape = une primitive ou une situation, démontrée une seule fois. Texte : lorem ipsum. Le nom de la primitive est affiché à l'écran par `assets/demo-label.css`.
+
+## 1c. Registre des schémas
+
+### D01 — La chaîne de la dépense
+
+```json
+{
+  "nodes": [
+    {"id": "budget", "label": "Budget", "x": 2.6, "y": 3, "cls": "bleu", "size": "s"},
+    {"id": "postes", "label": "Postes", "x": 6.6, "y": 3, "cls": "or", "size": "s"},
+    {"id": "classe", "label": "Heures de cours", "x": 11.2, "y": 3, "cls": "vert", "size": "s"},
+    {"id": "niveau", "label": "Niveau des élèves", "x": 11.2, "y": 6.6, "cls": "rouge", "size": "m"}
+  ],
+  "edges": [
+    {"from": "budget", "to": "postes"},
+    {"from": "postes", "to": "classe", "label": "?", "manual": true},
+    {"from": "classe", "to": "niveau", "cls": "rouge", "manual": true}
+  ]
+}
+```
+
+## 4. Scènes
 
 ### I0 — Structure et texte [BG-00]
 - `I0.1#0` t=0.00 (5.0s) [off/step] Consectetur adipiscing
@@ -49,3 +73,21 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 ### I9 — Webcam (Cast) [BG-00]
 - `I9.1#0` t=125.50 (5.0s) [pip/webcam] Lorem ipsum
 - `I9.1#1` t=130.50 (6.0s) [cast/webcam] Lorem ipsum
+
+### I10 — Schéma sur deux compositions (1/2) [BG-00]
+- `I10.1#0` t=136.50 (6.0s) [off/schema] Budget puis Postes
+  - schema: D01
+  - show: ["budget", "postes"]
+- `I10.1#1` t=142.50 (6.0s) [off/schema] Heures de cours, puis le lien « ? »
+  - show: ["classe", "postes>classe"]
+  - zoom: ["postes", "classe"]
+
+### I11 — Schéma sur deux compositions (2/2) [BG-00]
+- `I11.1#0` t=148.50 (7.0s) [off/schema] Niveau des élèves, le schéma continue
+  - schema: D01
+  - show: ["niveau", "classe>niveau"]
+  - zoom: "all"
+  - focus: ["classe", "niveau"]
+- `I11.1#1` t=155.50 (7.0s) [off/schema] Tout reprend sa place
+  - focus: "all"
+  - glow: ["postes>classe"]

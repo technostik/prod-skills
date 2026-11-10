@@ -7,6 +7,7 @@
 - Nouveau module `scripts/schema_anim.py` (pur, sans E/S) : boîtes dimensionnées d'après le texte (estimation déterministe), flèches clippées aux boîtes, liens courbes, avertissements de mise en page (hors scène, chevauchement, étiquette plus large que le lien), état suivi en Python : le JS ne reçoit que des opérations avec valeurs de départ et d'arrivée, donc la timeline se rejoue à l'identique quel que soit l'ordre des seeks.
 - Refusé en mode `incrustation` (illisible dans un quart d'écran). `Primitives(root, figures, refs, schemas=None)` : 4ᵉ argument optionnel, le studio pas à pas ne change pas. `data/schemas.json` est écrit quand le storyboard contient des schémas.
 - Documentation : `references/schemas-animes.md` (format, grille, règles de mise en scène), règle 13 du prompt scénario → storyboard. Tests : `scripts/test-schema.py` (logique, build de bout en bout, rendu Chromium avec seeks avant / arrière / au hasard).
+- Démo : scènes `I10` et `I11`, un même schéma `D01` **déployé sur deux compositions** (registre §1c de `examples/demo/storyboard.md` ; `i10` construit la première moitié, `i11` reprend l'état affiché et termine). Sert de cas visuel pour la persistance d'une scène à l'autre.
 
 ## 1.15.0
 
