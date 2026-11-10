@@ -27,6 +27,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import schema_anim
+
 # --------------------------------------------------------------------------- #
 # Catalogue
 # --------------------------------------------------------------------------- #
@@ -39,6 +41,7 @@ ALIASES = {
     "list": "enumerate", "cards": "kw", "text": "kw", "claim": "kw",
     "doc-crop": "ref-card", "ref-iframe": "ref-shot", "capture": "ref-shot",
     "source": "ref-card", "branch": "diverge", "threshold": "seuil",
+    "diagram": "schema", "graph": "schema",
 }
 
 ICONS = {
@@ -102,7 +105,7 @@ OVERLAY_KINDS = {"kw", "count", "strike", "enumerate", "stamp", "define", "brand
 # Tous les `kind` rendus par `render_step` (hors alias) : sert au format minuté `[kind]`.
 KINDS = {"kw", "punch", "image", "ref-shot", "title", "count", "strike", "chain", "enumerate", "versus",
          "diverge", "seuil", "bars", "compare3", "stamp", "define", "ref-card", "brand", "cols2", "waffle",
-         "sources"}
+         "sources", "schema"}
 
 
 def canonical_anchor(value):
@@ -167,6 +170,19 @@ CSS_EXT = """
 /* Marque (logo local, jamais chargé du réseau) */
 .brand{height:8vh;width:auto;vertical-align:middle;background:var(--blanc);border-radius:1.2vh;padding:.8vh 1.2vw}
 .brand-text{display:inline-block;font-size:4.6vh;font-weight:800;padding:.6vh 1.4vw;border-radius:1vh;background:var(--blanc);color:#111}
+/* Schémas animés (kind schema) : un schéma 1920×1080 posé sur la scène, cadré par la caméra GSAP */
+.sch-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.sch-svg{position:absolute;left:0;top:0;overflow:visible}
+.sch-edge path{fill:none;stroke:var(--c);stroke-width:5;stroke-linecap:round;stroke-dasharray:1}
+.sch-edge .sch-head{fill:var(--c);stroke:none}
+.sch-edge.plain{--c:#C9D1DC}.sch-edge.bleu{--c:var(--bleu)}.sch-edge.vert{--c:var(--vert)}
+.sch-edge.or{--c:var(--or)}.sch-edge.rouge{--c:var(--rouge)}.sch-edge.dim{--c:var(--gris)}
+.sch-node{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:4px solid var(--c);border-radius:26px;background:rgba(6,10,18,.74);color:var(--c);font-weight:800;line-height:1.22;white-space:nowrap;box-shadow:0 0 0 0 rgba(0,0,0,0);text-shadow:0 0 28px var(--halo),0 5px 24px var(--ombre)}
+.sch-node.plain{--c:var(--blanc);--halo:rgba(244,246,249,.18)}.sch-node.bleu{--c:var(--bleu);--halo:var(--halo-bleu)}
+.sch-node.vert{--c:var(--vert);--halo:var(--halo-vert)}.sch-node.or{--c:var(--or);--halo:var(--halo-or)}
+.sch-node.rouge{--c:var(--rouge);--halo:var(--halo-rouge)}.sch-node.dim{--c:var(--gris);--halo:rgba(154,164,178,.2)}
+.sch-s{font-weight:400;color:var(--bleu-clair);text-shadow:none;margin-top:8px}
+.sch-elab{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;font-size:32px;color:var(--bleu-clair);background:rgba(0,0,0,.6);border-radius:12px;white-space:nowrap}
 /* Caméra (mode webcam) */
 .cam-frame{position:absolute;z-index:6;border-radius:1.4vh;overflow:hidden;border:.3vh solid var(--bleu);background:#000;box-shadow:0 1.6vh 5vh rgba(0,0,0,.65)}
 .cam-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -247,10 +263,12 @@ def slug_id(value):
 class Primitives:
     """Rend une étape de storyboard en HTML + descripteur d'animation."""
 
-    def __init__(self, root, figures, refs):
+    def __init__(self, root, figures, refs, schemas=None):
         self.root = Path(root)
         self.figures = figures or {}
         self.refs = refs or {}
+        self.schemas = schemas or {}      # registre §1c : {Dxx: schema_anim.Schema}
+        self._schema_shown = {}           # éléments déjà montrés, par schéma (d'un groupe au suivant)
         self.warnings = []
 
     def warn(self, msg):
@@ -351,6 +369,35 @@ class Primitives:
     def col(self, items):
         return self.blocks(items)
 
+    # -- schémas animés ------------------------------------------------------
+    def schema_of(self, step):
+        """Schéma d'une étape `kind: schema` : `_schema` (hérité de l'étape précédente par build.py)
+        ou `schema:` de l'étape. None si absent du registre §1c."""
+        sid = str(step.get("_schema") or (step.get("params") or {}).get("schema") or "").strip()
+        sch = self.schemas.get(sid)
+        if sch is None:
+            self.warn("schéma absent du registre §1c : %s (étape %s)" % (sid or "—", step.get("id", "")))
+        return sch
+
+    def schema_group(self, scene, items, cam_frame=None, sel=None):
+        """Étapes consécutives d'un même schéma -> {"inner", "js", "warnings"} pour UN clip.
+
+        `items` : [{"step": step, "rel": temps relatif à la scène, "camera": état webcam}].
+        La persistance (éléments déjà montrés) passe d'un groupe au suivant du même schéma."""
+        first = items[0]["step"]
+        sch = self.schema_of(first)
+        if sch is None:
+            return None
+        uid = "sch-" + slug_id(first.get("id") or "")
+        beats = [{"id": it["step"]["id"], "rel": it["rel"], "params": it["step"].get("params") or {},
+                  "camera": it.get("camera"), "legacy_cam": bool(cam_frame)} for it in items]
+        out = schema_anim.render_group(sch, uid, beats, carry=self._schema_shown.get(sch.id),
+                                       cam_frame=cam_frame, sel=sel)
+        self._schema_shown[sch.id] = out["shown"]
+        for w in out["warnings"]:
+            self.warn(w)
+        return out
+
     # -- primitives ----------------------------------------------------------
     def render_step(self, scene, step):
         """-> (html, opts) ; opts contient aussi le descripteur `anim`."""
@@ -384,6 +431,16 @@ class Primitives:
             opts["full"] = True
             return ('<img class="%s" id="img-%s" src="%s" alt="%s" style="z-index:2">'
                     % (cls, pid, esc(src), esc(label))), opts
+
+        if kind == "schema":
+            # Appel isolé (studio pas à pas) : le schéma s'affiche d'un bloc, sans animation.
+            # La composition finale passe par `schema_group`, qui garde l'état d'une étape à l'autre.
+            opts["full"] = True
+            opts["anim"] = {"kind": "schema"}
+            sch = self.schema_of(step)
+            if sch is None:
+                return '<div class="dline"><span class="dkw dim">%s</span></div>' % esc(label), opts
+            return schema_anim.render_static(sch, "sch-" + pid, step), opts
 
         if kind == "title":
             p.setdefault("title", scene.get("title", ""))

@@ -2,6 +2,7 @@
 """Tests de la primitive `schema` (scripts/schema_anim.py, render_primitive.py, build.py).
 
   A. module schema_anim : géométrie, références, registre §1c, état suivi d'étape en étape ;
+  B. rendu (render_primitive.py) : catalogue, CSS, groupe d'étapes, persistance, rendu statique ;
 
 Usage : python3 scripts/test-schema.py
 Aucun fichier n'est produit hors d'un dossier temporaire.
@@ -24,6 +25,7 @@ def load(name, fname):
 
 
 sa = load("schema_anim", "schema_anim.py")
+rp = load("render_primitive", "render_primitive.py")
 
 FAILS = []
 
@@ -193,7 +195,41 @@ def part_a():
           st.count("opacity:0") >= 3 and 'id="%s-n0"' % uid in st)
 
 
+def part_b():
+    print("B. rendu (render_primitive)")
+    check("catalogue : `schema` est un kind, `diagram` un alias", "schema" in rp.KINDS and rp.canonical("diagram") == "schema")
+    check("catalogue : `schema` refusé en incrustation (trop dense pour un quart d'écran)",
+          "schema" not in rp.OVERLAY_KINDS)
+    check("CSS : les classes .sch-* sont dans le CSS étendu",
+          all(c in rp.CSS_EXT for c in (".sch-stage", ".sch-node", ".sch-edge", ".sch-elab")))
+    S = schema()
+    r = rp.Primitives(".", {}, {}, {"D01": S})
+    check("Primitives(root, figures, refs) sans schémas : toujours valide (studio)", rp.Primitives(".", {}, {}).schemas == {})
+    st = {"id": "I1.1#0", "label": "Les étapes", "params": {"kind": "schema", "schema": "D01", "show": ["vie", "intel"]}}
+    html, opts = r.render_step({"id": "I1", "title": "t"}, st)
+    check("render_step : rendu statique, plein cadre", opts["full"] and 'class="sch-stage"' in html, html[:120])
+    r2 = rp.Primitives(".", {}, {}, {})
+    html, _ = r2.render_step({"id": "I1", "title": "t"}, st)
+    check("schéma absent du registre : avertissement, pas d'exception",
+          any("absent du registre §1c" in w for w in r2.warnings), r2.warnings)
+    items = [{"step": {"id": "I1.1#%d" % k, "params": {"kind": "schema", "schema": "D01", "show": sh}},
+              "rel": 2.0 * (k + 1), "camera": "off"} for k, sh in enumerate((["vie"], ["intel"]))]
+    g = r.schema_group({}, items, cam_frame="#cam-frame-i01", sel="#step-I1-1-0")
+    check("schema_group : un clip, 2 numéros d'étape, JS", g and g["inner"].count('class="slideno"') == 2 and g["js"], g and g["inner"][:80])
+    items2 = [{"step": {"id": "I2.1#0", "params": {"kind": "schema", "schema": "D01", "show": ["vie", "tech"]}},
+               "rel": 1.0, "camera": "off"}]
+    g2 = r.schema_group({}, items2)
+    nodes = re.findall(r'"op":"node","dt":[\d.]+,"el":"([^"]+)"', g2["js"])
+    check("schema_group : 2e groupe du même schéma = persistance (vie déjà là, seul tech apparaît)",
+          nodes == ["sch-I2-1-0-n2"], nodes)
+    check("schema_group : sans cadre webcam (Cast/incrustation), aucune caméra posée par le schéma",
+          '"cam":' not in g2["js"].replace('"op":"cam"', ""))
+    check("schema_group : schéma inconnu -> None + avertissement",
+          rp.Primitives(".", {}, {}, {}).schema_group({}, items2) is None)
+
+
 if __name__ == "__main__":
     part_a()
+    part_b()
     print("\n" + ("ÉCHEC : %d test(s) : %s" % (len(FAILS), ", ".join(FAILS)) if FAILS else "OK : tous les tests passent"))
     sys.exit(1 if FAILS else 0)
