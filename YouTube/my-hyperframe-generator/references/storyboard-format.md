@@ -224,8 +224,8 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 | `stamp` | tampon verdict | `stamp`, `cls` (vert / rouge / or) |
 | `define` | terme puis définition | `kw`, `sub` |
 | `ref-card` | carte de source stylisée | `ref`, `source`, `author`, `title`, `quote`, `hl`, `url` |
-| `ref-shot` | capture pleine page | `ref` |
-| `image` | image pleine scène | `src` |
+| `ref-shot` | capture pleine page, toujours **en entier** (contain) | `ref`, `fit` |
+| `image` | image pleine scène : un **fond** (`src`) occupe tout l'écran, rogné au besoin ; une **référence** (`ref`) se voit en entier, bandes latérales transparentes | `src` ou `ref`, `fit` (`cover` ou `contain`, force l'autre choix) |
 | `punch` | punchline mot à mot, noir pur | `text` |
 | `brand` | logo local | `brand` (nom de `assets/brands/<nom>.svg`) |
 | `cols2` | mise en deux colonnes | `blocks` |

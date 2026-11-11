@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.17.0
+
+- **Fonds en plein écran, références en entier.** Un fond (`BG-xx`, `kind: image` avec `src`) est toujours plein écran, rogné au besoin (`cover`). Une référence (`ref:`, `ref-shot`, fichier d'un `ref-card`) se voit **toujours en entier** (`contain`) : les bandes qui restent sont transparentes et montrent le fond de la scène. `fit: cover | contain` force l'autre choix sur une étape. Le CSS étendu porte la règle, donc un projet dont `style-joriel.css` est ancien en profite. Test : `scripts/test-media-fit.py` (balisage, puis pixels dans Chromium).
+
 ## 1.16.0
 
 - **Schémas animés (`kind: schema`).** Un schéma se déclare une fois dans un nouveau registre §1c du storyboard (un bloc JSON : nœuds posés sur une grille 16 × 9, liens), puis les étapes le pilotent : `show` (apparition), `glow` (relief), `focus` (le reste passe en retrait), `zoom` (cadrage caméra). Contrairement aux autres primitives, **l'état persiste d'une étape à la suivante** : le schéma se construit au fil de la voix, et un schéma qui revient dans une autre scène retrouve ce qui était déjà affiché.

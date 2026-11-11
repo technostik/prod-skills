@@ -50,7 +50,7 @@
 .ref-url{font-size:2.4vh;color:var(--bleu-clair);opacity:.8}
 /* Reference iframe (page web en plein écran) */
 .ref-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-.ref-shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ref-shot{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .diverge{display:flex;flex-direction:column;align-items:center}
 .trunk{font-size:6.4vh;font-weight:800;color:var(--blanc);text-align:center;text-shadow:0 .5vh 2.4vh var(--ombre)}
 .trunk::after{content:"";display:block;width:.4vh;height:3.4vh;margin:1.6vh auto 0;border-radius:.4vh;background:var(--bleu);opacity:.45}

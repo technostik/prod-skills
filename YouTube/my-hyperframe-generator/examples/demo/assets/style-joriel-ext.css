@@ -44,6 +44,11 @@
 /* Marque (logo local, jamais chargé du réseau) */
 .brand{height:8vh;width:auto;vertical-align:middle;background:var(--blanc);border-radius:1.2vh;padding:.8vh 1.2vw}
 .brand-text{display:inline-block;font-size:4.6vh;font-weight:800;padding:.6vh 1.4vw;border-radius:1vh;background:var(--blanc);color:#111}
+/* Fonds : plein écran, rognés (cover). Références : image complète (contain), bandes transparentes. */
+.fond{object-fit:cover}
+.ref-shot{object-fit:contain}
+.fond.fit-contain,.ref-shot.fit-contain{object-fit:contain}
+.fond.fit-cover,.ref-shot.fit-cover{object-fit:cover}
 /* Schémas animés (kind schema) : un schéma 1920×1080 posé sur la scène, cadré par la caméra GSAP */
 .sch-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
 .sch-svg{position:absolute;left:0;top:0;overflow:visible}

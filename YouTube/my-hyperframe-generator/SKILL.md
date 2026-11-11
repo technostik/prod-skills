@@ -4,7 +4,7 @@ description: Build a Joriel-styled HyperFrames video in one of four modes — au
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.16.0
+version: 1.17.0
 ---
 
 # Hyperframe-joriel
@@ -189,7 +189,9 @@ La composition est vue par le spectateur, pas par l'auteur. Règles absolues :
 
 ## Assets
 
-### Fonds
+### Fonds et références
+- **Un fond** (image décorative d'un chapitre, `BG-xx`, `kind: image` avec `src`) occupe **tout l'écran**, quitte à être rognée (`object-fit: cover`).
+- **Une référence** (portrait, couverture, capture, image d'un auteur cité ; `ref:` ou `ref-shot`) se voit **en entier** (`object-fit: contain`) : s'il y a des bandes sur les côtés ou en haut et en bas, elles sont **transparentes** et laissent voir le fond de la scène. `fit: cover` ou `fit: contain` sur une étape force l'autre choix.
 - Varier les images de fond entre chapitres au minimum. Le storyboard nomme les fonds et les visuels ; on les résout avant la composition.
 
 ### Sources

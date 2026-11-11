@@ -170,6 +170,11 @@ CSS_EXT = """
 /* Marque (logo local, jamais chargé du réseau) */
 .brand{height:8vh;width:auto;vertical-align:middle;background:var(--blanc);border-radius:1.2vh;padding:.8vh 1.2vw}
 .brand-text{display:inline-block;font-size:4.6vh;font-weight:800;padding:.6vh 1.4vw;border-radius:1vh;background:var(--blanc);color:#111}
+/* Fonds : plein écran, rognés (cover). Références : image complète (contain), bandes transparentes. */
+.fond{object-fit:cover}
+.ref-shot{object-fit:contain}
+.fond.fit-contain,.ref-shot.fit-contain{object-fit:contain}
+.fond.fit-cover,.ref-shot.fit-cover{object-fit:cover}
 /* Schémas animés (kind schema) : un schéma 1920×1080 posé sur la scène, cadré par la caméra GSAP */
 .sch-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
 .sch-svg{position:absolute;left:0;top:0;overflow:visible}
@@ -427,7 +432,17 @@ class Primitives:
             if not src:
                 self.warn("image sans source à l'étape %s" % step.get("id", ""))
                 src = "assets/bg/BG-00.jpg"
-            cls = "ref-shot" if kind == "ref-shot" else "fond"
+            # Un fond (image décorative, `src`) occupe tout l'écran, quitte à être rogné (cover).
+            # Une référence (`ref:` ou `ref-shot`) se voit EN ENTIER (contain) : s'il y a des bandes
+            # sur les côtés, elles sont transparentes et laissent voir le fond de la scène.
+            # `fit: cover | contain` force l'autre choix, au cas par cas.
+            is_ref = kind == "ref-shot" or bool(p.get("ref"))
+            cls = "ref-shot" if is_ref else "fond"
+            fit = str(p.get("fit") or "").strip().lower()
+            if fit in ("cover", "contain"):
+                cls += " fit-" + fit
+            elif fit:
+                self.warn("`fit: %s` inconnu à l'étape %s (cover ou contain)" % (fit, step.get("id", "")))
             opts["full"] = True
             return ('<img class="%s" id="img-%s" src="%s" alt="%s" style="z-index:2">'
                     % (cls, pid, esc(src), esc(label))), opts
