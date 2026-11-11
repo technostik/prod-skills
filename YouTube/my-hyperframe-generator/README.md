@@ -26,7 +26,7 @@ Prérequis et variables d'environnement : `SKILL.md` § Prérequis.
 | `SKILL.md` | point d'entrée : routeur des 4 modes, puis le socle commun (vocabulaire, étapes, format du storyboard, règles de rendu) |
 | `modes/` | un sous-skill par mode, lu seulement une fois le mode choisi : `auto.md`, `slides.md`, `webcam.md`, `incrustation.md` |
 | `references/` | langage visuel, primitives (balisage exact), format du storyboard, conventions studio et webcam, schémas `data/`, glossaire |
-| `scripts/` | `build.py` (composition finale), `render_primitive.py` (primitives partagées), `schema_anim.py` (schémas animés), builders studio, `check-steps.py`, nettoyage webcam (`concat-mkv.sh`, `clean-posthoc.py`), détection des screencasts OBS (`detect-cast.py`), `post-render.py` (inserts), `lint-repo.py` ; tests : `test-detect-cast.py`, `test-cast-build.py`, `test-schema.py`, `test-post-render.sh` |
+| `scripts/` | `build.py` (composition finale), `render_primitive.py` (primitives partagées), `schema_anim.py` (schémas animés), `transcript-export.py` (sous-titres JSON + TXT), builders studio, `check-steps.py`, nettoyage webcam (`concat-mkv.sh`, `clean-posthoc.py`), détection des screencasts OBS (`detect-cast.py`), `post-render.py` (inserts), `lint-repo.py` ; tests : `test-detect-cast.py`, `test-cast-build.py`, `test-schema.py`, `test-transcript-export.py`, `test-media-fit.py`, `test-post-render.sh` |
 | `examples/demo/` | catalogue des primitives (12 scènes dont la webcam avec Cast et un schéma déployé sur deux compositions, lorem ipsum, nom affiché à l'écran) ; médias factices via `scripts/make-placeholders.sh` |
 | `examples/storyboard.example.md` | storyboard complet et parsable, couvre toutes les primitives |
 | `examples/gabarits/` | exemples JSON de `data/design.json` pour `diverge`, `seuil`, `compare3`, `cols2` |
@@ -60,6 +60,8 @@ python3 scripts/lint-repo.py                                          # chemins 
 python3 scripts/test-detect-cast.py                                   # détecteur Cast : vidéos synthétiques, FFmpeg seul
 python3 scripts/test-cast-build.py                                    # build Cast : logique, build, seeks (Playwright optionnel)
 python3 scripts/test-schema.py                                        # schémas animés : géométrie, build, seeks Chromium (Playwright optionnel)
+python3 scripts/test-transcript-export.py                             # sous-titres : JSON + TXT, nommage long_publish, décalage des inserts
+python3 scripts/test-media-fit.py                                     # fonds cover, références contain (pixels dans Chromium)
 python3 scripts/test-incrustation.py                                  # mode incrustation : ancres, primitives, calques, crop (Playwright optionnel)
 bash scripts/test-post-render.sh                                      # inserts : test de bout en bout, FFmpeg seul
 cd examples/demo && bash scripts/make-placeholders.sh && npm run check  # nécessite Node, FFmpeg, accès réseau

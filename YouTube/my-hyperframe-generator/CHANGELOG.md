@@ -3,6 +3,7 @@
 ## 1.17.0
 
 - **Fonds en plein écran, références en entier.** Un fond (`BG-xx`, `kind: image` avec `src`) est toujours plein écran, rogné au besoin (`cover`). Une référence (`ref:`, `ref-shot`, fichier d'un `ref-card`) se voit **toujours en entier** (`contain`) : les bandes qui restent sont transparentes et montrent le fond de la scène. `fit: cover | contain` force l'autre choix sur une étape. Le CSS étendu porte la règle, donc un projet dont `style-joriel.css` est ancien en profite. Test : `scripts/test-media-fit.py` (balisage, puis pixels dans Chromium).
+- **Sous-titres aux deux formats.** `scripts/transcript-export.py` écrit toujours le JSON avec timecodes (mots + segments, le format de `video extract-transcript -f json`, lu par `build.py --transcript`) **et** le TXT sans timecode (une ligne par segment, le même texte que long_publish tire de son ASS). `--from-video` lance d'abord la transcription (CLI `video`). `--publish final` écrit `renders/final_transcript.json` et `.txt` aux noms que long_publish cherche à côté de la vidéo publiée ; avec `--inserts`, les temps sont décalés sur la timeline de `final.mp4`. Test : `scripts/test-transcript-export.py` (dont la compatibilité avec `_ass_to_plain_text`).
 
 ## 1.16.0
 
