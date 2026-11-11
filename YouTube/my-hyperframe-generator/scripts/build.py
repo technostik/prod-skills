@@ -63,6 +63,7 @@ CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de
 # échantillonnée à l'instant exact `n / fps` est du bon côté de la borne (jamais une image de retard).
 CAST_FRAME_LEAD = 0.25
 
+import music_plan
 import schema_anim
 from render_primitive import (ALIASES, CSS_EXT, ICONS, OVERLAY_ANCHORS, OVERLAY_DEFAULTS,
                               KINDS, OVERLAY_KINDS, Primitives, as_blocks, canonical, canonical_anchor,
@@ -448,10 +449,12 @@ def parse_storyboard(path):
             cur.append(ln)
     sections[name] = cur
 
-    fig_lines, ref_lines, scene_lines, schema_lines = [], [], [], []
+    fig_lines, ref_lines, scene_lines, schema_lines, music_lines = [], [], [], [], []
     for h, body in sections.items():
         hh = norm(h)
-        if re.match(r"^##\s*1c", h):
+        if re.match(r"^##\s*1d", h):
+            music_lines = body
+        elif re.match(r"^##\s*1c", h):
             schema_lines = body
         elif re.match(r"^##\s*1b", h) or "references" in hh and "registre" in hh:
             ref_lines = body
@@ -470,8 +473,11 @@ def parse_storyboard(path):
     schemas, schema_warns, schema_errs = schema_anim.schemas_from_lines(schema_lines)
     if schema_errs:
         die("\n  ".join(schema_errs))
+    music, music_errs = music_plan.registry_from_rows(parse_registry(music_lines, "M"))
+    if music_errs:
+        die("\n  ".join(music_errs))
     return {"title": title or "film", "meta": meta, "figures": figs, "refs": refs, "scenes": scenes,
-            "schemas": schemas, "schema_warnings": schema_warns}
+            "schemas": schemas, "schema_warnings": schema_warns, "music": music}
 
 
 def parse_scenes(lines):
@@ -1363,6 +1369,8 @@ def main():
     ap.add_argument("--root", default=".")
     ap.add_argument("--storyboard", default="assets/storyboard.md")
     ap.add_argument("--transcript", default=None)
+    ap.add_argument("--no-music", action="store_true",
+                    help="ignorer le registre §1d et les `music:` du storyboard (aucune musique au résultat final)")
     ap.add_argument("--audio", default=None)
     ap.add_argument("--camera", default=None)
     ap.add_argument("--cast-segments", default=None,
@@ -1524,6 +1532,26 @@ def main():
             "crop": cam_plan["crop"],
             "timeline": cam_plan["plan"].global_timeline(total),
         }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # musique : repères posés par les étapes (`music:`), écrits dans data/music.json
+    music_off = a.no_music or norm(movie["meta"].get("musique", "")) in ("aucune", "non", "none", "sans", "0")
+    cues = []
+    if music_off:
+        if movie["music"] or any((st.get("params") or {}).get("music") for sc in scenes for st in sc["steps"]):
+            print("musique : désactivée (%s)" % ("--no-music" if a.no_music else "en-tête **Musique** : aucune"))
+    else:
+        cues, m_warns, m_errs = music_plan.resolve_cues(scenes, movie["music"], total)
+        if m_errs:
+            die("\n  ".join(m_errs))
+        for w in m_warns:
+            print("AVERTISSEMENT : " + w)
+    if cues:
+        (data / "music.json").write_text(
+            json.dumps(music_plan.plan_dict(cues, total), ensure_ascii=False, indent=2), encoding="utf-8")
+        print("musique : %d repère(s), %.0f %% du film (data/music.json) ; générer avec scripts/make-music.py, "
+              "mixer avec scripts/mix-music.py" % (len(cues), 100 * sum(c["duration"] for c in cues) / total))
+    elif (data / "music.json").exists():
+        (data / "music.json").unlink()          # plus de musique dans le storyboard : pas de plan périmé
 
     if schemas:
         (data / "schemas.json").write_text(

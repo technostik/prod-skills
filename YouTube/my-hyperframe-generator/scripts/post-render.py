@@ -13,7 +13,11 @@ Usage (depuis le dossier du projet) :
   python3 $SKILL_DIR/scripts/post-render.py --plan       # coupes résolues, sans rien télécharger
   python3 $SKILL_DIR/scripts/post-render.py --preview    # un clip court autour de chaque coupe
   python3 $SKILL_DIR/scripts/post-render.py              # téléchargement + rendu final
-  options : --manifest FILE  --root DIR  --force  --dry-run  --fetch-only
+  options : --manifest FILE  --root DIR  --force  --dry-run  --fetch-only  --no-music
+
+Musique : si `master` n'est pas fixé dans le manifeste et que renders/full-music.mp4 existe (produit par
+mix-music.py), c'est lui le master. Plus ancien que renders/full.mp4, il est refusé (composition rendue
+de nouveau depuis le mixage). `--no-music` part de renders/full.mp4.
 
 Format du manifeste : references/inserts.md.
 """
@@ -100,6 +104,7 @@ def load_manifest(path):
     if not p.exists():
         die("manifeste absent : %s (voir references/inserts.md)" % p)
     m = json.loads(p.read_text(encoding="utf-8"))
+    m["_master_explicit"] = "master" in m
     m.setdefault("master", "renders/full.mp4")
     m.setdefault("output", "renders/final.mp4")
     m.setdefault("scenario", "assets/storyboard.md")
@@ -369,10 +374,19 @@ def main():
     ap.add_argument("--fetch-only", action="store_true", help="télécharge et prépare les inserts, sans rendu")
     ap.add_argument("--force", action="store_true", help="refait téléchargements et préparations")
     ap.add_argument("--dry-run", action="store_true", help="affiche les commandes sans les exécuter")
+    ap.add_argument("--no-music", action="store_true", help="ignorer renders/full-music.mp4 et partir de renders/full.mp4")
     args = ap.parse_args()
 
     os.chdir(args.root)
     man = load_manifest(args.manifest)
+    mus = Path("renders/full-music.mp4")
+    if not man["_master_explicit"] and not args.no_music and mus.exists():
+        base = Path(man["master"])
+        if base.exists() and base.stat().st_mtime > mus.stat().st_mtime + 1:
+            die("%s est plus ancien que %s : relancer scripts/mix-music.py, ou --no-music pour partir du master sans musique"
+                % (mus, base))
+        man["master"] = str(mus)
+        print("master : %s (musique mixée ; --no-music pour l'ignorer)" % mus)
     steps = load_steps(man["scenario"])
     needs_steps = any(("after" in i or "before" in i) for i in man["inserts"])
     if needs_steps and not steps:

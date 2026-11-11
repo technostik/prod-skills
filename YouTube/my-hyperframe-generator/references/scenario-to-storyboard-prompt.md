@@ -139,6 +139,9 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 >
 > 13. **Schémas animés** (`kind: schema`). Quand une explication a une structure (processus, causes et effets, boucle, composants), conçois **un schéma** : déclare-le une fois dans §1c (`### Dxx`, bloc JSON : nœuds placés sur la grille 16 × 9, liens), puis pilote-le avec des étapes `kind: schema` consécutives (`show`, `glow`, `focus`, `zoom`). Construis-le **dans l'ordre de la parole**, deux ou trois éléments par étape, `zoom` sur la zone dont on parle, `camera` `off` ou `pip`. Pas de schéma en mode `incrustation`. Respecte les largeurs de nœuds et la grille de `references/schemas-animes.md` : `build.py` avertit des débordements et chevauchements.
 
+>
+> 14. **Musique** (`references/music.md`). Sauf instruction contraire, ajoute de la musique **pour souligner** : une **montée en puissance**, un **point culminant**, la **conclusion**. Jamais de fond continu : au plus ≈ 35 % du film, jamais sous une démonstration ou un chiffre à lire. Déclare chaque musique en §1d (`Prompt` en anglais, épique et orchestral, instrumental, `no vocals`), puis pose-la avec `music: Mxx` sur l'étape où elle démarre (avant le mot fort, pas dessus) et `music_until:` pour l'arrêt (étape, scène ou secondes). `**Musique** : aucune` dans l'en-tête si l'utilisateur n'en veut pas.
+
 ---
 
 ## Checklist de validation (à passer avant de rendre le STORYBOARD.md)
@@ -157,4 +160,5 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 - [ ] Format markdown exact (tableaux, tirets, indentation)
 - [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape
 - [ ] Schémas : déclarés en §1c (JSON valide, nœuds dans la scène et sans chevauchement), `Dxx` cité par la 1re étape, éléments montrés dans l'ordre de la parole, `zoom` / `focus` ramenés à `"all"` quand on revient à l'ensemble
+- [ ] Musique : registre §1d (prompts en anglais, `no vocals`), `music:` sur les moments forts seulement, ≤ ≈ 35 % du film, aucune musique sous un chiffre ou une démonstration, durée ≥ 4 s, pas de chevauchement
 - [ ] Incrustation : aucun `camera`, primitives lisibles en surimpression uniquement, `place:` seulement sur demande

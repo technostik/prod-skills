@@ -65,6 +65,12 @@ Les figures `verify` restent dans le registre (elles sont dites), mais ne passen
  "edges": [{"from": "a", "to": "b"}]}
 ```
 
+## 1d. Registre des musiques
+
+| ID | Rôle | Prompt | Durée | Volume | Seed |
+|---|---|---|---|---|---|
+| M01 | montée | epic orchestral build, no vocals | 14 | 0.45 | 11 |
+
 ## 2. Vigilance
 
 Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
@@ -197,6 +203,7 @@ Seules les primitives lisibles en surimpression sont acceptées (`kw`, `count`, 
 - `§1` : `ID`, `Valeur` (ou `Chiffre`), `Label`, `Source`, `Statut`, `Note`.
 - `§1b` : `ID`, `Type`, `Source`, `Fichier local`, `Statut`.
 - Statut chiffre : `ok` · `verify`. Statut référence : `ok` · `à capturer` · `bloquée`.
+- `§1d` : un tableau `ID | Rôle | Prompt | Durée | Volume | Seed` (`Prompt` obligatoire, en anglais). Optionnel. Une étape déclenche une musique avec `music: Mxx` (+ `music_until`, `music_volume`). Format, règles de mise en scène, génération et mixage : `references/music.md`.
 - `§1c` : un en-tête `### Dxx — Titre` puis **un bloc JSON** par schéma (nœuds, liens). Optionnel ; absent, rien ne change. Format et mise en page : `references/schemas-animes.md`.
 - Les lignes d'une sous-section « Écartés » ne sont **jamais** importées.
 - Un `Rxx` ne s'affiche jamais à l'écran : seule l'attribution lisible apparaît.

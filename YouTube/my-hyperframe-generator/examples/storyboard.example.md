@@ -58,6 +58,16 @@ F03 reste `verify` tant que la source n'est pas confirmée.
 }
 ```
 
+## 1d. Registre des musiques
+
+Une musique souligne un moment fort (montée en puissance, point culminant, conclusion). Jamais de fond continu.
+Le prompt est en anglais, instrumental, sans voix.
+
+| ID | Rôle | Prompt | Durée | Volume | Seed |
+|---|---|---|---|---|---|
+| M01 | montée | epic cinematic orchestral build, low strings ostinato, rising brass and timpani, tension growing, 110 bpm, no vocals | 14 | 0.45 | 11 |
+| M02 | conclusion | epic orchestral finale, full strings and brass, slow powerful resolution, hopeful, big timpani, no vocals | | 0.5 | 12 |
+
 ## 2. Vigilance
 
 Ne pas transformer la corrélation dépense/résultats en causalité unique.
@@ -93,6 +103,7 @@ Ne pas transformer la corrélation dépense/résultats en causalité unique.
 - `I1.1#0` · cue « cinquante-sept » → **compteur +57 %**
   - kind: count
   - figure: F01
+  - music: M01
   - prefix: "+ "
   - suffix: " %"
   - notes: marquer le chiffre, ton calme.
@@ -188,6 +199,8 @@ Ne pas transformer la corrélation dépense/résultats en causalité unique.
 
 - `S04.1#1` · cue « conclusion » → **punchline**
   - kind: punch
+  - music: M02
+  - music_until: S04
   - text: "Moins d'idéologie. Plus de résultats."
   - camera: off
   - notes: laisser le silence après.
