@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Primitives visuelles, rendues une seule fois pour tous les builders.
 
-`build.py` (composition finale) et `build_studio_anim.py` (studio pas à pas)
+`build.py` (composition finale) et `archive/slides/scripts/build_studio_anim.py` (studio pas à pas, mode archivé)
 importent ce module. Une primitive = un `kind` du storyboard, un balisage HTML
 et un descripteur d'animation. Le balisage est identique dans les deux sorties :
 le studio réutilise donc le CSS de la composition (`style-joriel.css` +

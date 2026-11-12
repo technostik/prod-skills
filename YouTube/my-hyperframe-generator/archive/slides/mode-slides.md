@@ -1,4 +1,6 @@
-# Mode slides
+# Mode slides (archivé)
+
+> Archivé : voir `archive/slides/README.md`. Ce mode n'est plus utilisé ; il n'est ni maintenu ni testé.
 
 Sous-skill de `hyperframe-joriel`. Lire d'abord `SKILL.md` (socle commun). Ce fichier ne contient que ce qui est propre au mode slides.
 
@@ -8,9 +10,9 @@ Le script est monté en présentation ; le locuteur s'enregistre en la commentan
 
 ## Étapes
 
-1. Écrire le storyboard (`**Mode** : slides`), puis les slides aux **mêmes identifiants** (`SCÈNE.N`, étapes `SLIDE#k`). Format du deck (un `id:` par slide, un `fragment` = une étape `#k`, `note:` pour le locuteur) : `references/studio-slides.md`, § « Format des slides ».
+1. Écrire le storyboard (`**Mode** : slides`), puis les slides aux **mêmes identifiants** (`SCÈNE.N`, étapes `SLIDE#k`). Format du deck (un `id:` par slide, un `fragment` = une étape `#k`, `note:` pour le locuteur) : `archive/slides/studio-slides.md`, § « Format des slides ».
 2. La composition suit le storyboard, **avant** la prise : `python3 scripts/build.py`.
-3. Le studio pas à pas garde ses deux builders (`scripts/build_studio_anim.py`, `scripts/build_studio_slides.py`) : ils lisent `data/scenes.json` et `data/figures.json` produits par `build.py`. Commandes à copier, deux previews (deck, composition), serveur d'enregistrement, suites de prise : `references/studio-slides.md`.
+3. Le studio pas à pas garde ses deux builders (`archive/slides/scripts/build_studio_anim.py`, `archive/slides/scripts/build_studio_slides.py`) : ils lisent `data/scenes.json` et `data/figures.json` produits par `build.py`. Commandes à copier, deux previews (deck, composition), serveur d'enregistrement, suites de prise : `archive/slides/studio-slides.md`.
 4. Après la prise, transcrire (`video transcribe … -F json -l fr -o transcript.json`), puis `python3 scripts/build.py --transcript transcript.json` : les temps suivent la prise.
 5. `python3 scripts/check-steps.py`, `npm run check` vert, preview, mp4 sur feu vert uniquement.
 
@@ -23,4 +25,4 @@ Le script est monté en présentation ; le locuteur s'enregistre en la commentan
 
 ## Contexte LLM (scénario → storyboard)
 
-Fichiers communs (`SKILL.md` § Contexte LLM), plus `references/studio-slides.md` et `references/scenario-studio-conventions.md` (écran, sons, correspondance des étapes).
+Fichiers communs (`SKILL.md` § Contexte LLM), plus `archive/slides/studio-slides.md` et `references/scenario-studio-conventions.md` (écran, sons, correspondance des étapes).

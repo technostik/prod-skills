@@ -1,6 +1,6 @@
 ---
 name: hyperframe-joriel
-description: Build a Joriel-styled HyperFrames video in one of four modes — auto (the script is the transcript, vocalized with TTS), slides (composition from the script, then a live take that may diverge), webcam (a take read from the script, then the composition from the measured transcript; the video alternates with the visuals), or incrustation (same take, but the video stays full screen under the visuals, which are overlaid in one of nine screen zones). The scenario is written first, then turned into a structured storyboard, then built by scripts/build.py. The worked chapter is examples/demo. Use when the user asks for hyperframe-joriel.
+description: Build a Joriel-styled HyperFrames video in one of three modes — auto (the script is the transcript, vocalized with TTS), webcam (a take read from the script; the video alternates with the visuals) or incrustation (same take, but the video stays full screen under the visuals, which are overlaid in one of nine screen zones). The order is fixed: the scenario, then a preparation stage (voice and transcript first, then backgrounds, references, chapters, screencasts, schemas), then a structured storyboard written on the measured transcript, then scripts/build.py. Includes animated Excalidraw schemas, punctual orchestral music mixed under the voice, and full-screen backgrounds with full-image references. The worked chapter is examples/demo. Use when the user asks for hyperframe-joriel.
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
@@ -9,32 +9,31 @@ version: 1.17.0
 
 # Hyperframe-joriel
 
-Quatre modes, un seul langage visuel. **Un seul mode par projet** : ne jamais en mélanger deux.
-On part toujours d'un script. Le transcript est ce qui est dit. Le mp4 YouTube sort de trois étapes : le scénario (texte libre), le storyboard (mise en scène structurée), puis la composition (`build.py`).
+Trois modes, un seul langage visuel. **Un seul mode par projet** : ne jamais en mélanger deux.
+On part toujours d'un script. Le transcript est ce qui est dit. Le mp4 YouTube sort de quatre étapes : le scénario (texte libre), la **préparation** (voix, transcript, assets : `references/preparation.md`), le storyboard (mise en scène structurée, écrite sur le transcript), puis la composition (`build.py`).
 
-Cette skill est découpée en un **socle commun** (ce fichier) et **quatre sous-skills**, une par mode, dans `modes/`. On choisit le mode ci-dessous, puis on lit **uniquement** le fichier de ce mode, en plus de ce socle.
+Cette skill est découpée en un **socle commun** (ce fichier) et **trois sous-skills**, une par mode, dans `modes/`. On choisit le mode ci-dessous, puis on lit **uniquement** le fichier de ce mode, en plus de ce socle.
 
 ## Routeur
 
 | Situation | Mode | Sous-skill |
 |---|---|---|
 | Rien n'est enregistré, le TTS lira le script. Script = transcript. | **auto** | `modes/auto.md` |
-| Le script est monté en présentation, le locuteur s'enregistre en commentant. L'écart entre le script et la prise peut être important. | **slides** | `modes/slides.md` |
 | 1..n `.mkv` déjà tournés en lisant le script, sans composition. L'écart est faible. La vidéo **alterne** avec les visuels (coin, mi-écran, absente, ou plein écran pour un screencast). | **webcam** | `modes/webcam.md` |
 | Les mêmes `.mkv`, mais la vidéo **reste plein écran** (webcam ou screencast OBS) et les visuels sont **posés par-dessus**. | **incrustation** | `modes/incrustation.md` |
 
-Le choix entre **webcam** et **incrustation** est celui de l'utilisateur, pour toute la vidéo ; le LLM ne le déduit pas du contenu. S'il n'est pas dit, le demander. S'il manque l'ordre des tronçons `.mkv`, le demander aussi. Le mode s'écrit dans l'en-tête du storyboard : `**Mode** : auto | slides | webcam | incrustation`.
+Le choix entre **webcam** et **incrustation** est celui de l'utilisateur, pour toute la vidéo ; le LLM ne le déduit pas du contenu. S'il n'est pas dit, le demander. S'il manque l'ordre des tronçons `.mkv`, le demander aussi. Le mode s'écrit dans l'en-tête du storyboard : `**Mode** : auto | webcam | incrustation`. Le mode `slides` (le storyboard avant la prise) n'est plus utilisé : il est archivé dans `archive/slides/README.md`.
 
-S'il manque le script : le demander, ou l'obtenir via `hyperframe-scenario`. Un scénario, un storyboard ou des slides déjà fournis ne se réécrivent pas : on vérifie seulement que les identifiants correspondent. Sinon, cette skill les écrit avant la composition.
+S'il manque le script : le demander, ou l'obtenir via `hyperframe-scenario`. Un scénario ou un storyboard déjà fournis ne se réécrivent pas : on vérifie seulement que les identifiants correspondent. Sinon, cette skill les écrit avant la composition.
 
 ## Vocabulaire
 
-- **Studio** : montage vidéo HyperFrames. **Slides** (le produit) : pas à pas avec enregistrement. Les modes **auto**, **webcam** et **incrustation** finissent en studio. Le mode **slides** enregistre au pas à pas.
+- **Studio** : montage vidéo HyperFrames.
 - **Scénario** (`SCENARIO.md`) : le texte libre de départ, l'histoire et l'argumentaire. Il n'est pas formaté : c'est l'amont de toutes les étapes.
 - **Storyboard** (`assets/storyboard.md`) : la mise en scène structurée du scénario, produite par le LLM. Il décrit l'écran, pas ce qui est dit. Chaque passage reçoit une primitive du langage visuel. C'est la seule entrée de `scripts/build.py`.
 - **Primitives** : le vocabulaire visuel figé, identique d'une vidéo à l'autre (`references/visual-language-joriel.md`, `references/primitives-joriel.md`). Le LLM choisit la primitive ; le code ne choisit jamais à sa place.
-- **Script** : le texte de départ, dans les quatre modes.
-- **Transcript** : ce qui est dit. Auto : le script, lu par le TTS. Slides : la prise, qui peut s'écarter beaucoup du script. Webcam et incrustation : la lecture, écart faible. Après une prise, le transcript mesuré porte les temps.
+- **Script** : le texte de départ, dans les trois modes.
+- **Transcript** : ce qui est dit. Auto : le script, lu par le TTS. Webcam et incrustation : la lecture, écart faible. Après une prise, le transcript mesuré porte les temps.
 - **Notes** : le guide pour commenter. Visibles du locuteur seul (`notes:` dans le storyboard).
 - **Composition** : le document HTML animé produit par `build.py`. Une scène par unité du storyboard. Le chapitre de référence est `examples/demo/`.
 - **Preview** : le HTML affiché avant le mp4.
@@ -82,30 +81,25 @@ cd <slug>
 
 ## Étapes communes (ordre canonique)
 
-Dans les quatre modes, on suit le même ordre :
+Dans les trois modes, on suit le même ordre. **La voix et le transcript passent avant le storyboard** : le storyboard se pose sur ce qui est réellement dit, avec ses temps.
 
-1. **Scénario** — `SCENARIO.md` : le texte libre, l'histoire à raconter (amont, déjà à disposition).
-2. **Storyboard** — le LLM transforme le scénario en `assets/storyboard.md` : scènes, étapes, primitives, registres de chiffres et de références. C'est lui qui décide « ce passage devient un versus » ; le code n'invente rien. Format : `references/storyboard-format.md` ; prompt : `references/scenario-to-storyboard-prompt.md`.
-3. **Collecte des assets** — Pexels (image/vidéo 1920×1080), `thesvg` (SVG local sans altération, logos), recherche web, génération via fast-market `image`, embeds YouTube/tweet (voir section Assets). Résoudre les fonds, images et logos nommés par le storyboard.
-4. **Voix et transcript** — selon le mode (voir son sous-skill) : TTS+STT (auto), prise (slides), concat+nettoyage+détection Cast+STT (webcam, incrustation) → `transcript.json`. Facultatif : sans transcript, `build.py` utilise les durées estimées du storyboard.
-5. **Build** — `python3 scripts/build.py` lit le storyboard, recale les `cue` sur le transcript s'il existe, et écrit `data/*.json`, `index.html` et `compositions/`. Le storyboard n'est pas réécrit.
-6. **Contrôle et preview** — `python3 scripts/check-steps.py`, `npx hyperframes check`, preview. Le mp4 seulement sur feu vert.
-7. **Post-rendu** — si `assets/inserts.json` existe, `scripts/post-render.py` assemble `renders/final.mp4`. Voir `references/inserts.md`.
+1. **Scénario** — `SCENARIO.md` : le texte libre, l'histoire à raconter (amont, déjà à disposition). Un titre `##` par chapitre.
+2. **Préparation** — tout ce qui est nécessaire pour écrire le storyboard (`references/preparation.md`), vérifié par `python3 scripts/prepare.py check` jusqu'à `ready` :
+   - **la voix et le transcript** : auto, le scénario est vocalisé (TTS) puis transcrit ; webcam et incrustation, la prise que le locuteur dicte (concat, nettoyage). Le transcript est toujours produit **aux deux formats** : JSON avec timecodes et TXT sans timecode (`scripts/transcript-export.py`) ;
+   - **les fonds d'écran** (`assets/assets.md`), plein écran ; **les références** et **les assets de référence** d'un auteur cité (`assets/refs.md`), en entier ; **les chiffres** sourcés (`assets/figures.md`) ;
+   - **les chapitres** (`prepare.py chapters`), **les screencasts** repérés (`detect-cast.py`, webcam et incrustation), **les schémas** (`assets/schemas/*.excalidraw`, regardés et validés), les inserts.
+3. **Storyboard** — le LLM transforme le scénario, le transcript et les assets préparés en `assets/storyboard.md` : scènes, étapes, primitives, registres de chiffres, de références, de schémas et de musiques. C'est lui qui décide « ce passage devient un versus » ; le code n'invente rien. Format : `references/storyboard-format.md` ; prompt : `references/scenario-to-storyboard-prompt.md`.
+4. **Build** — `python3 scripts/build.py` lit le storyboard, recale les `cue` sur le transcript, et écrit `data/*.json`, `index.html` et `compositions/`. Le storyboard n'est pas réécrit.
+5. **Contrôle et preview** — `python3 scripts/check-steps.py`, `npx hyperframes check`, preview. Le mp4 seulement sur feu vert.
+6. **Rendu et post-rendu** — la musique (`make-music.py`, `mix-music.py` : `references/music.md`), puis les inserts (`scripts/post-render.py` : `references/inserts.md`) qui assemblent `renders/final.mp4`, et les sous-titres de publication (`transcript-export.py --publish final`).
 
-Deux builds distincts :
-
-| Build | Quand | Script | Sortie |
-|---|---|---|---|
-| **Composition finale** | toujours | `scripts/build.py` | `index.html` + `compositions/` |
-| **Studio pas à pas** | mode slides (voir `modes/slides.md`) | `scripts/build_studio_anim.py`, `build_studio_slides.py` | `studio.html` (vue d'enregistrement) |
-
-`build.py` produit aussi `data/scenes.json` et `data/figures.json`. Le rendu des primitives est partagé : `scripts/render_primitive.py` est importé par `build.py` et par `build_studio_anim.py`, donc une primitive (versus, strike, count…) a le même balisage dans la composition finale et dans le studio.
+`build.py` produit aussi `data/scenes.json` et `data/figures.json` (schémas : `references/data-schemas.md`). Le rendu des primitives est dans `scripts/render_primitive.py`, importé par `build.py` : une primitive n'est écrite qu'une fois.
 
 ## Storyboard
 
 `assets/storyboard.md` est écrit par le LLM avant toute composition. Format complet et lisible par le code : `references/storyboard-format.md`. Prompt de transformation : `references/scenario-to-storyboard-prompt.md`.
 
-- Le LLM reçoit `SCENARIO.md`, ce `SKILL.md`, `references/visual-language-joriel.md`, `references/primitives-joriel.md`, `references/storyboard-format.md` et `examples/demo/`.
+- Le LLM reçoit `SCENARIO.md`, le transcript et les livrables de la préparation (`references/preparation.md` § Ce que reçoit le LLM), ce `SKILL.md`, `references/visual-language-joriel.md`, `references/primitives-joriel.md`, `references/storyboard-format.md` et `examples/demo/`.
 - Il rend **uniquement** le markdown du storyboard. Une étape = une primitive (`kind`) = une apparition = un label GSAP.
 - Les chiffres viennent du registre §1 (`Fxx`), les sources du registre §1b (`Rxx`). Jamais de chiffre ou d'URL en dur dans une étape.
 - Le registre est la seule source : `build.py` en extrait `data/figures.json` et `data/refs.json`.
@@ -159,10 +153,6 @@ Le même fichier peut porter des temps absolus, ligne par ligne. `build.py` les 
 
 Mode webcam : `off`, `pip`, `full` (états de base) et `cast` (annotation d'une séquence de screencast OBS), voir `modes/webcam.md`. Mode incrustation : la primitive seule (`[count]`) et `place:` facultatif, voir `modes/incrustation.md`. Après une coupe, on décale les temps et on ne réécrit pas les lignes.
 
-### Slides (mode slides seulement)
-
-Format du deck (un `id:` par slide, un `fragment` = une étape `#k`, `note:` pour le locuteur) : `references/studio-slides.md`, § « Format des slides ». Les autres modes n'ont pas de slides.
-
 ## Règles de rendu de la composition (spectateur final)
 
 > `python3 scripts/check-steps.py` est exécuté à chaque modification des étapes. `npm run check` (lent) est exécuté une fois avant toute demande de rendu mp4, et sur demande de l'utilisateur. Le mp4 n'est jamais rendu sans feu vert.
@@ -173,7 +163,7 @@ Format du deck (un `id:` par slide, un `fragment` = une étape `#k`, `note:` pou
 
 ### Caméra
 
-La caméra dépend du mode : états `off` / `pip` / `full` et `cast` (`modes/webcam.md`, `references/webcam.md`), ou vidéo plein écran sous les visuels (`modes/incrustation.md`). Pas de caméra en `auto` et en `slides`.
+La caméra dépend du mode : états `off` / `pip` / `full` et `cast` (`modes/webcam.md`, `references/webcam.md`), ou vidéo plein écran sous les visuels (`modes/incrustation.md`). Pas de caméra en `auto`.
 
 ### Règles absolues (spectateur final)
 
@@ -190,6 +180,9 @@ La composition est vue par le spectateur, pas par l'auteur. Règles absolues :
 ## Assets
 
 ### Fonds et références
+
+Ces assets se préparent **avant** le storyboard (`references/preparation.md`).
+
 - **Un fond** (image décorative d'un chapitre, `BG-xx`, `kind: image` avec `src`) occupe **tout l'écran**, quitte à être rognée (`object-fit: cover`).
 - **Une référence** (portrait, couverture, capture, image d'un auteur cité ; `ref:` ou `ref-shot`) se voit **en entier** (`object-fit: contain`) : s'il y a des bandes sur les côtés ou en haut et en bas, elles sont **transparentes** et laissent voir le fond de la scène. `fit: cover` ou `fit: contain` sur une étape force l'autre choix.
 - Varier les images de fond entre chapitres au minimum. Le storyboard nomme les fonds et les visuels ; on les résout avant la composition.
@@ -226,18 +219,18 @@ python3 scripts/build.py \
   [--audio assets/voix.wav] \
   [--camera assets/cam-clean.mkv] \
   [--cast-segments assets/cast-segments.json] \
-  [--mode auto|slides|webcam|incrustation] [--avoid bas-droite] \
+  [--mode auto|webcam|incrustation] [--avoid bas-droite] \
   [--slug mon-film]
 ```
 
 | Sortie | Contenu |
 |---|---|
-| `data/figures.json` | registre §1 (lu aussi par `build_studio_anim.py`) |
+| `data/figures.json` | registre §1 |
 | `data/refs.json` | registre §1b |
 | `data/steps.json` | une entrée par étape, temps absolus, caméra, `kind` |
 | `data/design.json` | `kind` + paramètres, par étape |
 | `data/camera.json` | timeline caméra effective (base ∪ Cast), **seulement si** `cast-segments.json` a des intervalles |
-| `data/scenes.json` | scènes + beats, schéma attendu par `build_studio_anim.py` |
+| `data/scenes.json` | scènes + beats (schéma : `references/data-schemas.md`) |
 | `index.html` | composition racine : scènes, audio, registre de timeline |
 | `compositions/iNN.html` | une sous-composition par scène |
 | `assets/style-joriel.css` | écrit **seulement s'il est absent** (copie de la démo) |
@@ -262,7 +255,7 @@ Avertissements connus de `hyperframes check` et leurs corrections : `references/
 Fichiers à donner tels quels.
 
 - **Scénario → storyboard**
-  - Source : `SCENARIO.md` (texte libre, l'histoire et l'argumentaire)
+  - Sources : `SCENARIO.md` (texte libre, l'histoire et l'argumentaire) et **la préparation** : `assets/transcript.json` + `transcript.txt`, `assets/chapters.json`, `assets/assets.md`, `assets/refs.md`, `assets/figures.md`, `assets/cast-segments.json` (webcam, incrustation), `assets/schemas/Dxx.handles.md` (les noms exacts des éléments d'un schéma) ; `assets/prep.json` dit si c'est prêt
   - `SKILL.md`
   - `references/visual-language-joriel.md`
   - `references/primitives-joriel.md`
@@ -280,12 +273,13 @@ Fichiers à donner tels quels.
 
 ## Modes
 
-Chaque mode a son sous-skill, à lire une fois le mode choisi (§ Routeur) : `modes/auto.md`, `modes/slides.md`, `modes/webcam.md`, `modes/incrustation.md`. Un sous-skill décrit ses étapes, ses règles propres et le contexte LLM supplémentaire ; tout ce qui est commun reste dans ce fichier.
+Chaque mode a son sous-skill, à lire une fois le mode choisi (§ Routeur) : `modes/auto.md`, `modes/webcam.md`, `modes/incrustation.md`. Un sous-skill décrit ses étapes, ses règles propres et le contexte LLM supplémentaire ; tout ce qui est commun reste dans ce fichier.
 
 ## Ce que ce dépôt fournit
 
-- `scripts/build.py` : builder générique des quatre modes, source unique `assets/storyboard.md`. Il ne remplace pas les builders du studio (mode slides, `modes/slides.md`), qui gardent la vue d'enregistrement pas à pas.
-- `scripts/render_primitive.py` : module commun de rendu des primitives, importé par `build.py` et `build_studio_anim.py`. Une primitive n'est écrite qu'une fois.
+- `scripts/build.py` : builder générique des trois modes, source unique `assets/storyboard.md`.
+- `scripts/render_primitive.py` : module commun de rendu des primitives, importé par `build.py`. Une primitive n'est écrite qu'une fois.
+- `scripts/prepare.py` : la préparation (checklist, contrôle, chapitres, validation des schémas) ; `scripts/transcript-export.py`, `scripts/make-music.py`, `scripts/mix-music.py`, `scripts/excalidraw-preview.py`, `scripts/schema-to-excalidraw.py` : les étapes qui l'entourent.
 - Les primitives sont dans `references/primitives-joriel.md` et rendues par `render_primitive.py`. Les **schémas animés** (`kind: schema`, registre §1c, état qui persiste d'une étape à l'autre) sont décrits dans `references/schemas-animes.md` et rendus par `scripts/schema_anim.py`. `seuil`, `bars`, `compare3`, `brand`, la caméra et l'incrustation sont couverts ; leurs styles manquants sont écrits dans `assets/style-joriel-ext.css` au build. **Schémas Excalidraw** : un fichier `assets/schemas/Dxx.excalidraw`, asset de la préparation, qu'on regarde (`scripts/excalidraw-preview.py`), valide et retouche avant de l'intégrer ; ronds, losanges, imbrications ; voir `references/schemas-excalidraw.md`.
 - Un `kind` absent du catalogue ne s'invente pas : on l'ajoute d'abord à `visual-language-joriel.md`, `primitives-joriel.md`, `examples/demo/` et `render_primitive.py`, puis on l'utilise.
 

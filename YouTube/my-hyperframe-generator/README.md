@@ -1,6 +1,6 @@
 # hyperframe-gen
 
-Distribution du skill `hyperframe-joriel` : produire une vidéo HyperFrames au langage visuel Joriel, en quatre modes (auto, slides, webcam, incrustation).
+Distribution du skill `hyperframe-joriel` : produire une vidéo HyperFrames au langage visuel Joriel, en trois modes (auto, webcam, incrustation), après une étape de préparation (voix et transcript d'abord, puis assets) qui précède le storyboard.
 
 ## Installation
 
@@ -24,8 +24,9 @@ Prérequis et variables d'environnement : `SKILL.md` § Prérequis.
 | Chemin | Contenu |
 |---|---|
 | `SKILL.md` | point d'entrée : routeur des 4 modes, puis le socle commun (vocabulaire, étapes, format du storyboard, règles de rendu) |
-| `modes/` | un sous-skill par mode, lu seulement une fois le mode choisi : `auto.md`, `slides.md`, `webcam.md`, `incrustation.md` |
-| `references/` | langage visuel, primitives (balisage exact), format du storyboard, conventions studio et webcam, schémas `data/`, glossaire |
+| `modes/` | un sous-skill par mode, lu seulement une fois le mode choisi : `auto.md`, `webcam.md`, `incrustation.md` |
+| `archive/slides/` | le mode `slides` (archivé, plus utilisé) : doc, builders du studio, serveur d'enregistrement ; `archive/slides/README.md` |
+| `references/` | **préparation**, langage visuel, primitives (balisage exact), format du storyboard, schémas animés et Excalidraw, musique, conventions studio et webcam, schémas `data/`, glossaire |
 | `scripts/` | `build.py` (composition finale), `render_primitive.py` (primitives partagées), `schema_anim.py` (schémas animés), `prepare.py` (préparation), `transcript-export.py` (sous-titres JSON + TXT), `music_plan.py` / `make-music.py` / `mix-music.py` (musique), `excalidraw_anim.py` / `excalidraw_gen.py` / `schema-to-excalidraw.py` / `excalidraw-preview.py` (schémas Excalidraw), builders studio, `check-steps.py`, nettoyage webcam (`concat-mkv.sh`, `clean-posthoc.py`), détection des screencasts OBS (`detect-cast.py`), `post-render.py` (inserts), `lint-repo.py` ; tests : `test-detect-cast.py`, `test-cast-build.py`, `test-schema.py`, `test-transcript-export.py`, `test-media-fit.py`, `test-post-render.sh` |
 | `examples/demo/` | catalogue des primitives (12 scènes dont la webcam avec Cast et un schéma déployé sur deux compositions, lorem ipsum, nom affiché à l'écran) ; médias factices via `scripts/make-placeholders.sh` |
 | `examples/storyboard.example.md` | storyboard complet et parsable, couvre toutes les primitives |

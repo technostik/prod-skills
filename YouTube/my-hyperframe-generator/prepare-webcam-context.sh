@@ -90,6 +90,11 @@ else
 fi
 copy_file "$ROOT/references/posthoc-video-conventions.md" "$STORYBOARD"
 copy_file "$ROOT/references/scenario-studio-conventions.md" "$STORYBOARD"
+# Étapes qui dépendent de la préparation : schémas animés (Excalidraw), musique, préparation elle-même
+copy_file "$ROOT/references/preparation.md" "$STORYBOARD"
+copy_file "$ROOT/references/schemas-animes.md" "$STORYBOARD"
+copy_file "$ROOT/references/schemas-excalidraw.md" "$STORYBOARD"
+copy_file "$ROOT/references/music.md" "$STORYBOARD"
 
 # Données du projet pour les séquences Cast (facultatif)
 if [[ -n "$PROJECT" ]]; then
@@ -98,6 +103,22 @@ if [[ -n "$PROJECT" ]]; then
     else
         echo "AVERTISSEMENT : $PROJECT/assets/cast-segments.json absent (pas de Cast, ou lancer scripts/detect-cast.py)" >&2
     fi
+    # Livrables de la préparation (references/preparation.md) : ce que le LLM du storyboard doit lire
+    for f in transcript.txt chapters.json chapters.txt assets.md refs.md figures.md prep.json; do
+        if [[ -f "$PROJECT/assets/$f" ]]; then
+            cp "$PROJECT/assets/$f" "$STORYBOARD/"
+        fi
+    done
+    if [[ -f "$PROJECT/SCENARIO.md" ]]; then
+        cp "$PROJECT/SCENARIO.md" "$STORYBOARD/"
+    else
+        echo "AVERTISSEMENT : $PROJECT/SCENARIO.md absent" >&2
+    fi
+    shopt -s nullglob
+    for h in "$PROJECT"/assets/schemas/*.handles.md; do
+        cp "$h" "$STORYBOARD/"
+    done
+    shopt -u nullglob
     if [[ -f "$PROJECT/transcript.json" ]]; then
         cp "$PROJECT/transcript.json" "$STORYBOARD/"
     elif [[ -f "$PROJECT/assets/transcript.json" ]]; then

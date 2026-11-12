@@ -17,12 +17,12 @@ Une ou plusieurs prises `.mkv` déjà tournées (comme en mode webcam), et l'uti
 
 ## Étapes
 
-1. Prises : mêmes commandes que le mode webcam (`references/webcam.md` § Commandes) : `concat-mkv.sh`, `clean-posthoc.py`, `detect-cast.py` (si screencasts OBS), `video transcribe`.
-2. Storyboard sur le transcript mesuré, en-tête `**Mode** : incrustation` (format minuté, § Storyboard ci-dessous).
+1. **Préparation** (`references/preparation.md`) : `python3 scripts/prepare.py init --mode incrustation`. Les prises : mêmes commandes que le mode webcam (`references/webcam.md` § Commandes) : `concat-mkv.sh`, `clean-posthoc.py`, `detect-cast.py` (si screencasts OBS), puis `python3 scripts/transcript-export.py --from-video assets/voix-posthoc-vN.wav` (transcript JSON + TXT). Fonds, références, chiffres, schémas, `prepare.py chapters`, `prepare.py check` jusqu'à `ready`.
+2. **Storyboard** sur le transcript mesuré, en-tête `**Mode** : incrustation` (format minuté, § Storyboard ci-dessous).
 3. Build :
 
 ```bash
-python3 scripts/build.py --transcript transcript.json \
+python3 scripts/build.py --transcript assets/transcript.json \
   --camera assets/cam-clean.mkv --audio assets/voix.wav \
   [--avoid bas-droite]
 ```

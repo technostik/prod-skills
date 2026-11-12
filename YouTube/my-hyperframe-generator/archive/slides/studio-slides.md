@@ -1,11 +1,13 @@
-# Studio slides (mode slides)
+# Studio slides (mode slides, archivé)
 
-Entrée : le script. Écrire le scénario au format estimé, puis les slides aux mêmes identifiants. La composition suit le scénario, avant la prise. Après la prise, le transcript peut s'écarter du script : les temps suivent le transcript. Une étape dont l'écran ne correspond plus à ce qui a été dit se reprend. Si le deck est déjà fourni, le copier vers `assets/slides.md` et ne pas le réécrire (`references/advanced-slides-subset.md`). Résoudre les assets avant la preview.
+> Archivé : voir `archive/slides/README.md`. Les commandes ci-dessous copient les scripts depuis `archive/slides/scripts/` dans le projet.
+
+Entrée : le script. Écrire le scénario au format estimé, puis les slides aux mêmes identifiants. La composition suit le scénario, avant la prise. Après la prise, le transcript peut s'écarter du script : les temps suivent le transcript. Une étape dont l'écran ne correspond plus à ce qui a été dit se reprend. Si le deck est déjà fourni, le copier vers `assets/slides.md` et ne pas le réécrire (`archive/slides/advanced-slides-subset.md`). Résoudre les assets avant la preview.
 
 ```bash
-cp $SKILL_DIR/scripts/build_studio_slides.py scripts/
-cp $SKILL_DIR/scripts/build_studio_anim.py scripts/
-cp $SKILL_DIR/scripts/studio_server.py scripts/
+cp $SKILL_DIR/archive/slides/scripts/build_studio_slides.py scripts/
+cp $SKILL_DIR/archive/slides/scripts/build_studio_anim.py scripts/
+cp $SKILL_DIR/archive/slides/scripts/studio_server.py scripts/
 cp $SKILL_DIR/scripts/check-steps.py scripts/
 cp $SKILL_DIR/scripts/make-sfx.py scripts/
 ```

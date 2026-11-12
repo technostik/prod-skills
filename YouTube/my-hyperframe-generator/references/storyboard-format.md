@@ -22,7 +22,7 @@ Le LLM décide **quel passage devient quelle primitive** (éditorial). Le code n
 
 **Source** : SCENARIO.md
 **Langage visuel** : references/visual-language-joriel.md
-**Mode** : auto | slides | webcam | incrustation
+**Mode** : auto | webcam | incrustation
 **Durée estimée** : ≈ N min
 **Format** : 1920×1080 @ 30 fps
 
@@ -256,12 +256,12 @@ Le `kind` d'une étape est **une primitive du langage visuel**, pas un type de s
 
 | Sortie | Contenu |
 |---|---|
-| `data/figures.json` | registre §1 (lu aussi par `build_studio_anim.py`) |
+| `data/figures.json` | registre §1 |
 | `data/refs.json` | registre §1b |
 | `data/steps.json` | une entrée par étape, temps absolus, caméra (`off`, `pip`, `full` ou l'annotation `cast`) |
 | `data/camera.json` | timeline caméra effective (base ∪ Cast) en temps absolu ; **écrit seulement si `cast-segments.json` contient des intervalles, ou en mode incrustation** |
 | `data/design.json` | le `kind` et ses paramètres, par étape |
-| `data/scenes.json` | scènes + beats (schéma attendu par `build_studio_anim.py`) |
+| `data/scenes.json` | scènes + beats (schéma : `references/data-schemas.md`) |
 | `index.html` | composition racine : scènes, audio, durée totale |
 | `compositions/iNN.html` | une sous-composition par scène |
 | `assets/style-joriel.css` | écrit **seulement s'il est absent** |

@@ -8,16 +8,21 @@ La prise est déjà faite : le locuteur a lu le script (transcript chapitré), s
 
 ## Étapes
 
-1. Même init que `SKILL.md` § Projet, puis les commandes de `references/webcam.md` § Commandes : concaténer (`concat-mkv.sh`), nettoyer (`clean-posthoc.py`), **détecter les Cast** (`detect-cast.py`, si la prise contient des screencasts OBS), transcrire (`video transcribe`). Détail caméra, nettoyage et cues : `references/posthoc-video-conventions.md`.
-2. `transcript.json` (segments + mots) puis le storyboard sur cet audio (`**Mode** : webcam`, format minuté). Pas de slides.
+1. **Préparation** (`references/preparation.md`) : `python3 scripts/prepare.py init --mode webcam`, puis dans l'ordre :
+   - `SCENARIO.md` ; le locuteur dicte la prise (pas de prompteur) ;
+   - la prise : mêmes init que `SKILL.md` § Projet, puis les commandes de `references/webcam.md` § Commandes : concaténer (`concat-mkv.sh`), nettoyer (`clean-posthoc.py`). Détail caméra, nettoyage et cues : `references/posthoc-video-conventions.md` ;
+   - **repérer les screencasts** (`detect-cast.py`, si la prise en contient ; **après chaque nettoyage**) → `assets/cast-segments.json` ;
+   - transcrire : `python3 scripts/transcript-export.py --from-video assets/voix-posthoc-vN.wav` (N = dernière passe) → `assets/transcript.json` (avec timecodes) **et** `transcript.txt` (sans) ;
+   - les fonds, références, chiffres, schémas ; `python3 scripts/prepare.py chapters` ; `python3 scripts/prepare.py check` jusqu'à `ready`.
+2. **Storyboard** sur le transcript mesuré (`**Mode** : webcam`, format minuté). Pas de slides.
 3. Build :
 
 ```bash
-python3 scripts/build.py --transcript transcript.json \
+python3 scripts/build.py --transcript assets/transcript.json \
   --camera assets/cam-clean.mkv --audio assets/voix.wav
 ```
 
-4. `python3 scripts/check-steps.py`, `npm run check` vert, preview, snapshots, mp4 sur feu vert uniquement.
+4. `python3 scripts/check-steps.py`, `npm run check` vert, preview, snapshots, mp4 sur feu vert uniquement. Puis la musique (`references/music.md`) et les inserts (`references/inserts.md`).
 
 L'audio nettoyé fait foi : tout timing se remesure après le nettoyage. Pas de cut sec.
 
@@ -29,7 +34,7 @@ La caméra est intégrée à chaque composition (`cam-frame` + `<video data-medi
 
 ## Contexte LLM (scénario → storyboard)
 
-Fichiers communs (`SKILL.md` § Contexte LLM), plus : `references/posthoc-video-conventions.md`, `references/webcam.md`, et, s'ils existent, `assets/cast-segments.json` et `transcript.json`. `prepare-webcam-context.sh` les rassemble dans un dossier (option `--project`).
+Fichiers communs (`SKILL.md` § Contexte LLM, dont les livrables de la préparation), plus : `references/posthoc-video-conventions.md`, `references/webcam.md`, et `assets/cast-segments.json` s'il existe. `prepare-webcam-context.sh` les rassemble dans un dossier (option `--project`).
 
 ## Schémas animés
 

@@ -4,9 +4,9 @@ Ces fichiers sont produits par `scripts/build.py` à partir de `assets/storyboar
 
 | Fichier | Producteur | Lu par | Rôle |
 |---|---|---|---|
-| `data/figures.json` | `build.py` | `build_studio_anim.py` | registre des chiffres (§1 du storyboard) |
+| `data/figures.json` | `build.py` | archive/slides/scripts/build_studio_anim.py | registre des chiffres (§1 du storyboard) |
 | `data/refs.json` | `build.py` | — | registre des références (§1b du storyboard) |
-| `data/scenes.json` | `build.py` | `build_studio_anim.py` | scènes de la vue « animation pas à pas » |
+| `data/scenes.json` | `build.py` | archive/slides/scripts/build_studio_anim.py | scènes de la vue « animation pas à pas » (mode slides, archivé) |
 | `data/steps.json` | `build.py` | — | une entrée par étape, temps absolus |
 | `data/design.json` | `build.py` | — | primitive (`kind`) et paramètres, par étape |
 
@@ -22,7 +22,7 @@ Objet `{"figures": {"F01": {...}}}`, clé = identifiant de la figure. Champs : `
 
 ## `data/scenes.json`
 
-Objet `{"scenes": [...]}`. Champs lus par `build_studio_anim.py` : `id`, `section`, `title`, `type`, `illustration` (fond), `punchline`, `beats`. Un beat : `cue`, `text`, `kind`, `col` (`left` / `right` / `full`), `figure` ou `figures`, et selon le gabarit `viz`.
+Objet `{"scenes": [...]}`. Champs lus par `archive/slides/scripts/build_studio_anim.py` : `id`, `section`, `title`, `type`, `illustration` (fond), `punchline`, `beats`. Un beat : `cue`, `text`, `kind`, `col` (`left` / `right` / `full`), `figure` ou `figures`, et selon le gabarit `viz`.
 
 ```json
 {"scenes": [{"id": "I1", "section": "bilan", "title": "Titre court", "type": "numbers", "illustration": "assets/bg/BG-01.jpg", "punchline": "…", "beats": [{"cue": "interpellations", "text": "+5 000", "kind": "count", "col": "full", "figure": "F01"}]}]}
