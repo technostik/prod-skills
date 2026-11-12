@@ -204,7 +204,7 @@ Seules les primitives lisibles en surimpression sont acceptées (`kw`, `count`, 
 - `§1b` : `ID`, `Type`, `Source`, `Fichier local`, `Statut`.
 - Statut chiffre : `ok` · `verify`. Statut référence : `ok` · `à capturer` · `bloquée`.
 - `§1d` : un tableau `ID | Rôle | Prompt | Durée | Volume | Seed` (`Prompt` obligatoire, en anglais). Optionnel. Une étape déclenche une musique avec `music: Mxx` (+ `music_until`, `music_volume`). Format, règles de mise en scène, génération et mixage : `references/music.md`.
-- `§1c` : un en-tête `### Dxx — Titre` puis **un bloc JSON** par schéma (nœuds, liens). Optionnel ; absent, rien ne change. Format et mise en page : `references/schemas-animes.md`.
+- `§1c` : un en-tête `### Dxx — Titre` puis **`- fichier: assets/schemas/Dxx.excalidraw`** (un schéma dessiné et validé dans Excalidraw : `references/schemas-excalidraw.md`) ou **un bloc JSON** (nœuds, liens : `references/schemas-animes.md`). Optionnel ; absent, rien ne change.
 - Les lignes d'une sous-section « Écartés » ne sont **jamais** importées.
 - Un `Rxx` ne s'affiche jamais à l'écran : seule l'attribution lisible apparaît.
 

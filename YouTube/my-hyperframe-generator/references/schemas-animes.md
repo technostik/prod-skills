@@ -1,5 +1,11 @@
 # Schémas animés (`kind: schema`)
 
+> **Deux façons de déclarer un schéma.** Le schéma **Excalidraw** (`- fichier: assets/schemas/Dxx.excalidraw`,
+> décrit dans `references/schemas-excalidraw.md`) est le chemin recommandé : on le voit, on le valide et on le
+> retouche avant de l'intégrer, il a des ronds, des losanges et des imbrications. Le schéma **JSON** décrit
+> ci-dessous (un bloc dans le registre §1c) reste valable pour un schéma très simple. Les étapes (`show`, `glow`,
+> `focus`, `zoom`) sont les mêmes pour les deux.
+
 Un schéma qui **se construit au fil de la voix** : on déclare le schéma une fois, puis chaque étape
 fait apparaître, éclaire, isole ou cadre une partie. Contrairement aux autres primitives, dont
 chaque étape repart de zéro, **l'état du schéma persiste d'une étape à la suivante**.

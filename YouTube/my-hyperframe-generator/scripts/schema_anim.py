@@ -391,8 +391,8 @@ class Schema:
                     edges.append(e)
             elif ">" in k:
                 a, _, b = k.partition(">")
-                hit = next((e for e in self.edges if _key(e["a"]["id"]) == _key(a)
-                            and _key(e["b"]["id"]) == _key(b)), None)
+                hit = next((e for e in self.edges if e["a"] is not None and e["b"] is not None
+                            and _key(e["a"]["id"]) == _key(a) and _key(e["b"]["id"]) == _key(b)), None)
                 if hit and hit not in edges:
                     edges.append(hit)
                 elif not hit:
@@ -433,19 +433,27 @@ class Schema:
 _HEAD = re.compile(r"^#{2,4}\s+(D\d+)\s*(?:[—–:-]\s*)?(.*)$")
 
 
-def schemas_from_lines(lines):
+_FILE = re.compile(r"^\s*[-*]\s*(?:fichier|file)\s*:\s*`?([^`\n]+?)`?\s*$", re.I)
+
+
+def schemas_from_lines(lines, root=None):
     """Lit les lignes du registre §1c.
 
-    Chaque schéma : un en-tête `### D01 — Titre`, puis un bloc JSON entre ``` ``` ```.
-    Retourne ({id: Schema}, avertissements, erreurs).
-    """
+    Chaque schéma : un en-tête `### D01 — Titre`, puis SOIT une ligne `- fichier: assets/schemas/D01.excalidraw`
+    (un schéma dessiné et validé dans Excalidraw : voir `excalidraw_anim.py`), SOIT un bloc JSON entre ```.
+    `root` : dossier du projet, pour résoudre le chemin du fichier.
+    Retourne ({id: schéma}, avertissements, erreurs)."""
     blocks, cur, in_code, buf = {}, None, False, []
     for ln in lines:
         if not in_code:
             m = _HEAD.match(ln)
             if m:
                 cur = m.group(1)
-                blocks[cur] = {"title": m.group(2).strip(), "text": None}
+                blocks[cur] = {"title": m.group(2).strip(), "text": None, "file": None}
+                continue
+            fm = _FILE.match(ln)
+            if cur and fm and blocks[cur]["file"] is None:
+                blocks[cur]["file"] = fm.group(1).strip()
                 continue
             if cur and ln.strip().startswith("```"):
                 in_code, buf = True, []
@@ -458,8 +466,21 @@ def schemas_from_lines(lines):
         buf.append(ln)
     out, warns, errors = {}, [], []
     for sid, b in blocks.items():
+        if b["file"]:
+            import excalidraw_anim          # import tardif : excalidraw_anim importe ce module
+            if b["text"] is not None:
+                warns.append("schéma %s : un bloc JSON ET un fichier sont déclarés, le fichier fait foi" % sid)
+            try:
+                sch = excalidraw_anim.load_schema(b["file"], sid, b["title"], root)
+            except SchemaError as exc:
+                errors.append("registre §1c : %s : %s (dessiner le schéma dans Excalidraw, ou le générer avec "
+                              "scripts/schema-to-excalidraw.py)" % (sid, exc))
+                continue
+            out[sid] = sch
+            warns += sch.warnings
+            continue
         if b["text"] is None:
-            errors.append("registre §1c : %s sans bloc JSON (entre ```)" % sid)
+            errors.append("registre §1c : %s sans fichier (`- fichier: …`) ni bloc JSON (entre ```)" % sid)
             continue
         try:
             sch = Schema(sid, b["title"], json.loads(b["text"]))
@@ -538,11 +559,12 @@ def compile_beats(schema, uid, items, carry=None):
         if schema.auto_edges:
             for e in schema.edges:
                 if (("e", e["i"]) not in shown and e not in new_edges and not e["manual"]
+                        and e["a"] is not None and e["b"] is not None
                         and ("n", e["a"]["i"]) in shown and ("n", e["b"]["i"]) in shown
                         and (e["a"] in new_nodes or e["b"] in new_nodes)):
                     new_edges.append(e)
         for k, e in enumerate(new_edges):
-            if ("n", e["a"]["i"]) not in shown or ("n", e["b"]["i"]) not in shown:
+            if any(x is not None and ("n", x["i"]) not in shown for x in (e["a"], e["b"])):
                 warns.append("étape %s : le lien %s est montré avant l'un de ses nœuds (schéma %s)"
                              % (sid, e["id"], schema.id))
             heads = [_pid(uid, "e", e["i"]) + "-h%d" % h for h in range(len(e["geo"]["heads"]))]
@@ -564,7 +586,8 @@ def compile_beats(schema, uid, items, carry=None):
                     warns.append("étape %s : `focus` référence inconnue `%s` (schéma %s)" % (sid, u, schema.id))
                 keep = {("n", n["i"]) for n in fn} | {("e", e["i"]) for e in fe}
                 for e in schema.edges:     # un lien entre deux nœuds retenus est retenu
-                    if ("n", e["a"]["i"]) in keep and ("n", e["b"]["i"]) in keep:
+                    if (e["a"] is not None and e["b"] is not None
+                            and ("n", e["a"]["i"]) in keep and ("n", e["b"]["i"]) in keep):
                         keep.add(("e", e["i"]))
                 target = {k: (1.0 if (k in keep or k in fresh) else DIM) for k in sorted(shown)}
             groups = {}
@@ -592,6 +615,8 @@ def compile_beats(schema, uid, items, carry=None):
                 warns.append("étape %s : `glow` sur %s, pas encore affiché (schéma %s)" % (sid, n["id"], schema.id))
             ops.append({"op": "glow", "kind": "node", "dt": round(gdt + k * 0.1, 3),
                         "el": _pid(uid, "n", n["i"]), "halo": HALOS[n["cls"]]})
+            if n.get("fx"):
+                ops[-1]["fx"] = n["fx"]
         for k, e in enumerate(gedges):
             if ("e", e["i"]) not in shown:
                 warns.append("étape %s : `glow` sur le lien %s, pas encore affiché (schéma %s)"
@@ -684,6 +709,8 @@ RUNTIME = r"""
         if (o.label) tl.fromTo("#" + o.label, { opacity: 0 }, { opacity: 1, duration: 0.4, immediateRender: false }, t + 0.35);
       } else if (o.op === "fade") {
         tl.fromTo(o.els.map(function (e) { return "#" + e; }).join(","), { opacity: o.from }, { opacity: o.to, duration: 0.5, ease: "power2.out", immediateRender: false }, t);
+      } else if (o.op === "glow" && o.kind === "node" && o.fx === "filter") {
+        tl.to("#" + o.el, { scale: 1.1, filter: "drop-shadow(0 0 26px " + o.halo + ")", duration: 0.28, yoyo: true, repeat: 1, ease: "power2.inOut" }, t);
       } else if (o.op === "glow" && o.kind === "node") {
         tl.to("#" + o.el, { scale: 1.14, boxShadow: "0 0 64px 8px " + o.halo, duration: 0.28, yoyo: true, repeat: 1, ease: "power2.inOut" }, t);
       } else if (o.op === "glow") {
@@ -707,7 +734,8 @@ def render_group(schema, uid, items, carry=None, cam_frame=None, sel=None):
         b["no"] = "%s-no%d" % (uid, k)
         numbers.append('<div class="slideno" id="%s" data-step="%s"%s>%s</div>'
                        % (b["no"], _esc(b["id"]), "" if k == 0 else ' style="opacity:0"', _esc(b["id"])))
-    inner = "".join(numbers) + stage_html(schema, uid, set(carry or ()))
+    draw = getattr(schema, "stage_html", None)
+    inner = "".join(numbers) + (draw(uid, set(carry or ())) if draw else stage_html(schema, uid, set(carry or ())))
     payload = {"stage": "#%s-stage" % uid, "sel": sel or "", "camFrame": cam_frame or "",
                "beats": beats}
     js = "\n" + RUNTIME.replace("__G__", json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
@@ -721,6 +749,8 @@ def render_static(schema, uid, step):
     shown = {("n", n["i"]) for n in nodes} | {("e", e["i"]) for e in edges}
     if schema.auto_edges:
         for e in schema.edges:
-            if not e["manual"] and ("n", e["a"]["i"]) in shown and ("n", e["b"]["i"]) in shown:
+            if (not e["manual"] and e["a"] is not None and e["b"] is not None
+                    and ("n", e["a"]["i"]) in shown and ("n", e["b"]["i"]) in shown):
                 shown.add(("e", e["i"]))
-    return stage_html(schema, uid, shown)
+    draw = getattr(schema, "stage_html", None)
+    return draw(uid, shown) if draw else stage_html(schema, uid, shown)

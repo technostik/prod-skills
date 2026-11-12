@@ -424,7 +424,7 @@ def refs_from(rows):
     return out
 
 
-def parse_storyboard(path):
+def parse_storyboard(path, root=None):
     text = Path(path).read_text(encoding="utf-8")
     lines = text.splitlines()
     meta = {}
@@ -470,7 +470,7 @@ def parse_storyboard(path):
     scenes = parse_scenes(scene_lines)
     if not scenes:
         die("aucune scène trouvée dans %s (attendu : §4 avec des en-têtes `### I1 — Titre`)" % path)
-    schemas, schema_warns, schema_errs = schema_anim.schemas_from_lines(schema_lines)
+    schemas, schema_warns, schema_errs = schema_anim.schemas_from_lines(schema_lines, root)
     if schema_errs:
         die("\n  ".join(schema_errs))
     music, music_errs = music_plan.registry_from_rows(parse_registry(music_lines, "M"))
@@ -1393,7 +1393,7 @@ def main():
     if not sb_path.exists():
         die("storyboard absent : %s (voir references/storyboard-format.md)" % sb_path)
 
-    movie = parse_storyboard(sb_path)
+    movie = parse_storyboard(sb_path, root)
     scenes = movie["scenes"]
     figs, refs = movie["figures"], movie["refs"]
     schemas = movie["schemas"]
