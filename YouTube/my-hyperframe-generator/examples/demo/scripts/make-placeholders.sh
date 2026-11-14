@@ -18,4 +18,16 @@ while read -r f; do
   ffmpeg -nostdin -y -v error -f lavfi -i "color=c=$c:s=1920x1080" -frames:v 1 "$f"
   N=$((N+1))
 done < <(grep -rhoE 'assets/(images|bg|references)/[^" )]+' index.html compositions/*.html | sort -u)
-echo "médias factices créés : $N image(s) ; caméra : $( [ -e assets/cam-clean.mkv ] && echo présente )"
+# musiques factices (ignorées par git) : une nappe synthétique par fichier de data/music.json, pour que le mixage tourne.
+# Les vraies musiques : python3 scripts/make-music.py (CLI `sound` de fast-market).
+M=0
+if [ -f data/music.json ]; then
+  while read -r f dur; do
+    [ -z "$f" ] && continue
+    [ -e "$f" ] && continue
+    mkdir -p "$(dirname "$f")"
+    ffmpeg -nostdin -y -v error -f lavfi -i "aevalsrc=0.18*(sin(2*PI*110*t)+0.7*sin(2*PI*165*t)+0.5*sin(2*PI*220*t))*(0.4+0.6*t/$dur):s=22050:d=$dur" -ac 1 "$f"
+    M=$((M+1))
+  done < <(python3 -c "import json;[print(c['file'],c['gen_duration']) for c in json.load(open('data/music.json'))['cues']]")
+fi
+echo "médias factices créés : $N image(s), $M musique(s) factice(s) ; caméra : $( [ -e assets/cam-clean.mkv ] && echo présente )"

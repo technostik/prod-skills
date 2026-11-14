@@ -7,7 +7,7 @@ Pour corriger une primitive : repère son nom à l'écran, retrouve l'étape dan
 ## Lancer
 
 ```bash
-bash scripts/make-placeholders.sh   # médias factices (FFmpeg) pour les fichiers que tu n'as pas fournis
+bash scripts/make-placeholders.sh   # médias factices (FFmpeg) pour les fichiers que tu n'as pas fournis (images, caméra, musiques)
 npm run lint                        # rapide, sans navigateur : doit afficher 0 erreur, 0 avertissement
 npm run check                       # Node ≥ 22, Chrome, accès réseau
 npm run dev                         # aperçu
@@ -72,13 +72,45 @@ cp <ancien>/assets/cam-clean.mkv assets/cam-clean.mkv     # les 30 premières se
 | `I10.1#1` | schéma · 1/2 (Heures de cours, zoom) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
 | `I11.1#0` | schéma · 2/2 (reprise de l'état, Niveau) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
 | `I11.1#1` | schéma · 2/2 (focus « all », glow) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
+| `I12.1#0` | schéma **Excalidraw** · le rond « Écosystème » (+ musique M01, la montée) | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
+| `I12.1#1` | schéma Excalidraw · rectangle et cercle **imbriqués**, zoom `@Équipe` | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
+| `I12.1#2` | schéma Excalidraw · **losange** « Décision », le lien traverse l'imbrication, glow | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
+| `I12.1#3` | schéma Excalidraw · rectangle « Résultat » et flèche « oui » | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
+| `I12.1#4` | schéma Excalidraw · **flèche pointillée** montrée à la main, `focus` | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
+| `I12.1#5` | schéma Excalidraw · `focus` « all », glow `@Équipe` (+ musique M02, la conclusion) | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
 
 Le même schéma `D01` (registre §1c de `storyboard.md`) **se déploie sur deux compositions** : `i10` construit sa première moitié, `i11` retrouve les nœuds déjà affichés et termine le schéma. C'est le cas à regarder pour vérifier la persistance de l'état d'une scène à l'autre.
+
+## Schéma Excalidraw, musique et shorts (`I12`)
+
+**Le schéma** `D02` est un **asset à part** : `assets/schemas/D02.excalidraw`, référencé dans le registre §1c du storyboard par `- fichier: assets/schemas/D02.excalidraw`. Un **rond** (« Écosystème ») contient un **rectangle** (« Équipe ») qui contient un **cercle** (« Idée ») ; un **losange** (« Décision »), un rectangle (« Résultat ») et trois **flèches** : « Idée → Décision » traverse deux bords sans être gênée, « Décision → Résultat » (« oui ») et la boucle « Décision → Équipe » (« non »), **pointillée**, donc montrée à la main (`show: ["Décision>Équipe"]`). Les étapes construisent le schéma un élément à la fois (`show`), mettent en relief (`glow`), isolent (`focus`) et cadrent (`zoom: ["@Équipe"]`).
+
+Le workflow d'un schéma (`references/schemas-excalidraw.md`), avec les fichiers de `assets/schemas/` :
+
+| Fichier | Rôle |
+|---|---|
+| `D02.src.json` | la description compacte (nœuds, formes, liens) |
+| `D02.excalidraw` | le schéma : généré par `scripts/schema-to-excalidraw.py`, **ouvrable et retouchable dans Excalidraw** ; c'est lui qui fait foi |
+| `D02.preview.png` | le schéma **habillé aux couleurs de la vidéo** (`scripts/excalidraw-preview.py`) : à regarder avant de valider |
+| `D02.handles.md` | les éléments à citer dans `show`, `glow`, `focus`, `zoom` (lu par le LLM qui écrit le storyboard) |
+| `D02.validated` | le tampon de validation (`scripts/prepare.py validate-schema D02`) : retouché ensuite, le schéma redevient « à valider » |
+
+```bash
+python3 scripts/schema-to-excalidraw.py --json assets/schemas/D02.src.json --id D02 --force   # régénère (jamais sans --force)
+python3 scripts/excalidraw-preview.py assets/schemas/D02.excalidraw                             # aperçu + liste des éléments
+python3 scripts/prepare.py validate-schema D02
+```
+
+**La musique** : le registre §1d du storyboard déclare deux musiques et `I12.1#0` / `I12.1#5` les posent (`music: M01` jusqu'à `I12.1#4`, `music: M02` jusqu'à la fin de la scène). Elles soulignent la montée puis la conclusion ; ce n'est pas un fond continu (17 % de la démo). `build.py` écrit `data/music.json` (committé ici pour l'exemple). Les fichiers audio ne sont pas dans le dépôt : `scripts/make-placeholders.sh` crée des **musiques factices** (une nappe synthétique, pour que le mixage tourne) ; les vraies se génèrent avec `python3 scripts/make-music.py` (CLI `sound` de fast-market), puis `python3 scripts/mix-music.py` les mixe sous la voix du master rendu (`references/music.md`).
+
+**Les shorts** : le §6 du storyboard propose trois séquences de 20 à 26 s ; `build.py` les écrit dans `data/shorts_segments.json`, au format de `video short-extractor` : `video short-extractor renders/final.mp4 --segments data/shorts_segments.json --layout fit-blur --output-dir shorts/` (`references/shorts.md`).
+
+Régénérer `compositions/i12.html` : `build.py` sur `storyboard.md` (copier `i12.html`, puis y ajouter le calque `demo-label`, comme pour `i10` et `i11`).
 
 ## Primitives décrites mais absentes de la démo
 
 Leur balisage n'existe pas dans le dépôt, je ne l'ai pas inventé : `bar` / `bars`, `seuil`, `compare3`, `define` (morph vers `versus`), `brand` (SVG `thesvg`), `doc-crop`, `ref-iframe`, `nl`. Pour les ajouter, il suffit de fournir le HTML et le CSS que tu utilises dans ton projet.
 
-Le `kind: schema` n'est pas dans cette liste : il est rendu par `scripts/schema_anim.py` et sa démonstration sur deux compositions est en `i10` / `i11` (styles dans `assets/style-joriel-ext.css`).
+Le `kind: schema` n'est pas dans cette liste : il est rendu par `scripts/schema_anim.py` (schéma JSON, démonstration sur deux compositions en `i10` / `i11`) et `scripts/excalidraw_anim.py` (schéma Excalidraw, en `i12`) (styles dans `assets/style-joriel-ext.css`).
 
 Les lignes marquées « déduit de la spec » (`cols2`, `stamp`, `chip`, `icon`, `check / cross`) ont un balisage documenté dans `references/primitives-joriel.md`, mais leur CSS n'existait pas : il est déduit de `references/visual-language-joriel.md` §3, signalé « à valider » à l'écran.

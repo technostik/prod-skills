@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "total": 204.5,
+  "coverage": 0.171,
+  "cues": [
+    {
+      "cue": "C1",
+      "music": "M01",
+      "role": "montée",
+      "prompt": "epic cinematic orchestral build, low strings ostinato, rising brass and timpani, tension growing, 110 bpm, no vocals",
+      "seed": 11,
+      "step": "I12.1#0",
+      "start": 162.5,
+      "end": 189.5,
+      "duration": 27.0,
+      "volume": 0.45,
+      "fade_in": 1.5,
+      "fade_out": 3.0,
+      "gen_duration": 27,
+      "file": "assets/music/M01-7d2e1ad3.wav"
+    },
+    {
+      "cue": "C2",
+      "music": "M02",
+      "role": "conclusion",
+      "prompt": "epic orchestral finale, full strings and brass, slow powerful resolution, hopeful, big timpani, no vocals",
+      "seed": 12,
+      "step": "I12.1#5",
+      "start": 196.5,
+      "end": 204.5,
+      "duration": 8.0,
+      "volume": 0.5,
+      "fade_in": 1.5,
+      "fade_out": 3.0,
+      "gen_duration": 8,
+      "file": "assets/music/M02-a44770c0.wav"
+    }
+  ]
+}

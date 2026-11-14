@@ -62,6 +62,7 @@ python3 scripts/test-detect-cast.py                                   # détecte
 python3 scripts/test-cast-build.py                                    # build Cast : logique, build, seeks (Playwright optionnel)
 python3 scripts/test-schema.py                                        # schémas animés : géométrie, build, seeks Chromium (Playwright optionnel)
 python3 scripts/test-transcript-export.py                             # sous-titres : JSON + TXT, nommage long_publish, décalage des inserts
+python3 scripts/test-demo.py                                       # la démo reste synchrone avec le code (schéma D02, musique, shorts, i12)
 python3 scripts/test-shorts.py                                     # shorts : section §6, calage sur les phrases, format de video short-extractor
 python3 scripts/test-prepare.py                                    # préparation : gabarits, contrôle par mode, chapitres, validation des schémas
 python3 scripts/test-excalidraw.py                                  # schémas Excalidraw : lecture, habillage, génération, build, formes et seeks Chromium

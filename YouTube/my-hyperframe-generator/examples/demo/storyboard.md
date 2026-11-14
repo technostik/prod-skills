@@ -1,8 +1,10 @@
-# Storyboard minuté — catalogue des primitives (30 étapes, 12 scènes, 162.50 s)
+# Storyboard minuté — catalogue des primitives (36 étapes, 13 scènes, 204.50 s)
 
 > Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
 >
 > Les scènes `I10` et `I11` montrent **un même schéma qui se déploie sur deux compositions** : le schéma est déclaré une fois dans le registre §1c, `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
+>
+> La scène `I12` montre **un schéma Excalidraw** : un fichier `assets/schemas/D02.excalidraw` (asset à part, regardé et validé avant d'être intégré) avec des **formes imbriquées** (un rond qui contient un rectangle qui contient un cercle), un **losange**, des **flèches** qui traversent l'imbrication et une flèche pointillée montrée à la main, construits un élément à la fois. Elle porte aussi deux **musiques** (registre §1d) : une montée, puis la conclusion. Le §6 propose **trois shorts de promotion**.
 
 Une étape = une primitive ou une situation, démontrée une seule fois. Texte : lorem ipsum. Le nom de la primitive est affiché à l'écran par `assets/demo-label.css`.
 
@@ -25,6 +27,17 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
   ]
 }
 ```
+
+### D02 — Écosystème : formes imbriquées
+
+- fichier: assets/schemas/D02.excalidraw
+
+## 1d. Registre des musiques
+
+| ID | Rôle | Prompt | Durée | Volume | Seed |
+|---|---|---|---|---|---|
+| M01 | montée | epic cinematic orchestral build, low strings ostinato, rising brass and timpani, tension growing, 110 bpm, no vocals | 14 | 0.45 | 11 |
+| M02 | conclusion | epic orchestral finale, full strings and brass, slow powerful resolution, hopeful, big timpani, no vocals | | 0.5 | 12 |
 
 ## 4. Scènes
 
@@ -91,3 +104,37 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 - `I11.1#1` t=155.50 (7.0s) [off/schema] Tout reprend sa place
   - focus: "all"
   - glow: ["postes>classe"]
+
+### I12 — Schéma Excalidraw : formes, imbrication, flèches [BG-00]
+- `I12.1#0` t=162.50 (6.0s) [off/schema] L'écosystème : un rond qui contiendra tout le reste
+  - schema: D02
+  - show: ["Écosystème"]
+  - music: M01
+  - music_until: I12.1#4
+- `I12.1#1` t=168.50 (7.0s) [off/schema] L'équipe (rectangle) et son idée (cercle), imbriqués
+  - show: ["Équipe", "Idée"]
+  - zoom: ["@Équipe"]
+- `I12.1#2` t=175.50 (7.0s) [off/schema] Le losange « Décision » : le lien traverse l'imbrication
+  - show: ["Décision"]
+  - zoom: "all"
+  - glow: ["Idée>Décision"]
+- `I12.1#3` t=182.50 (7.0s) [off/schema] Le résultat, au bout de la flèche « oui »
+  - show: ["Résultat"]
+- `I12.1#4` t=189.50 (7.0s) [off/schema] La boucle « non » : une flèche pointillée, montrée à la main
+  - show: ["Décision>Équipe"]
+  - focus: ["Décision", "Équipe", "Décision>Équipe"]
+- `I12.1#5` t=196.50 (8.0s) [off/schema] Tout reprend sa place, relief sur l'équipe
+  - focus: "all"
+  - glow: ["@Équipe"]
+  - music: M02
+  - music_until: I12
+
+## 6. Shorts
+
+Trois séquences percutantes (3 minutes au plus chacune) pour la promo de la vidéo : une accroche dans les trois premières secondes, une chute, des idées différentes.
+
+| ID | Titre | Début | Fin | Pourquoi |
+|---|---|---|---|---|
+| SH01 | Un schéma qui se construit, une forme après l'autre | I12.1#0 | I12.1#2 | la construction progressive, imbrication comprise |
+| SH02 | Une boucle de retour montrée à la main | I12.1#3 | I12.1#5 | le moment fort, la flèche pointillée |
+| SH03 | Un schéma qui se déploie sur deux compositions | I10.1#0 | I11.1#1 | la reprise d'état d'une scène à l'autre |

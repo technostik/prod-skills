@@ -1,0 +1,78 @@
+{
+  "nodes": [
+    {
+      "id": "Écosystème",
+      "label": "Écosystème",
+      "x": 7.0,
+      "y": 4.7,
+      "w": 1560,
+      "h": 900,
+      "shape": "ellipse",
+      "cls": "bleu",
+      "valign": "top"
+    },
+    {
+      "id": "Équipe",
+      "label": "Équipe",
+      "x": 4.05,
+      "y": 5.1,
+      "w": 520,
+      "h": 400,
+      "shape": "rect",
+      "cls": "vert",
+      "valign": "top"
+    },
+    {
+      "id": "Idée",
+      "label": "Idée",
+      "x": 4.05,
+      "y": 5.35,
+      "w": 270,
+      "h": 190,
+      "shape": "ellipse",
+      "cls": "or"
+    },
+    {
+      "id": "Décision",
+      "label": "Décision",
+      "x": 9.6,
+      "y": 4.2,
+      "w": 380,
+      "h": 290,
+      "shape": "diamond",
+      "cls": "rouge",
+      "size": "s"
+    },
+    {
+      "id": "Résultat",
+      "label": "Résultat",
+      "x": 14.75,
+      "y": 4.2,
+      "w": 270,
+      "h": 140,
+      "shape": "rect",
+      "cls": "plain",
+      "size": "s"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Idée",
+      "to": "Décision",
+      "cls": "or"
+    },
+    {
+      "from": "Décision",
+      "to": "Résultat",
+      "label": "oui"
+    },
+    {
+      "from": "Décision",
+      "to": "Équipe",
+      "cls": "rouge",
+      "curve": -0.5,
+      "label": "non",
+      "manual": true
+    }
+  ]
+}
