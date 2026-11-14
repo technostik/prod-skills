@@ -71,6 +71,12 @@ Les figures `verify` restent dans le registre (elles sont dites), mais ne passen
 |---|---|---|---|---|---|
 | M01 | montée | epic orchestral build, no vocals | 14 | 0.45 | 11 |
 
+## 6. Shorts
+
+| ID | Titre | Début | Fin | Pourquoi |
+|---|---|---|---|---|
+| SH01 | La métaphore du pistolet chargé | I1.1#0 | I1.1#3 | l'image qui ouvre la vidéo |
+
 ## 2. Vigilance
 
 Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
@@ -203,6 +209,7 @@ Seules les primitives lisibles en surimpression sont acceptées (`kw`, `count`, 
 - `§1` : `ID`, `Valeur` (ou `Chiffre`), `Label`, `Source`, `Statut`, `Note`.
 - `§1b` : `ID`, `Type`, `Source`, `Fichier local`, `Statut`.
 - Statut chiffre : `ok` · `verify`. Statut référence : `ok` · `à capturer` · `bloquée`.
+- `§6` : trois shorts de promotion, **3 minutes au plus chacun** : `ID | Titre | Début | Fin | Pourquoi` (`Début` : une étape ou un timecode ; `Fin` : la fin d'une étape ou un timecode). `build.py` écrit `data/shorts_segments.json` au format de `video short-extractor`. Voir `references/shorts.md`. Optionnel.
 - `§1d` : un tableau `ID | Rôle | Prompt | Durée | Volume | Seed` (`Prompt` obligatoire, en anglais). Optionnel. Une étape déclenche une musique avec `music: Mxx` (+ `music_until`, `music_volume`). Format, règles de mise en scène, génération et mixage : `references/music.md`.
 - `§1c` : un en-tête `### Dxx — Titre` puis **`- fichier: assets/schemas/Dxx.excalidraw`** (un schéma dessiné et validé dans Excalidraw : `references/schemas-excalidraw.md`) ou **un bloc JSON** (nœuds, liens : `references/schemas-animes.md`). Optionnel ; absent, rien ne change.
 - Les lignes d'une sous-section « Écartés » ne sont **jamais** importées.

@@ -65,6 +65,7 @@ CAST_FRAME_LEAD = 0.25
 
 import music_plan
 import schema_anim
+import shorts_plan
 from render_primitive import (ALIASES, CSS_EXT, ICONS, OVERLAY_ANCHORS, OVERLAY_DEFAULTS,
                               KINDS, OVERLAY_KINDS, Primitives, as_blocks, canonical, canonical_anchor,
                               esc, num_parts, overlay_wrap, to_float)
@@ -449,10 +450,12 @@ def parse_storyboard(path, root=None):
             cur.append(ln)
     sections[name] = cur
 
-    fig_lines, ref_lines, scene_lines, schema_lines, music_lines = [], [], [], [], []
+    fig_lines, ref_lines, scene_lines, schema_lines, music_lines, shorts_lines = [], [], [], [], [], []
     for h, body in sections.items():
         hh = norm(h)
-        if re.match(r"^##\s*1d", h):
+        if re.match(r"^##\s*6\b", h) or re.match(r"^##\s*shorts", hh):
+            shorts_lines = body
+        elif re.match(r"^##\s*1d", h):
             music_lines = body
         elif re.match(r"^##\s*1c", h):
             schema_lines = body
@@ -476,8 +479,11 @@ def parse_storyboard(path, root=None):
     music, music_errs = music_plan.registry_from_rows(parse_registry(music_lines, "M"))
     if music_errs:
         die("\n  ".join(music_errs))
+    shorts, shorts_errs = shorts_plan.entries_from_rows(parse_registry(shorts_lines, "SH"))
+    if shorts_errs:
+        die("\n  ".join(shorts_errs))
     return {"title": title or "film", "meta": meta, "figures": figs, "refs": refs, "scenes": scenes,
-            "schemas": schemas, "schema_warnings": schema_warns, "music": music}
+            "schemas": schemas, "schema_warnings": schema_warns, "music": music, "shorts": shorts}
 
 
 def parse_scenes(lines):
@@ -1369,6 +1375,7 @@ def main():
     ap.add_argument("--root", default=".")
     ap.add_argument("--storyboard", default="assets/storyboard.md")
     ap.add_argument("--transcript", default=None)
+    ap.add_argument("--no-shorts", action="store_true", help="ne pas écrire data/shorts_segments.json")
     ap.add_argument("--no-music", action="store_true",
                     help="ignorer le registre §1d et les `music:` du storyboard (aucune musique au résultat final)")
     ap.add_argument("--audio", default=None)
@@ -1552,6 +1559,25 @@ def main():
               "mixer avec scripts/mix-music.py" % (len(cues), 100 * sum(c["duration"] for c in cues) / total))
     elif (data / "music.json").exists():
         (data / "music.json").unlink()          # plus de musique dans le storyboard : pas de plan périmé
+
+    # shorts de promotion : trois séquences percutantes, au format de `video short-extractor`
+    shorts_off = a.no_shorts or norm(movie["meta"].get("shorts", "")) in ("aucun", "aucune", "non", "none", "sans", "0")
+    seg_path = data / "shorts_segments.json"
+    if movie["shorts"] and not shorts_off:
+        sentences = shorts_plan.sentences_from_transcript(transcript) if transcript else []
+        segs, s_warns, s_errs = shorts_plan.resolve(scenes, movie["shorts"], total, sentences)
+        if s_errs:
+            die("\n  ".join(s_errs))
+        for w in s_warns:
+            print("AVERTISSEMENT : " + w)
+        seg_path.write_text(json.dumps(shorts_plan.extractor_list(segs), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print("shorts : %d séquence(s) dans data/shorts_segments.json" % len(segs))
+        for sg in segs:
+            print("  %s  %s → %s  (%.0f s)  %s" % (sg["id"], shorts_plan.fmt_tc(sg["start"]), shorts_plan.fmt_tc(sg["end"]), sg["duration"], sg["title"]))
+        print("  extraire : video short-extractor renders/final.mp4 --segments data/shorts_segments.json --layout fit-blur "
+              "--output-dir shorts/   (avec des inserts : python3 scripts/shorts-export.py d'abord)")
+    elif seg_path.exists():
+        seg_path.unlink()                       # plus de shorts dans le storyboard : pas de plan périmé
 
     if schemas:
         (data / "schemas.json").write_text(

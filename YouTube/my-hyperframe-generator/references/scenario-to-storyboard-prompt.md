@@ -142,6 +142,9 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 >
 > 14. **Musique** (`references/music.md`). Sauf instruction contraire, ajoute de la musique **pour souligner** : une **montée en puissance**, un **point culminant**, la **conclusion**. Jamais de fond continu : au plus ≈ 35 % du film, jamais sous une démonstration ou un chiffre à lire. Déclare chaque musique en §1d (`Prompt` en anglais, épique et orchestral, instrumental, `no vocals`), puis pose-la avec `music: Mxx` sur l'étape où elle démarre (avant le mot fort, pas dessus) et `music_until:` pour l'arrêt (étape, scène ou secondes). `**Musique** : aucune` dans l'en-tête si l'utilisateur n'en veut pas.
 
+>
+> 15. **Shorts de promotion** (`references/shorts.md`). Une fois le storyboard écrit, propose **trois séquences** de la vidéo, **3 minutes au plus chacune**, parmi les plus percutantes, pour en faire la promo : une punchline, une métaphore forte, un chiffre choc, une thèse tranchée. Elles sont **autonomes** (comprises sans le reste), s'ouvrent sur une **accroche** dans les trois premières secondes, se terminent sur une **chute**, durent de préférence 20 à 60 s, et sont **trois idées différentes** sans chevauchement. Déclare-les en `## 6. Shorts` (`ID | Titre | Début | Fin | Pourquoi`) en citant des **étapes** (début = début de l'étape de départ, fin = fin de l'étape d'arrivée) ; le titre est l'accroche (≤ 100 caractères).
+
 ---
 
 ## Checklist de validation (à passer avant de rendre le STORYBOARD.md)
@@ -160,5 +163,6 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 - [ ] Format markdown exact (tableaux, tirets, indentation)
 - [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape
 - [ ] Schémas : déclarés en §1c (JSON valide, nœuds dans la scène et sans chevauchement), `Dxx` cité par la 1re étape, éléments montrés dans l'ordre de la parole, `zoom` / `focus` ramenés à `"all"` quand on revient à l'ensemble
+- [ ] Shorts : trois séquences en `## 6. Shorts`, chacune ≤ 180 s, autonome, avec une accroche et une chute, sans chevauchement, citées par étapes
 - [ ] Musique : registre §1d (prompts en anglais, `no vocals`), `music:` sur les moments forts seulement, ≤ ≈ 35 % du film, aucune musique sous un chiffre ou une démonstration, durée ≥ 4 s, pas de chevauchement
 - [ ] Incrustation : aucun `camera`, primitives lisibles en surimpression uniquement, `place:` seulement sur demande

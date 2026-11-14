@@ -95,6 +95,7 @@ copy_file "$ROOT/references/preparation.md" "$STORYBOARD"
 copy_file "$ROOT/references/schemas-animes.md" "$STORYBOARD"
 copy_file "$ROOT/references/schemas-excalidraw.md" "$STORYBOARD"
 copy_file "$ROOT/references/music.md" "$STORYBOARD"
+copy_file "$ROOT/references/shorts.md" "$STORYBOARD"
 
 # Données du projet pour les séquences Cast (facultatif)
 if [[ -n "$PROJECT" ]]; then

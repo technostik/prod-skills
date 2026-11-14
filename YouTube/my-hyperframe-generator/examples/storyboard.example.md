@@ -245,3 +245,14 @@ Ne pas transformer la corrélation dépense/résultats en causalité unique.
 | BG-02 | cour d'école | S01 |
 | BG-03 | couloir | S02 |
 | BG-04 | tableau noir | S03 |
+
+## 6. Shorts
+
+Trois séquences percutantes (3 minutes au plus chacune) pour la promo de la vidéo : une accroche dans les trois premières secondes,
+une chute, des idées différentes. `build.py` les écrit dans `data/shorts_segments.json` (format de `video short-extractor`).
+
+| ID | Titre | Début | Fin | Pourquoi |
+|---|---|---|---|---|
+| SH01 | 57 % de budget en plus, et des élèves qui reculent | I1.1#0 | I1.1#2 | le chiffre choc, compris sans contexte |
+| SH02 | Où va vraiment l'argent de l'école | S02.1#0 | S02.1#1 | la thèse centrale, argumentée en une minute |
+| SH03 | Moins d'idéologie. Plus de résultats. | S04.1#0 | S04.1#1 | la chute et la promesse |
