@@ -126,6 +126,17 @@ def part_a():
     hidden = S.stage_html("u", set())
     check("éléments cachés tant qu'ils ne sont pas montrés", hidden.count("opacity:0") >= 4 + 2)
 
+    # flèche pointillée : manuelle
+    els = fixture()
+    [e for e in els if e["id"] == "a2"][0]["strokeStyle"] = "dashed"       # a2 : Intelligence -> Filtre
+    S0 = schema(els)
+    ed = {x["id"]: x for x in S0.edges}
+    check("flèche pointillée : manuelle (jamais montrée toute seule), l'autre reste automatique",
+          ed["Intelligence>Filtre"]["manual"] and not ed["Vie>Intelligence"]["manual"], {k: v["manual"] for k, v in ed.items()})
+    b0, _, _ = sa.compile_beats(S0, "u", [{"id": "X#0", "rel": 0, "params": {"show": ["Intelligence", "Filtre"]}},
+                                          {"id": "X#1", "rel": 5, "params": {"show": ["Intelligence>Filtre"]}}])
+    check("flèche pointillée : n'apparaît qu'à l'étape qui la nomme",
+          not [o for o in b0[0]["ops"] if o["op"] == "edge"] and len([o for o in b0[1]["ops"] if o["op"] == "edge"]) == 1, [o["op"] for o in b0[0]["ops"]])
     # flèche sans accroche : rattachée par sa position
     els = fixture()
     els[6] = arrow("a1", 364, 280, [[0, 0], [152, 0]])
@@ -213,6 +224,11 @@ def part_b():
           all(a["startBinding"] and a["endBinding"] for a in arrows)
           and all({"id": a["id"], "type": "arrow"} in byid[a["startBinding"]["elementId"]]["boundElements"]
                   and {"id": a["id"], "type": "arrow"} in byid[a["endBinding"]["elementId"]]["boundElements"] for a in arrows))
+    raw2 = {"nodes": [{"id": "a", "label": "A", "x": 4, "y": 4}, {"id": "b", "label": "B", "x": 12, "y": 4}],
+            "edges": [{"from": "a", "to": "b", "manual": True}]}
+    el2, _ = gen.build_elements(raw2)
+    check("`manual` dans la description : flèche pointillée dans le fichier, manuelle une fois relue",
+          [e for e in el2 if e["type"] == "arrow"][0]["strokeStyle"] == "dashed" and ex.ExSchema("D", "", el2).edges[0]["manual"])
     check("flèche courbe : 3 points + arrondi ; double sens : tête au départ", any(len(a["points"]) == 3 and a["roundness"] for a in arrows)
           and any(a["startArrowhead"] == "arrow" for a in arrows))
     # les bouts de flèche sont sur le bord des formes rondes (pas sur la boîte englobante)

@@ -30,6 +30,15 @@ ROOT_VARS = ("--blanc:#F4F6F9;--bleu:#5B9CF6;--vert:#6FDC8C;--or:#F0B429;--rouge
              "--halo-or:rgba(240,180,41,.75);--halo-rouge:rgba(229,72,77,.75)")
 
 
+def display_path(p):
+    """Chemin à afficher : relatif au dossier du projet (celui qui contient `assets/`), jamais un chemin de machine."""
+    p = Path(p).resolve()
+    for anc in p.parents:
+        if anc.name == "assets":
+            return str(p.relative_to(anc.parent))
+    return p.name
+
+
 def page_html(schema, uid="prev"):
     """La page d'aperçu : le schéma entier, tout montré, sur le fond de la vidéo."""
     allk = {("n", n["i"]) for n in schema.nodes} | {("e", e["i"]) for e in schema.edges}
@@ -51,6 +60,7 @@ def main(argv=None):
     path = Path(a.file)
     try:
         schema = ex.load_schema(path, a.id or path.stem.split(".")[0], a.title)
+        schema.source = display_path(path)
     except sa.SchemaError as exc:
         print("erreur : %s" % exc, file=sys.stderr)
         sys.exit(1)

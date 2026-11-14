@@ -88,7 +88,8 @@ le schéma est **habillé** à l'affichage, le fichier n'est pas modifié.
 | rouge, rose | `rouge` ; orange, jaune : `or` ; vert : `vert` ; cyan, bleu, violet : `bleu` |
 | remplissage | teinte du rôle, 22 % ; **transparent** : fond sombre translucide (plus léger pour un conteneur, pour laisser voir son contenu) |
 | épaisseur du trait | 3, 4,5 ou 6,5 px |
-| trait pointillé | forme pointillée (les **liens** restent pleins : leur tracé s'anime) |
+| trait pointillé d'une forme | forme pointillée |
+| flèche **pointillée** | n'apparaît **pas toute seule** avec ses deux formes : à nommer dans `show` (reste pleine à l'écran : son tracé s'anime) |
 | police, rugosité | police de la vidéo, trait net |
 
 Le plus simple : **choisir ses couleurs dans la palette d'Excalidraw** (rouge, vert, bleu, orange) ; elles sont
@@ -105,7 +106,7 @@ rapprochées du rôle le plus proche.
 | `gal` | l'identifiant Excalidraw (pour une forme sans texte) |
 | `all` | tout |
 
-Les liens accrochés à deux éléments apparaissent **dès que les deux sont visibles**. Une flèche libre (sans forme à
+Les liens accrochés à deux éléments apparaissent **dès que les deux sont visibles**, sauf une flèche **pointillée** (`"manual": true` dans la description compacte) qui se nomme dans `show`. Une flèche libre (sans forme à
 un bout) se cite par son identifiant ou son étiquette dans `show`.
 
 ## Pas de rendu Excalidraw intégral

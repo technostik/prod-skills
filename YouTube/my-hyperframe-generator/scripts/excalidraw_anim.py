@@ -17,7 +17,8 @@ Habillage : les couleurs Excalidraw sont rapprochées d'un rôle du thème (`pla
 `dim`), la police est celle de la vidéo, le trait est net (pas de rendu « crayonné »), le schéma est mis à
 l'échelle de l'écran 1920×1080. Les polices Excalidraw et la rugosité sont ignorées.
 
-Références (dans les étapes) : le **texte** d'un élément (insensible à la casse), `a>b` pour un lien entre deux
+Une flèche **pointillée** n'apparaît pas toute seule avec ses deux formes : il faut la nommer dans `show` (pour
+faire arriver une boucle de retour plus tard). Références (dans les étapes) : le **texte** d'un élément (insensible à la casse), `a>b` pour un lien entre deux
 éléments (par leurs textes), l'identifiant Excalidraw d'un élément, `@nom` pour un cadre nommé ou pour une forme
 et tout ce qu'elle contient, `all`.
 
@@ -346,7 +347,8 @@ class ExSchema(Schema):
         if _key(eid) in self._ek:
             eid = e["id"]
         edge = {"id": eid, "i": len(self.edges), "eid": e["id"], "a": a, "b": b, "cls": role, "dir": "->", "label": label,
-                "curve": 0.0, "manual": a is None or b is None, "dash": False, "sw": STROKE.get(int(_f(e.get("strokeWidth"), 2)), 4.5),
+                "curve": 0.0,
+                "manual": a is None or b is None or e.get("strokeStyle") in ("dashed", "dotted"), "dash": False, "sw": STROKE.get(int(_f(e.get("strokeWidth"), 2)), 4.5),
                 "geo": {"d": d, "heads": heads, "mid": mid, "label_at": label_at, "label_w": lab_w,
                         "pts": list(pts) + ([(label_at[0] - lab_w / 2, label_at[1] - LABEL_H / 2),
                                              (label_at[0] + lab_w / 2, label_at[1] + LABEL_H / 2)] if label else [])}}
@@ -558,7 +560,7 @@ class ExSchema(Schema):
             for e in self.edges:
                 ends = "%s → %s" % (e["a"]["id"] if e["a"] else "?", e["b"]["id"] if e["b"] else "?")
                 lines.append("  - %s  [%s%s]%s" % (e["id"], ends, ", étiquette « %s »" % e["label"] if e["label"] else "",
-                                                    ", libre (à nommer dans `show`)" if e["manual"] else ", apparaît avec ses deux éléments"))
+                                                    ", à nommer dans `show` (libre ou pointillé)" if e["manual"] else ", apparaît avec ses deux éléments"))
         conts = [n for n in self.nodes if n["kind"] in SHAPES and self._is_container(n)]
         if conts or self.frames:
             lines += ["", "Groupes (`@nom`) :"]

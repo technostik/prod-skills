@@ -16,7 +16,8 @@ Description (JSON) : la même que le registre §1c « à blocs JSON », avec en 
 Clés d'un nœud : `id`, `label`, `x`, `y` (centre, grille 16 × 9 de 120 px), `cls` (plain, bleu, vert, or, rouge, dim),
 `size` (s, m, l), `shape` (rect, ellipse, diamond), `w`, `h` (px, sinon calculées d'après le texte), `valign`
 (`top` pour le titre d'un conteneur). Un nœud qui en contient d'autres (par sa position et sa taille) est dessiné
-avant eux. Clés d'un lien : `from`, `to`, `label`, `cls`, `curve` (-1 à 1), `dir` (`->`, `<->`, `--`).
+avant eux. Clés d'un lien : `from`, `to`, `label`, `cls`, `curve` (-1 à 1), `dir` (`->`, `<->`, `--`), `manual`
+(`true` : flèche pointillée, qui n'apparaît pas toute seule : il faut la nommer dans `show`).
 
 Les coordonnées du fichier sont celles de l'écran 1920 × 1080 et les polices sont celles de la vidéo : le schéma
 est déjà à la bonne échelle quand on l'ouvre.
@@ -188,6 +189,8 @@ def build_elements(raw):
         e.update({"points": pts, "lastCommittedPoint": None, "elbowed": False,
                   "startBinding": {"elementId": a["eid"], "focus": 0, "gap": GAP}, "endBinding": {"elementId": b["eid"], "focus": 0, "gap": GAP},
                   "startArrowhead": "arrow" if direction == "<->" else None, "endArrowhead": None if direction == "--" else "arrow"})
+        if it.get("manual"):
+            e["strokeStyle"] = "dashed"
         if ctrl:
             e["roundness"] = {"type": 2}
         a["el"]["boundElements"].append({"id": eid, "type": "arrow"})
