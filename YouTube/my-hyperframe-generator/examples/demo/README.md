@@ -68,10 +68,10 @@ cp <ancien>/assets/cam-clean.mkv assets/cam-clean.mkv     # les 30 premières se
 | `I8.1#2` | webcam · full | `compositions/i08.html` | dépôt d'origine |
 | `I9.1#0` | webcam · pip avant Cast | `compositions/i09.html` | dépôt d'origine |
 | `I9.1#1` | webcam · cast (plein écran, crop du filet OBS) | `compositions/i09.html` | mode Cast de `scripts/build.py` |
-| `I10.1#0` | schéma · 1/2 (Budget, Postes) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
-| `I10.1#1` | schéma · 1/2 (Heures de cours, zoom) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
-| `I11.1#0` | schéma · 2/2 (reprise de l'état, Niveau) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
-| `I11.1#1` | schéma · 2/2 (focus « all », glow) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
+| `I10.1#0` | schéma Excalidraw · 1/2 (Budget, École **imbriquant** Postes) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
+| `I10.1#1` | schéma Excalidraw · 1/2 (Heures de cours, zoom `@École`) | `compositions/i10.html` | `scripts/build.py` + `schema_anim.py` |
+| `I11.1#0` | schéma Excalidraw · 2/2 (reprise de l'état, Niveau en **cercle**) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
+| `I11.1#1` | schéma Excalidraw · 2/2 (focus « all », glow) | `compositions/i11.html` | `scripts/build.py` + `schema_anim.py` |
 | `I12.1#0` | schéma **Excalidraw** · le rond « Écosystème » (+ musique M01, la montée) | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
 | `I12.1#1` | schéma Excalidraw · rectangle et cercle **imbriqués**, zoom `@Équipe` | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
 | `I12.1#2` | schéma Excalidraw · **losange** « Décision », le lien traverse l'imbrication, glow | `compositions/i12.html` | `scripts/build.py` + `excalidraw_anim.py` |
@@ -83,7 +83,7 @@ Le même schéma `D01` (registre §1c de `storyboard.md`) **se déploie sur deux
 
 ## Schéma Excalidraw, musique et shorts (`I12`)
 
-**Le schéma** `D02` est un **asset à part** : `assets/schemas/D02.excalidraw`, référencé dans le registre §1c du storyboard par `- fichier: assets/schemas/D02.excalidraw`. Un **rond** (« Écosystème ») contient un **rectangle** (« Équipe ») qui contient un **cercle** (« Idée ») ; un **losange** (« Décision »), un rectangle (« Résultat ») et trois **flèches** : « Idée → Décision » traverse deux bords sans être gênée, « Décision → Résultat » (« oui ») et la boucle « Décision → Équipe » (« non »), **pointillée**, donc montrée à la main (`show: ["Décision>Équipe"]`). Les étapes construisent le schéma un élément à la fois (`show`), mettent en relief (`glow`), isolent (`focus`) et cadrent (`zoom: ["@Équipe"]`).
+**Les schémas** `D01` (`i10`, `i11` : un conteneur imbriqué et un cercle, déployé sur deux compositions) et `D02` (`i12`) sont des **assets à part** : `assets/schemas/D02.excalidraw`, référencé dans le registre §1c du storyboard par `- fichier: assets/schemas/D02.excalidraw`. Un **rond** (« Écosystème ») contient un **rectangle** (« Équipe ») qui contient un **cercle** (« Idée ») ; un **losange** (« Décision »), un rectangle (« Résultat ») et trois **flèches** : « Idée → Décision » traverse deux bords sans être gênée, « Décision → Résultat » (« oui ») et la boucle « Décision → Équipe » (« non »), **pointillée**, donc montrée à la main (`show: ["Décision>Équipe"]`). Les étapes construisent le schéma un élément à la fois (`show`), mettent en relief (`glow`), isolent (`focus`) et cadrent (`zoom: ["@Équipe"]`).
 
 Le workflow d'un schéma (`references/schemas-excalidraw.md`), avec les fichiers de `assets/schemas/` :
 
@@ -105,12 +105,14 @@ python3 scripts/prepare.py validate-schema D02
 
 **Les shorts** : le §6 du storyboard propose trois séquences de 20 à 26 s ; `build.py` les écrit dans `data/shorts_segments.json`, au format de `video short-extractor` : `video short-extractor renders/final.mp4 --segments data/shorts_segments.json --layout fit-blur --output-dir shorts/` (`references/shorts.md`).
 
-Régénérer `compositions/i12.html` : `build.py` sur `storyboard.md` (copier `i12.html`, puis y ajouter le calque `demo-label`, comme pour `i10` et `i11`).
+**`assets/style-joriel-ext.css` est une copie de `CSS_EXT`** (`scripts/render_primitive.py`), que `build.py` réécrit à chaque build dans un projet. Après un changement de `render_primitive.py`, la recopier dans la démo : `python3 -c "import sys; sys.path.insert(0, 'scripts'); import render_primitive as r; open('examples/demo/assets/style-joriel-ext.css', 'w', encoding='utf-8').write(r.CSS_EXT)"` (`scripts/test-demo.py` le vérifie : une copie périmée donne des formes non stylées).
+
+Régénérer `compositions/i10.html`, `i11.html` et `i12.html` : `build.py` sur `storyboard.md` (copier la composition, puis y ajouter le calque `demo-label`).
 
 ## Primitives décrites mais absentes de la démo
 
 Leur balisage n'existe pas dans le dépôt, je ne l'ai pas inventé : `bar` / `bars`, `seuil`, `compare3`, `define` (morph vers `versus`), `brand` (SVG `thesvg`), `doc-crop`, `ref-iframe`, `nl`. Pour les ajouter, il suffit de fournir le HTML et le CSS que tu utilises dans ton projet.
 
-Le `kind: schema` n'est pas dans cette liste : il est rendu par `scripts/schema_anim.py` (schéma JSON, démonstration sur deux compositions en `i10` / `i11`) et `scripts/excalidraw_anim.py` (schéma Excalidraw, en `i12`) (styles dans `assets/style-joriel-ext.css`).
+Le `kind: schema` n'est pas dans cette liste : il est rendu par `scripts/schema_anim.py` (schéma décrit en JSON dans le registre §1c : toujours pris en charge, voir `references/schemas-animes.md`, mais plus montré ici) et `scripts/excalidraw_anim.py` (schémas Excalidraw : `D01` sur deux compositions en `i10` / `i11`, `D02` en `i12`) (styles dans `assets/style-joriel-ext.css`).
 
 Les lignes marquées « déduit de la spec » (`cols2`, `stamp`, `chip`, `icon`, `check / cross`) ont un balisage documenté dans `references/primitives-joriel.md`, mais leur CSS n'existait pas : il est déduit de `references/visual-language-joriel.md` §3, signalé « à valider » à l'écran.

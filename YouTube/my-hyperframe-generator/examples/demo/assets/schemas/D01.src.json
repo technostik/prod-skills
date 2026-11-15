@@ -1,0 +1,78 @@
+{
+  "nodes": [
+    {
+      "id": "Budget",
+      "label": "Budget",
+      "x": 1.417,
+      "y": 5.0,
+      "w": 240,
+      "h": 140,
+      "shape": "rect",
+      "cls": "bleu",
+      "size": "s"
+    },
+    {
+      "id": "École",
+      "label": "École",
+      "x": 7.333,
+      "y": 4.5,
+      "w": 960,
+      "h": 520,
+      "shape": "rect",
+      "cls": "plain",
+      "valign": "top"
+    },
+    {
+      "id": "Postes",
+      "label": "Postes",
+      "x": 5.0,
+      "y": 5.0,
+      "w": 300,
+      "h": 140,
+      "shape": "rect",
+      "cls": "or",
+      "size": "s"
+    },
+    {
+      "id": "Heures de cours",
+      "label": "Heures de cours",
+      "x": 9.083,
+      "y": 5.0,
+      "w": 480,
+      "h": 140,
+      "shape": "rect",
+      "cls": "vert",
+      "size": "s"
+    },
+    {
+      "id": "Niveau des élèves",
+      "label": "Niveau\ndes élèves",
+      "x": 14.0,
+      "y": 5.0,
+      "w": 340,
+      "h": 340,
+      "shape": "ellipse",
+      "cls": "rouge",
+      "size": "s"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Budget",
+      "to": "Postes",
+      "cls": "bleu"
+    },
+    {
+      "from": "Postes",
+      "to": "Heures de cours",
+      "label": "?",
+      "manual": true
+    },
+    {
+      "from": "Heures de cours",
+      "to": "Niveau des élèves",
+      "cls": "rouge",
+      "manual": true
+    }
+  ]
+}

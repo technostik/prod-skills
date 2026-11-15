@@ -2,7 +2,7 @@
 
 > Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
 >
-> Les scènes `I10` et `I11` montrent **un même schéma qui se déploie sur deux compositions** : le schéma est déclaré une fois dans le registre §1c, `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
+> Les scènes `I10` et `I11` montrent **un même schéma Excalidraw qui se déploie sur deux compositions** : le schéma `D01` (`assets/schemas/D01.excalidraw`) est déclaré une fois dans le registre §1c, avec **un conteneur imbriqué** (l'« École » contient « Postes » et « Heures de cours », et le lien « Budget → Postes » en traverse le bord) et **un cercle** (« Niveau des élèves »). `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
 >
 > La scène `I12` montre **un schéma Excalidraw** : un fichier `assets/schemas/D02.excalidraw` (asset à part, regardé et validé avant d'être intégré) avec des **formes imbriquées** (un rond qui contient un rectangle qui contient un cercle), un **losange**, des **flèches** qui traversent l'imbrication et une flèche pointillée montrée à la main, construits un élément à la fois. Elle porte aussi deux **musiques** (registre §1d) : une montée, puis la conclusion. Le §6 propose **trois shorts de promotion**.
 
@@ -10,23 +10,9 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 
 ## 1c. Registre des schémas
 
-### D01 — La chaîne de la dépense
+### D01 — La chaîne de la dépense (Excalidraw : un conteneur, un cercle)
 
-```json
-{
-  "nodes": [
-    {"id": "budget", "label": "Budget", "x": 2.6, "y": 3, "cls": "bleu", "size": "s"},
-    {"id": "postes", "label": "Postes", "x": 6.6, "y": 3, "cls": "or", "size": "s"},
-    {"id": "classe", "label": "Heures de cours", "x": 11.2, "y": 3, "cls": "vert", "size": "s"},
-    {"id": "niveau", "label": "Niveau des élèves", "x": 11.2, "y": 6.6, "cls": "rouge", "size": "m"}
-  ],
-  "edges": [
-    {"from": "budget", "to": "postes"},
-    {"from": "postes", "to": "classe", "label": "?", "manual": true},
-    {"from": "classe", "to": "niveau", "cls": "rouge", "manual": true}
-  ]
-}
-```
+- fichier: assets/schemas/D01.excalidraw
 
 ### D02 — Écosystème : formes imbriquées
 
@@ -88,22 +74,22 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 - `I9.1#1` t=130.50 (6.0s) [cast/webcam] Lorem ipsum
 
 ### I10 — Schéma sur deux compositions (1/2) [BG-00]
-- `I10.1#0` t=136.50 (6.0s) [off/schema] Budget puis Postes
+- `I10.1#0` t=136.50 (6.0s) [off/schema] Budget, puis l'école qui contient les postes
   - schema: D01
-  - show: ["budget", "postes"]
+  - show: ["Budget", "École", "Postes"]
 - `I10.1#1` t=142.50 (6.0s) [off/schema] Heures de cours, puis le lien « ? »
-  - show: ["classe", "postes>classe"]
-  - zoom: ["postes", "classe"]
+  - show: ["Heures de cours", "Postes>Heures de cours"]
+  - zoom: ["@École"]
 
 ### I11 — Schéma sur deux compositions (2/2) [BG-00]
-- `I11.1#0` t=148.50 (7.0s) [off/schema] Niveau des élèves, le schéma continue
+- `I11.1#0` t=148.50 (7.0s) [off/schema] Niveau des élèves (le cercle), le schéma continue
   - schema: D01
-  - show: ["niveau", "classe>niveau"]
+  - show: ["Niveau des élèves", "Heures de cours>Niveau des élèves"]
   - zoom: "all"
-  - focus: ["classe", "niveau"]
+  - focus: ["Heures de cours", "Niveau des élèves"]
 - `I11.1#1` t=155.50 (7.0s) [off/schema] Tout reprend sa place
   - focus: "all"
-  - glow: ["postes>classe"]
+  - glow: ["Postes>Heures de cours"]
 
 ### I12 — Schéma Excalidraw : formes, imbrication, flèches [BG-00]
 - `I12.1#0` t=162.50 (6.0s) [off/schema] L'écosystème : un rond qui contiendra tout le reste
