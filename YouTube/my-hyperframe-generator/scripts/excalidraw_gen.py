@@ -126,6 +126,10 @@ def build_elements(raw):
         if size not in sa.SIZES:
             size = "m"
         label = str(it.get("label") if it.get("label") is not None else nid)
+        if it.get("sub"):                                    # sous-titre du moteur JSON : une ligne de plus
+            label = label + "\n" + str(it["sub"])
+        if it.get("group"):
+            warns.append("nœud %s : la clé `group` est ignorée (un cadre nommé dans Excalidraw désigne un groupe : `@nom`)" % nid)
         fs = sa.SIZES[size][0]
         lines = label.split("\n") if "\n" in label else wrap(label, fs, sa.WRAP_AT)
         n = {"id": nid, "label": "\n".join(lines), "lines": lines, "shape": shape, "cls": cls, "size": size,
@@ -189,7 +193,7 @@ def build_elements(raw):
         e.update({"points": pts, "lastCommittedPoint": None, "elbowed": False,
                   "startBinding": {"elementId": a["eid"], "focus": 0, "gap": GAP}, "endBinding": {"elementId": b["eid"], "focus": 0, "gap": GAP},
                   "startArrowhead": "arrow" if direction == "<->" else None, "endArrowhead": None if direction == "--" else "arrow"})
-        if it.get("manual"):
+        if it.get("manual") or raw.get("auto_edges") is False:
             e["strokeStyle"] = "dashed"
         if ctrl:
             e["roundness"] = {"type": 2}

@@ -5,7 +5,8 @@
   B. génération : description compacte -> fichier .excalidraw (liens, formes, conteneurs, protection) ;
   C. build : `fichier:` dans le registre §1c, erreurs claires, étapes qui pilotent le schéma ;
   D. Chromium : formes réellement rondes / en losange, animation, même état quel que soit le chemin (seeks) ;
-  E. aperçu : PNG + liste des éléments à citer.
+  E. aperçu : PNG + liste des éléments à citer ;
+  F. le pont JSON -> Excalidraw (intermédiaire généré automatiquement) et ce qui survit à une retouche à la main.
 
 Usage : python3 scripts/test-excalidraw.py
 """
@@ -499,6 +500,140 @@ def part_e(tmp):
     check("aperçu d'un fichier absent : erreur claire", r.returncode == 1 and "introuvable" in r.stderr, r.stderr)
 
 
+BRIDGE_SB = """# SB
+
+**Mode** : webcam
+
+## 1c. Registre des schémas
+
+### D01 — Pont
+
+```json
+{"nodes": [
+  {"id": "A", "label": "Source", "x": 3, "y": 4.5, "cls": "bleu", "size": "s"},
+  {"id": "B", "label": "Filtre", "x": 8, "y": 4.5, "cls": "rouge", "shape": "diamond", "size": "s"},
+  {"id": "C", "label": "Cible", "x": 13, "y": 4.5, "cls": "vert", "shape": "ellipse", "size": "s"}],
+ "edges": [{"from": "A", "to": "B"}, {"from": "B", "to": "C", "manual": true}]}
+```
+%s
+## 4. Scènes
+
+### G1 — Test
+
+- section: a · type: cards · fond: BG-00 · durée: 30
+
+#### Étapes
+
+- `G1.1#0` t=0.00 (10s) [off/schema] début
+  - kind: schema
+  - schema: D01
+  - show: ["Source", "Filtre"]
+- `G1.1#1` t=10.00 (10s) [off/schema] la suite
+  - show: ["Cible", "Filtre>Cible"]
+  - zoom: ["Filtre", "Cible"]
+- `G1.1#2` t=20.00 (10s) [off/schema] relief
+  - focus: "all"
+  - glow: ["Cible"]
+"""
+
+
+def part_f(tmp):
+    print("F. le pont JSON -> Excalidraw, et les retouches à la main")
+    # --- JSON seul : le moteur JSON, comme avant ; les clés de forme sont signalées
+    t0 = tmp / "json-only"
+    project(t0, BRIDGE_SB % "")
+    r = build(t0)
+    check("JSON seul : moteur JSON, aucun fichier créé", r.returncode == 0 and not (t0 / "assets" / "schemas").exists()
+          and "sch-node" in (t0 / "compositions" / "i00.html").read_text(encoding="utf-8"), r.stdout[-300:] + r.stderr[-200:])
+    check("JSON seul : `shape` signalé (ronds et losanges demandent un fichier Excalidraw)", "`shape` n'existe pas dans le moteur JSON" in r.stdout, r.stdout[-400:])
+
+    # --- JSON + fichier absent : le fichier est généré depuis le bloc, une seule fois
+    t1 = tmp / "bridge"
+    project(t1, BRIDGE_SB % "- fichier: assets/schemas/D01.excalidraw\n")
+    r = build(t1)
+    f = t1 / "assets" / "schemas" / "D01.excalidraw"
+    check("JSON + fichier absent : le build génère l'intermédiaire Excalidraw et le signale", r.returncode == 0 and f.exists() and "GÉNÉRÉ depuis le bloc JSON" in r.stdout, r.stdout[-400:] + r.stderr[-300:])
+    check("l'intermédiaire a ses éléments de liste (D01.handles.md) pour le LLM des étapes", (t1 / "assets/schemas/D01.handles.md").exists() and "Source" in (t1 / "assets/schemas/D01.handles.md").read_text(encoding="utf-8"))
+    comp = (t1 / "compositions" / "i00.html").read_text(encoding="utf-8")
+    check("le rendu vient du fichier Excalidraw : losange, rond", "<polygon" in comp and "<ellipse" in comp and 'class="exn ' in comp)
+    doc = json.loads(f.read_text(encoding="utf-8"))
+    check("le fichier est un vrai fichier Excalidraw (enveloppe, flèches liées, flèche pointillée = manuelle)",
+          doc["type"] == "excalidraw" and any(e["type"] == "arrow" and e.get("strokeStyle") == "dashed" for e in doc["elements"]))
+    before = f.read_bytes()
+    r = build(t1)
+    check("2e build : le fichier existe, il n'est pas régénéré, plus de message de génération", r.returncode == 0 and f.read_bytes() == before and "GÉNÉRÉ" not in r.stdout, r.stdout[-300:])
+    check("aucun avertissement sur le schéma une fois le fichier là", "schéma D01" not in r.stdout, r.stdout[-300:])
+
+    # --- le fichier fait foi : retouches à la main
+    doc = json.loads(f.read_text(encoding="utf-8"))
+    for e in doc["elements"]:
+        e["x"] += 90
+        e["y"] -= 40
+        if e["type"] in ("diamond", "ellipse"):
+            e["strokeColor"] = "#ff00ff" if e["type"] == "diamond" else "#12abcd"          # couleurs hors palette
+    f.write_text(json.dumps(doc), encoding="utf-8")
+    json_changed = BRIDGE_SB.replace('"x": 3, "y": 4.5, "cls": "bleu"', '"x": 9, "y": 8, "cls": "rouge"') % "- fichier: assets/schemas/D01.excalidraw\n"
+    (t1 / "assets" / "storyboard.md").write_text(json_changed, encoding="utf-8")
+    r = build(t1)
+    comp2 = (t1 / "compositions" / "i00.html").read_text(encoding="utf-8")
+    check("tout déplacé et recoloré à la main : la composition se construit, sans avertissement sur le schéma", r.returncode == 0 and "schéma D01" not in r.stdout, r.stdout[-300:])
+    check("le fichier fait foi : modifier le bloc JSON ensuite ne change rien (positions du fichier)", comp2 != comp and "exn" in comp2)
+    S = ex.load_schema(f, "D01")
+    check("couleurs hors palette rapprochées d'un rôle du thème (rose -> rouge, cyan -> bleu)", {n["id"]: n["cls"] for n in S.nodes}["Filtre"] == "rouge" and {n["id"]: n["cls"] for n in S.nodes}["Cible"] == "bleu")
+
+    # --- renommer un texte casse les références, et le build le dit
+    doc = json.loads(f.read_text(encoding="utf-8"))
+    for e in doc["elements"]:
+        if e["type"] == "text" and e.get("originalText") == "Filtre":
+            e["text"] = e["originalText"] = "Tamis"
+    f.write_text(json.dumps(doc), encoding="utf-8")
+    r = build(t1)
+    check("texte renommé (Filtre -> Tamis) : les étapes qui le citent sont signalées", r.returncode == 0 and "référence inconnue `Filtre`" in r.stdout, r.stdout[-400:])
+
+    # --- élément ajouté à la main et oublié dans les étapes
+    doc = json.loads(f.read_text(encoding="utf-8"))
+    for e in doc["elements"]:
+        if e["type"] == "text" and e.get("originalText") == "Tamis":
+            e["text"] = e["originalText"] = "Filtre"
+    doc["elements"].append(el("extra", "rectangle", 50, 950, 300, 90, strokeColor="#e03131"))
+    doc["elements"].append(txt("extra_t", "Oublié", 60, 960, 280, 70, "extra"))
+    f.write_text(json.dumps(doc), encoding="utf-8")
+    r = build(t1)
+    check("élément ajouté mais cité par aucune étape : avertissement (il n'apparaîtrait jamais)", r.returncode == 0 and "aucune étape ne montre « Oublié »" in r.stdout, r.stdout[-400:])
+
+    # --- régénérer explicitement depuis le bloc
+    r = subprocess.run([sys.executable, str(HERE / "schema-to-excalidraw.py"), "--root", str(t1), "--storyboard", "assets/storyboard.md", "--id", "D01", "--no-preview"], capture_output=True, text=True)
+    check("régénérer : refusé sans --force (le fichier est peut-être retouché)", r.returncode == 1 and "--force" in r.stderr, r.stderr)
+
+    # --- fichier absent et pas de JSON : erreur qui explique les trois façons
+    t2 = tmp / "nofile"
+    project(t2, BRIDGE_SB.replace(BRIDGE_SB[BRIDGE_SB.index("```json"):BRIDGE_SB.index("## 4. Scènes")], "") .replace("### D01 — Pont\n", "### D01 — Pont\n\n- fichier: assets/schemas/D01.excalidraw\n\n"))
+    r = build(t2)
+    check("fichier absent sans bloc JSON : erreur avec les deux remèdes", r.returncode == 1 and "schema-to-excalidraw.py" in r.stderr and "bloc JSON" in r.stderr, r.stderr[-400:])
+
+    # --- le générateur : sous-titre, auto_edges, group
+    els, w = gen.build_elements({"auto_edges": False, "nodes": [{"id": "a", "label": "A", "sub": "sous-titre", "x": 4, "y": 4, "group": "g"}, {"id": "b", "label": "B", "x": 12, "y": 4}],
+                                 "edges": [{"from": "a", "to": "b"}]})
+    texts = [e["text"] for e in els if e["type"] == "text"]
+    check("générateur : `sub` devient une ligne de plus du libellé", any("sous-titre" in t for t in texts), texts)
+    check("générateur : `auto_edges: false` -> tous les liens pointillés (à nommer)", all(e.get("strokeStyle") == "dashed" for e in els if e["type"] == "arrow"))
+    check("générateur : `group` ignoré, avec avertissement", any("`group`" in x for x in w), w)
+
+    # --- ce qui survit à une retouche : unitaire, sur le schéma de test
+    base_steps = [{"id": "X#0", "rel": 1, "params": {"show": ["La galaxie"]}}, {"id": "X#1", "rel": 5, "params": {"show": ["Vie", "Intelligence"], "glow": ["Vie>Intelligence"]}}]
+    ref = [[o["op"] for o in b["ops"]] for b in sa.compile_beats(schema(), "u", base_steps)[0]]
+    moved = fixture()
+    for e_ in moved:
+        e_["x"] += 200
+        e_["y"] += 30
+    check("tout déplacé : mêmes opérations d'animation", [[o["op"] for o in b["ops"]] for b in sa.compile_beats(schema(moved), "u", base_steps)[0]] == ref)
+    recol = fixture()
+    for e_ in recol:
+        if e_["type"] in ("rectangle", "ellipse", "diamond"):
+            e_["strokeColor"], e_["backgroundColor"] = "#7c3aed", "#ffec99"
+    check("tout recoloré : mêmes opérations d'animation", [[o["op"] for o in b["ops"]] for b in sa.compile_beats(schema(recol), "u", base_steps)[0]] == ref)
+
+
 def main():
     part_a()
     part_b()
@@ -507,6 +642,7 @@ def main():
         part_c(tmp)
         part_d(tmp)
         part_e(tmp)
+        part_f(tmp)
     print("\n" + ("ÉCHEC : %d test(s) : %s" % (len(FAILS), ", ".join(FAILS)) if FAILS else "OK : tous les tests passent"))
     sys.exit(1 if FAILS else 0)
 

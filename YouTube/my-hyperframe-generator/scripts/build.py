@@ -1612,6 +1612,16 @@ def main():
             die("assets/style-joriel.css absent et modèle de démo introuvable")
     (root / "assets" / "style-joriel-ext.css").write_text(CSS_EXT, encoding="utf-8")
 
+    # schémas : un élément que aucune étape ne montre n'apparaîtra jamais (par exemple ajouté dans Excalidraw puis oublié)
+    for sid, sch in schemas.items():
+        shown = renderer._schema_shown.get(sid)
+        if shown is None:
+            renderer.warn("schéma %s déclaré mais utilisé par aucune étape" % sid)
+            continue
+        never = schema_anim.unseen(sch, shown)
+        if never:
+            renderer.warn("schéma %s : aucune étape ne montre %s ; cela n'apparaîtra jamais (un élément ajouté au schéma doit être "
+                          "cité dans un `show`)" % (sid, ", ".join("« %s »" % x for x in never[:6]) + (" …" if len(never) > 6 else "")))
     for w in movie["schema_warnings"] + renderer.warnings:
         print("AVERTISSEMENT : " + w)
     missing = []

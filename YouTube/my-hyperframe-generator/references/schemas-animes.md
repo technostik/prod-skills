@@ -4,7 +4,9 @@
 > décrit dans `references/schemas-excalidraw.md`) est le chemin recommandé : on le voit, on le valide et on le
 > retouche avant de l'intégrer, il a des ronds, des losanges et des imbrications. Le schéma **JSON** décrit
 > ci-dessous (un bloc dans le registre §1c) reste valable pour un schéma très simple. Les étapes (`show`, `glow`,
-> `focus`, `zoom`) sont les mêmes pour les deux.
+> `focus`, `zoom`) sont les mêmes pour les deux. **On peut partir de ce JSON et obtenir un Excalidraw** : ajouter
+> `- fichier: assets/schemas/Dxx.excalidraw` sous le bloc, le fichier est généré au premier build puis fait foi
+> (`references/schemas-excalidraw.md` § Trois façons de déclarer un schéma).
 
 Un schéma qui **se construit au fil de la voix** : on déclare le schéma une fois, puis chaque étape
 fait apparaître, éclaire, isole ou cadre une partie. Contrairement aux autres primitives, dont

@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from pathlib import Path
 import unicodedata
 
 # --------------------------------------------------------------------------- #
@@ -206,6 +207,11 @@ class Schema:
                 self.warn("nœud #%d ignoré (objet avec `id` attendu)" % i)
                 continue
             nid = str(it["id"]).strip()
+            for ignored in ("shape", "valign"):
+                if ignored in it:
+                    self.warn("nœud %s : la clé `%s` n'existe pas dans le moteur JSON (rectangles seulement) : déclarer un fichier "
+                              "Excalidraw (`- fichier:` à côté du bloc JSON) pour avoir des ronds, des losanges, des imbrications"
+                              % (nid, ignored))
             if _key(nid) in self._nk:
                 self.warn("nœud en double ignoré : %s" % nid)
                 continue
@@ -439,8 +445,15 @@ _FILE = re.compile(r"^\s*[-*]\s*(?:fichier|file)\s*:\s*`?([^`\n]+?)`?\s*$", re.I
 def schemas_from_lines(lines, root=None):
     """Lit les lignes du registre §1c.
 
-    Chaque schéma : un en-tête `### D01 — Titre`, puis SOIT une ligne `- fichier: assets/schemas/D01.excalidraw`
-    (un schéma dessiné et validé dans Excalidraw : voir `excalidraw_anim.py`), SOIT un bloc JSON entre ```.
+    Chaque schéma : un en-tête `### D01 — Titre`, puis l'une de ces trois formes :
+
+      - un bloc JSON seul : rendu par le moteur JSON (rectangles) ;
+      - une ligne `- fichier: assets/schemas/D01.excalidraw` seule : un schéma dessiné et validé dans Excalidraw
+        (`excalidraw_anim.py`) ;
+      - les DEUX : le bloc JSON est la description de départ, le fichier en est l'**intermédiaire Excalidraw**. S'il
+        n'existe pas encore, il est GÉNÉRÉ depuis le bloc (formes, imbrications, flèches liées) ; ensuite le fichier
+        fait foi (on peut le retoucher à la main), et le bloc ne sert plus qu'à le régénérer.
+
     `root` : dossier du projet, pour résoudre le chemin du fichier.
     Retourne ({id: schéma}, avertissements, erreurs)."""
     blocks, cur, in_code, buf = {}, None, False, []
@@ -468,13 +481,35 @@ def schemas_from_lines(lines, root=None):
     for sid, b in blocks.items():
         if b["file"]:
             import excalidraw_anim          # import tardif : excalidraw_anim importe ce module
-            if b["text"] is not None:
-                warns.append("schéma %s : un bloc JSON ET un fichier sont déclarés, le fichier fait foi" % sid)
+            full = Path(b["file"]) if Path(b["file"]).is_absolute() or root is None else Path(root) / b["file"]
+            generated = False
+            if b["text"] is not None and not full.exists():
+                import excalidraw_gen
+                try:
+                    elements, gen_warns = excalidraw_gen.build_elements(json.loads(b["text"]))
+                except json.JSONDecodeError as exc:
+                    errors.append("registre §1c : JSON invalide pour %s : %s" % (sid, exc))
+                    continue
+                except SchemaError as exc:
+                    errors.append("registre §1c : %s : %s" % (sid, exc))
+                    continue
+                full.parent.mkdir(parents=True, exist_ok=True)
+                full.write_text(excalidraw_gen.dumps(excalidraw_gen.to_document(elements)), encoding="utf-8")
+                warns += ["schéma %s : %s" % (sid, w) for w in gen_warns]
+                generated = True
             try:
                 sch = excalidraw_anim.load_schema(b["file"], sid, b["title"], root)
+                if generated:
+                    handles = full.with_suffix("").parent / (full.stem + ".handles.md")
+                    handles.write_text(sch.handles(), encoding="utf-8")
+                    warns.append("schéma %s : fichier Excalidraw %s GÉNÉRÉ depuis le bloc JSON (intermédiaire) : le regarder "
+                                 "(scripts/excalidraw-preview.py), le retoucher dans Excalidraw si besoin, puis le valider "
+                                 "(scripts/prepare.py validate-schema %s). Désormais le fichier fait foi ; le bloc JSON ne sert plus "
+                                 "qu'à le régénérer (schema-to-excalidraw.py --force)" % (sid, b["file"], sid))
             except SchemaError as exc:
-                errors.append("registre §1c : %s : %s (dessiner le schéma dans Excalidraw, ou le générer avec "
-                              "scripts/schema-to-excalidraw.py)" % (sid, exc))
+                errors.append("registre §1c : %s : %s (dessiner le schéma dans Excalidraw, le générer avec "
+                              "scripts/schema-to-excalidraw.py, ou ajouter un bloc JSON à côté de `fichier:` pour le générer "
+                              "automatiquement)" % (sid, exc))
                 continue
             out[sid] = sch
             warns += sch.warnings
@@ -740,6 +775,13 @@ def render_group(schema, uid, items, carry=None, cam_frame=None, sel=None):
                "beats": beats}
     js = "\n" + RUNTIME.replace("__G__", json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
     return {"inner": inner, "js": js, "shown": shown, "warnings": warns}
+
+
+def unseen(schema, shown):
+    """Éléments d'un schéma qu'aucune étape ne montre : nœuds et liens absents de `shown` (union de tous les groupes)."""
+    out = [n["label"] or n["id"] for n in schema.nodes if ("n", n["i"]) not in shown]
+    out += [e["id"] for e in schema.edges if ("e", e["i"]) not in shown]
+    return out
 
 
 def render_static(schema, uid, step):

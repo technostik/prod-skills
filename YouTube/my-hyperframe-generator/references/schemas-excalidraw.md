@@ -9,6 +9,44 @@ Ce que ça apporte par rapport au schéma décrit en JSON dans le storyboard : o
 l'aveugle. Les formes sont libres (rectangle, **rond**, **losange**), **imbriquées** si on veut, les liens ne sont
 jamais gênés par l'imbrication, et le fichier s'ouvre dans Excalidraw.
 
+## Trois façons de déclarer un schéma
+
+Deux moteurs de rendu coexistent ; ils partagent **les mêmes étapes** (`show`, `glow`, `focus`, `zoom`) et la même animation. Ce que
+le registre §1c contient décide du moteur :
+
+| Registre §1c | Moteur | Pour quoi faire |
+|---|---|---|
+| un **bloc JSON** seul | moteur JSON : des rectangles et des flèches (`references/schemas-animes.md`) | un schéma très simple, qu'on n'a rien à retoucher |
+| **`- fichier: assets/schemas/Dxx.excalidraw`** seul | moteur Excalidraw : le fichier fait foi | un schéma dessiné dans Excalidraw, ou généré par `schema-to-excalidraw.py` |
+| **un bloc JSON ET `- fichier:`** | moteur Excalidraw ; le fichier est **généré depuis le bloc au premier build** | **partir d'un schéma JSON comme avant**, obtenir un Excalidraw intermédiaire qu'on regarde et qu'on retouche |
+
+**Le cas « JSON puis Excalidraw »** : on écrit le schéma en JSON dans le storyboard, puis on ajoute une ligne `- fichier:` en dessous. Au
+premier build, `build.py` génère le fichier (et `Dxx.handles.md`, la liste des éléments à citer) et l'annonce par un avertissement : à
+regarder (`scripts/excalidraw-preview.py`), à retoucher dans Excalidraw si besoin, à valider (`scripts/prepare.py validate-schema`).
+**À partir de là le fichier fait foi** : les builds suivants le relisent tel qu'il est, y compris vos retouches, et ne le régénèrent
+jamais seuls. Le bloc JSON ne sert plus qu'à le régénérer, volontairement :
+`python3 scripts/schema-to-excalidraw.py --storyboard assets/storyboard.md --id D01 --force` (écrase vos retouches).
+
+Les clés de **forme** (`shape`: `ellipse`/`diamond`/`rect`, `w`, `h`, `valign`) ne comptent que dans ce cas : le moteur JSON seul n'a que des
+rectangles et le signale (« la clé `shape` n'existe pas dans le moteur JSON »). `sub` devient une ligne de plus du libellé, `auto_edges:
+false` rend tous les liens pointillés (à nommer dans `show`), `group` est ignoré (un **cadre nommé** dans Excalidraw le remplace : `@nom`).
+
+## Ce qui survit à une retouche à la main
+
+Le fichier est relu à chaque build, et les étapes ne le connaissent que par les **textes** de ses éléments :
+
+| Tu changes dans Excalidraw | Effet sur la composition |
+|---|---|
+| **déplacer**, **redimensionner** (un élément ou tous) | **rien à refaire** : la mise à l'échelle sur l'écran, le tracé des flèches et les cadrages du `zoom` se recalculent au build |
+| **changer les couleurs**, l'épaisseur, le remplissage | **rien à refaire** : la couleur est rapprochée du rôle le plus proche du thème (`plain`, `bleu`, `vert`, `or`, `rouge`, `dim`) ; une couleur hors palette n'existe pas dans la vidéo |
+| **changer le texte** d'un élément | **ça casse les références** : chaque étape qui le citait est signalée (« référence inconnue `Filtre` ») ; mettre à jour les `show` / `glow` / `focus` / `zoom` |
+| **ajouter** un élément | il n'apparaît **jamais** tant qu'aucune étape ne le cite : avertissement « aucune étape ne montre … » |
+| **supprimer** un élément cité | références inconnues, comme un texte renommé |
+| **relier** ou **délier** une flèche d'une forme | change le lien `a>b` (et son apparition automatique) |
+| rendre une flèche **pointillée** | elle n'apparaît plus toute seule : à nommer dans `show` |
+
+Retouché après validation, le schéma redevient « à valider » pour `prepare.py check` (le build, lui, ne bloque jamais).
+
 ## Le workflow
 
 1. **Produire le fichier.** Au choix : le dessiner dans Excalidraw ; ou le générer depuis une description compacte
