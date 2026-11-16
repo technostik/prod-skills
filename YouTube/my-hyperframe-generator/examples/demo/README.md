@@ -83,14 +83,14 @@ Le même schéma `D01` (registre §1c de `storyboard.md`) **se déploie sur deux
 
 ## Schéma Excalidraw, musique et shorts (`I12`)
 
-**Les schémas** `D01` (`i10`, `i11` : un conteneur imbriqué et un cercle, déployé sur deux compositions) et `D02` (`i12`) sont des **assets à part** : `assets/schemas/D02.excalidraw`, référencé dans le registre §1c du storyboard par `- fichier: assets/schemas/D02.excalidraw`. Un **rond** (« Écosystème ») contient un **rectangle** (« Équipe ») qui contient un **cercle** (« Idée ») ; un **losange** (« Décision »), un rectangle (« Résultat ») et trois **flèches** : « Idée → Décision » traverse deux bords sans être gênée, « Décision → Résultat » (« oui ») et la boucle « Décision → Équipe » (« non »), **pointillée**, donc montrée à la main (`show: ["Décision>Équipe"]`). Les étapes construisent le schéma un élément à la fois (`show`), mettent en relief (`glow`), isolent (`focus`) et cadrent (`zoom: ["@Équipe"]`).
+**Deux schémas, deux façons de les déclarer** (`references/schemas-excalidraw.md` § Trois façons de déclarer un schéma). `D01` (`i10`, `i11` : un conteneur imbriqué et un cercle, déployé sur deux compositions) est **décrit en JSON dans le registre §1c du storyboard, comme avant** ; la ligne `- fichier: assets/schemas/D01.excalidraw` sous le bloc fait générer **automatiquement** un Excalidraw intermédiaire au premier build (committé ici : on peut le regarder, le retoucher dans Excalidraw, les compositions continuent de se construire ; le fichier fait foi). `D02` (`i12`) part du fichier : c'est un **asset à part**, `assets/schemas/D02.excalidraw`, référencé dans le registre §1c du storyboard par `- fichier: assets/schemas/D02.excalidraw`. Un **rond** (« Écosystème ») contient un **rectangle** (« Équipe ») qui contient un **cercle** (« Idée ») ; un **losange** (« Décision »), un rectangle (« Résultat ») et trois **flèches** : « Idée → Décision » traverse deux bords sans être gênée, « Décision → Résultat » (« oui ») et la boucle « Décision → Équipe » (« non »), **pointillée**, donc montrée à la main (`show: ["Décision>Équipe"]`). Les étapes construisent le schéma un élément à la fois (`show`), mettent en relief (`glow`), isolent (`focus`) et cadrent (`zoom: ["@Équipe"]`).
 
-Le workflow d'un schéma (`references/schemas-excalidraw.md`), avec les fichiers de `assets/schemas/` :
+Le workflow d'un schéma (`references/schemas-excalidraw.md`), avec les fichiers de `assets/schemas/` (`D01.*` : mêmes fichiers, sauf `D01.src.json` : la description est le bloc JSON du storyboard) :
 
 | Fichier | Rôle |
 |---|---|
 | `D02.src.json` | la description compacte (nœuds, formes, liens) |
-| `D02.excalidraw` | le schéma : généré par `scripts/schema-to-excalidraw.py`, **ouvrable et retouchable dans Excalidraw** ; c'est lui qui fait foi |
+| `D02.excalidraw` | le schéma : généré par `scripts/schema-to-excalidraw.py` (`D01` : généré par `build.py` depuis le bloc JSON), **ouvrable et retouchable dans Excalidraw** ; c'est lui qui fait foi |
 | `D02.preview.png` | le schéma **habillé aux couleurs de la vidéo** (`scripts/excalidraw-preview.py`) : à regarder avant de valider |
 | `D02.handles.md` | les éléments à citer dans `show`, `glow`, `focus`, `zoom` (lu par le LLM qui écrit le storyboard) |
 | `D02.validated` | le tampon de validation (`scripts/prepare.py validate-schema D02`) : retouché ensuite, le schéma redevient « à valider » |
@@ -99,6 +99,9 @@ Le workflow d'un schéma (`references/schemas-excalidraw.md`), avec les fichiers
 python3 scripts/schema-to-excalidraw.py --json assets/schemas/D02.src.json --id D02 --force   # régénère (jamais sans --force)
 python3 scripts/excalidraw-preview.py assets/schemas/D02.excalidraw                             # aperçu + liste des éléments
 python3 scripts/prepare.py validate-schema D02
+
+# D01 : le fichier existe, il fait foi. Pour le régénérer depuis le bloc JSON du storyboard (écrase les retouches) :
+python3 scripts/schema-to-excalidraw.py --storyboard storyboard.md --id D01 --force
 ```
 
 **La musique** : le registre §1d du storyboard déclare deux musiques et `I12.1#0` / `I12.1#5` les posent (`music: M01` jusqu'à `I12.1#4`, `music: M02` jusqu'à la fin de la scène). Elles soulignent la montée puis la conclusion ; ce n'est pas un fond continu (17 % de la démo). `build.py` écrit `data/music.json` (committé ici pour l'exemple). Les fichiers audio ne sont pas dans le dépôt : `scripts/make-placeholders.sh` crée des **musiques factices** (une nappe synthétique, pour que le mixage tourne) ; les vraies se génèrent avec `python3 scripts/make-music.py` (CLI `sound` de fast-market), puis `python3 scripts/mix-music.py` les mixe sous la voix du master rendu (`references/music.md`).

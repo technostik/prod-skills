@@ -2,7 +2,7 @@
 
 > Format minuté historique, conservé comme trace du catalogue. Le format canonique, lisible par `scripts/build.py`, est `references/storyboard-format.md` ; exemple complet : `examples/storyboard.example.md`.
 >
-> Les scènes `I10` et `I11` montrent **un même schéma Excalidraw qui se déploie sur deux compositions** : le schéma `D01` (`assets/schemas/D01.excalidraw`) est déclaré une fois dans le registre §1c, avec **un conteneur imbriqué** (l'« École » contient « Postes » et « Heures de cours », et le lien « Budget → Postes » en traverse le bord) et **un cercle** (« Niveau des élèves »). `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
+> Les scènes `I10` et `I11` montrent **un même schéma Excalidraw qui se déploie sur deux compositions** : le schéma `D01` est **décrit en JSON dans le registre §1c** (comme avant) ; la ligne `- fichier: assets/schemas/D01.excalidraw` à côté du bloc en fait un schéma Excalidraw : le fichier est **généré automatiquement depuis le bloc** au premier build (intermédiaire qu'on peut ensuite retoucher à la main), avec **un conteneur imbriqué** (l'« École » contient « Postes » et « Heures de cours », et le lien « Budget → Postes » en traverse le bord) et **un cercle** (« Niveau des élèves »). `I10` en construit la première moitié, `I11` reprend l'état déjà affiché et le termine.
 >
 > La scène `I12` montre **un schéma Excalidraw** : un fichier `assets/schemas/D02.excalidraw` (asset à part, regardé et validé avant d'être intégré) avec des **formes imbriquées** (un rond qui contient un rectangle qui contient un cercle), un **losange**, des **flèches** qui traversent l'imbrication et une flèche pointillée montrée à la main, construits un élément à la fois. Elle porte aussi deux **musiques** (registre §1d) : une montée, puis la conclusion. Le §6 propose **trois shorts de promotion**.
 
@@ -10,7 +10,24 @@ Une étape = une primitive ou une situation, démontrée une seule fois. Texte :
 
 ## 1c. Registre des schémas
 
-### D01 — La chaîne de la dépense (Excalidraw : un conteneur, un cercle)
+### D01 — La chaîne de la dépense (décrit en JSON ; l'Excalidraw est son intermédiaire)
+
+```json
+{
+  "nodes": [
+    {"id": "Budget", "label": "Budget", "x": 1.417, "y": 5.0, "w": 240, "h": 140, "shape": "rect", "cls": "bleu", "size": "s"},
+    {"id": "École", "label": "École", "x": 7.333, "y": 4.5, "w": 960, "h": 520, "shape": "rect", "cls": "plain", "valign": "top"},
+    {"id": "Postes", "label": "Postes", "x": 5.0, "y": 5.0, "w": 300, "h": 140, "shape": "rect", "cls": "or", "size": "s"},
+    {"id": "Heures de cours", "label": "Heures de cours", "x": 9.083, "y": 5.0, "w": 480, "h": 140, "shape": "rect", "cls": "vert", "size": "s"},
+    {"id": "Niveau des élèves", "label": "Niveau\ndes élèves", "x": 14.0, "y": 5.0, "w": 340, "h": 340, "shape": "ellipse", "cls": "rouge", "size": "s"}
+  ],
+  "edges": [
+    {"from": "Budget", "to": "Postes", "cls": "bleu"},
+    {"from": "Postes", "to": "Heures de cours", "label": "?", "manual": true},
+    {"from": "Heures de cours", "to": "Niveau des élèves", "cls": "rouge", "manual": true}
+  ]
+}
+```
 
 - fichier: assets/schemas/D01.excalidraw
 

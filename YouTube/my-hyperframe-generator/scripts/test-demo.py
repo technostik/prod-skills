@@ -48,6 +48,13 @@ def main():
     print("A. le schéma D01 (I10, I11) : un conteneur imbriqué, un cercle")
     S1 = ex.load_schema(DEMO / "assets" / "schemas" / "D01.excalidraw", "D01")
     k1 = {n["id"]: n["kind"] for n in S1.nodes}
+    sb = (DEMO / "storyboard.md").read_text(encoding="utf-8")
+    block = sb[sb.index("### D01"):sb.index("### D02")]
+    check("D01 : décrit en JSON dans le registre §1c ET relié à un fichier Excalidraw (intermédiaire généré)", "```json" in block and "- fichier: assets/schemas/D01.excalidraw" in block)
+    raw = json.loads(re.search(r"```json\n(.*?)\n```", block, re.S).group(1))
+    gen_nodes = {n["id"]: n["kind"] for n in ex.ExSchema("D01", "", __import__("excalidraw_gen").build_elements(raw)[0]).nodes}
+    check("D01 : le fichier committé a la structure du bloc JSON (mêmes éléments et formes)", gen_nodes == {n["id"]: n["kind"] for n in S1.nodes}, (gen_nodes, {n["id"]: n["kind"] for n in S1.nodes}))
+    check("D01 : le bloc JSON n'a plus de fichier source à côté (pas de D01.src.json)", not (DEMO / "assets/schemas/D01.src.json").exists())
     check("D01 : rectangles, un conteneur « École », un cercle", k1 == {"Budget": "rectangle", "École": "rectangle", "Postes": "rectangle", "Heures de cours": "rectangle", "Niveau des élèves": "ellipse"}, k1)
     circle = [n for n in S1.nodes if n["id"] == "Niveau des élèves"][0]
     check("D01 : le cercle est rond (largeur = hauteur)", abs(circle["w"] - circle["h"]) < 1.0, (circle["w"], circle["h"]))
