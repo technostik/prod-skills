@@ -5,7 +5,7 @@ La voix et le transcript passent AVANT le storyboard (auto : voix de synthèse t
 incrustation : la prise, que le locuteur dicte ; la skill n'écrit jamais le storyboard sur une voix qui n'existe pas
 encore). Même chose pour les fonds, les références, les chapitres, les screencasts et les schémas.
 
-  python3 scripts/prepare.py init --mode auto|webcam|incrustation   # dossiers, gabarits, checklist du mode
+  python3 scripts/prepare.py init --mode auto|webcam|incrustation [--format 9:16]   # dossiers, gabarits, checklist
   python3 scripts/prepare.py check                                  # l'état de chaque livrable ; code 1 s'il bloque
   python3 scripts/prepare.py chapters                               # chapitres : titres du scénario alignés sur le transcript
   python3 scripts/prepare.py validate-schema D01                    # marque un schéma Excalidraw comme validé
@@ -35,6 +35,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 MODES = ("auto", "webcam", "incrustation")
+FORMATS = ("16:9", "9:16")     # orthogonal au mode : 9:16 = un Short vertical, une seule vidéo, un seul chapitre
 STATUS_OK = {"ok", "valide", "validé", "fait", "prêt", "pret"}
 STATUS_SKIP = {"écarté", "ecarte", "écartée", "abandonné", "abandonne", "non", "n/a"}
 MIN_CHAPTER = 10.0            # secondes : YouTube ignore les chapitres plus courts
@@ -140,6 +141,22 @@ CHECKLIST = {
 }
 CHECKLIST["incrustation"] = CHECKLIST["webcam"]
 
+# Format 9:16 (Short) : une seule prise, un seul chapitre, pas de concaténation. La source par défaut est la
+# dernière vidéo de $HF_VIDEOS_DIR (scripts/short-take.py).
+CHECKLIST_SHORT = {
+    "auto": ["scénario court (SCENARIO.md, un seul titre)", "voix de synthèse (TTS) → assets/voix.wav",
+             "transcript (STT) → scripts/transcript-export.py --from-video assets/voix.wav",
+             "fonds 1080 × 1920 → assets/assets.md", "références → assets/refs.md", "chiffres → assets/figures.md",
+             "chapitre unique → prepare.py chapters", "contrôle → prepare.py check"],
+    "webcam": ["scénario court (SCENARIO.md, un seul titre)",
+               "la prise : la dernière vidéo de $HF_VIDEOS_DIR (ou un fichier) → scripts/short-take.py, puis clean-posthoc.py",
+               "screencasts → detect-cast.py → assets/cast-segments.json",
+               "transcript → scripts/transcript-export.py --from-video assets/voix-posthoc-vN.wav",
+               "fonds 1080 × 1920 → assets/assets.md", "références → assets/refs.md", "chiffres → assets/figures.md",
+               "chapitre unique → prepare.py chapters", "contrôle → prepare.py check"],
+}
+CHECKLIST_SHORT["incrustation"] = CHECKLIST_SHORT["webcam"]
+
 
 def cmd_init(a):
     root = Path(a.root).resolve()
@@ -148,6 +165,8 @@ def cmd_init(a):
     made = []
     for rel, text in TEMPLATES.items():
         p = root / rel
+        if a.format == "9:16":
+            text = text.replace("Image 1920 × 1080", "Image 1080 × 1920 (portrait)")
         if not p.exists():
             p.write_text(text, encoding="utf-8")
             made.append(rel)
@@ -155,11 +174,16 @@ def cmd_init(a):
     prep = json.loads(pj.read_text(encoding="utf-8")) if pj.exists() else {}
     if prep.get("mode") and prep["mode"] != a.mode:
         die("le projet est déjà en mode %s (un seul mode par projet) : %s" % (prep["mode"], pj))
+    if prep.get("format") and a.format != prep["format"]:
+        die("le projet est déjà en format %s : %s" % (prep["format"], pj))
     prep.update({"mode": a.mode, "created": prep.get("created") or time.strftime("%Y-%m-%d")})
+    if a.format != "16:9":
+        prep["format"] = a.format
     pj.write_text(json.dumps(prep, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("format %s" % a.format)
     print("mode %s : dossiers assets/bg, assets/references, assets/schemas ; gabarits écrits : %s" % (a.mode, ", ".join(made) or "(déjà là)"))
     print("\nPréparation, dans l'ordre (le storyboard vient APRÈS) :")
-    for i, step in enumerate(CHECKLIST[a.mode], 1):
+    for i, step in enumerate((CHECKLIST_SHORT if a.format == "9:16" else CHECKLIST)[a.mode], 1):
         print("  %d. %s" % (i, step))
     print("\nDétail : references/preparation.md")
 
@@ -255,7 +279,7 @@ def check_figures(root, rep):
         rep.add("chiffres", "ok" if live else "n/a", "%d chiffre(s) sourcé(s)" % len(live) if live else "aucun chiffre")
 
 
-def check_chapters(root, rep, duration):
+def check_chapters(root, rep, duration, fmt="16:9"):
     cj, ct = root / "assets" / "chapters.json", root / "assets" / "chapters.txt"
     if not cj.exists():
         rep.add("chapitres", "à faire", "assets/chapters.json absent : python3 scripts/prepare.py chapters")
@@ -271,6 +295,11 @@ def check_chapters(root, rep, duration):
         rep.add("chapitres", "bloquant", "le premier chapitre doit commencer à 0 et les temps croître")
     elif duration and starts and starts[-1] >= duration:
         rep.add("chapitres", "bloquant", "un chapitre commence après la fin du transcript (%.0f s)" % duration)
+    elif fmt == "9:16":
+        if len(ch) != 1:
+            rep.add("chapitres", "bloquant", "format 9:16 : un seul chapitre (une seule vidéo), %d trouvé(s)" % len(ch))
+        else:
+            rep.add("chapitres", "ok", "chapitre unique : %s" % ch[0]["title"])
     elif not ct.exists():
         rep.add("chapitres", "à faire", "assets/chapters.txt (format YouTube) absent : relancer prepare.py chapters")
     else:
@@ -359,13 +388,14 @@ def cmd_check(a):
     check_table(root, rep, "assets/assets.md", "fonds", "fichier")
     check_table(root, rep, "assets/refs.md", "références", "fichier_local")
     check_figures(root, rep)
-    check_chapters(root, rep, data["words"][-1]["end"] if data and data["words"] else None)
+    out_format = prep.get("format") or "16:9"
+    check_chapters(root, rep, data["words"][-1]["end"] if data and data["words"] else None, out_format)
     check_screencasts(root, mode, rep)
     check_schemas(root, rep)
     check_optional(root, rep)
 
     width = max(len(i["livrable"]) for i in rep.items)
-    print("Préparation (mode %s)" % mode)
+    print("Préparation (mode %s%s)" % (mode, "" if out_format == "16:9" else ", format " + out_format))
     for i in rep.items:
         mark = {"ok": "ok      ", "n/a": "n/a     ", "à faire": "à faire ", "bloquant": "BLOQUANT"}[i["etat"]]
         print("  %-*s  %s  %s" % (width, i["livrable"], mark, i["detail"]))
@@ -445,6 +475,17 @@ def cmd_chapters(a):
     te = load_module("transcript_export", "transcript-export.py")
     data = te.normalize(json.loads(tj.read_text(encoding="utf-8")))
     secs = sections(sc.read_text(encoding="utf-8"))
+    pj = root / "assets" / "prep.json"
+    out_format = (json.loads(pj.read_text(encoding="utf-8")).get("format") if pj.exists() else None) or "16:9"
+    if out_format == "9:16":
+        # un Short : une seule vidéo, un seul chapitre (titre : --title, sinon le premier titre du scénario)
+        first = re.search(r"^#{1,3}\s+(.*?)\s*#*\s*$", sc.read_text(encoding="utf-8"), re.M)
+        title = a.title or (first.group(1) if first else "Short")
+        (root / "assets").mkdir(exist_ok=True)
+        (root / "assets" / "chapters.json").write_text(
+            json.dumps([{"start": 0.0, "title": title}], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print("00:00  %s\nécrit : assets/chapters.json (chapitre unique, format 9:16)" % title)
+        return
     if len(secs) < 2:
         die("moins de deux titres dans %s : un chapitre par titre `##` (YouTube en demande au moins trois)" % a.scenario)
     total = data["words"][-1]["end"] if data["words"] else 0.0
@@ -514,11 +555,14 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("init")
     p.add_argument("--mode", required=True, choices=MODES)
+    p.add_argument("--format", default="16:9", choices=FORMATS,
+                   help="9:16 : un Short vertical (une seule vidéo, un seul chapitre)")
     p = sub.add_parser("check")
     p.add_argument("--mode", choices=MODES, default=None)
     p.add_argument("--scenario", default="SCENARIO.md")
     p = sub.add_parser("chapters")
     p.add_argument("--scenario", default="SCENARIO.md")
+    p.add_argument("--title", default=None, help="format 9:16 : titre du chapitre unique")
     p = sub.add_parser("validate-schema")
     p.add_argument("schema", help="Dxx ou chemin du fichier .excalidraw")
     a = ap.parse_args(argv)
