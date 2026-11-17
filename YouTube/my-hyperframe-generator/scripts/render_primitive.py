@@ -82,6 +82,9 @@ OVERLAY_ANCHORS = {
 OVERLAY_SCALE_CLASS = {0.5: "ov-s50", 0.75: "ov-s75", 1.0: "ov-s100"}
 # Positions automatiques par défaut : le milieu des deux quarts supérieurs.
 OVERLAY_DEFAULTS = ("haut-gauche", "haut-droite")
+# Format 9:16 : le visage d'une prise verticale occupe le haut et le milieu de l'écran, les quarts
+# supérieurs le cacheraient. Par défaut on pose donc les visuels dans les deux quarts inférieurs.
+OVERLAY_DEFAULTS_BY_FORMAT = {"16:9": OVERLAY_DEFAULTS, "9:16": ("bas-gauche", "bas-droite")}
 # Écritures acceptées dans le storyboard (`place:`), sans accents ni casse.
 OVERLAY_ALIASES = {
     "tl": "haut-gauche", "hg": "haut-gauche", "coin-haut-gauche": "haut-gauche",
@@ -216,6 +219,79 @@ CSS_EXT = """
 /* Statut de source non vérifiée : invisible par défaut, jamais un code à l'écran */
 [data-status="verify"]{outline:0}
 """
+
+# --------------------------------------------------------------------------- #
+# Format 9:16 (Short vertical, 1080 × 1920)
+# --------------------------------------------------------------------------- #
+# Le CSS du langage visuel est écrit en `vh` / `vw` pour du 16:9. Sur 1080 × 1920, 1 vh vaut 19,2 px
+# (au lieu de 10,8) : tout le texte grossirait de 78 %. `css_vertical` réécrit chaque `Nvh` en
+# `calc(N * var(--u))`, où `--u` vaut 10,8 px : un texte garde la même taille en pixels qu'en 16:9, et les `vw`
+# (1080 px de large, donc plus étroits) restent des `vw`. Puis `CSS_VERTICAL` redessine ce qui change de
+# forme en portrait (marges de sécurité, versus empilé, chiffre-clé, caméra, schéma, ancres de l'incrustation).
+VERTICAL_UNIT_PX = 10.8
+# Zones où l'interface de YouTube Shorts recouvre l'image (titre, boutons, nom de chaîne) : rien d'essentiel
+# n'y est posé (en % de la hauteur). À ajuster ici.
+SAFE_TOP_PCT = 7
+SAFE_BOTTOM_PCT = 22
+VH_RE = re.compile(r"(?<![\w.])(-?(?:\d+\.\d*|\.\d+|\d+))vh\b")
+
+
+def vertical_css(css):
+    """Réécrit les `Nvh` d'une feuille 16:9 en `calc(N * var(--u))` (voir plus haut)."""
+    return VH_RE.sub(lambda m: "calc(%s * var(--u))" % m.group(1), css)
+
+
+CSS_VERTICAL = """
+/* ------------------------------------------------------------------ *
+ * Format 9:16 : 1080 × 1920. Redéfinitions de ce qui change de forme en portrait.
+ * Fichier généré par scripts/build.py ; ne pas éditer à la main.
+ * ------------------------------------------------------------------ */
+:root{--u:%(u)spx}
+/* Caméra (mode webcam) : cadre 9:16 au repos (pip), au-dessus de la zone des légendes de YouTube Shorts */
+.cam-frame{left:40px;top:1052px;width:252px;height:448px}
+.cam-frame.cam-under{left:0;top:0;width:1080px;height:1920px}
+/* Titres et zone de contenu : marges de sécurité haut et bas */
+.kicker{top:%(top)s%%;font-size:calc(3.6 * var(--u))}
+.stitle{top:calc(%(top)s%% + 7vw);font-size:calc(8.2 * var(--u))}
+.zone{top:25%%;bottom:%(bottom)s%%;left:6%%;right:6%%}
+/* Textes plus grands : 1080 px de large, beaucoup de hauteur */
+.dkw{font-size:calc(8.4 * var(--u))}
+.dkw.dim{font-size:calc(4.2 * var(--u))}
+.dbig{font-size:calc(17 * var(--u))}
+.srow .dbig{font-size:calc(14 * var(--u))}
+.dsub{font-size:calc(5.2 * var(--u));max-width:88vw}
+.punch-text{font-size:calc(12 * var(--u));max-width:90vw}
+/* Versus : les deux colonnes s'empilent, le filet devient horizontal */
+.versus{flex-direction:column;align-items:center;gap:calc(4 * var(--u));padding:0}
+.vcol{flex:none;width:100%%}
+.vcol.left .dkw.dim{font-size:calc(4.6 * var(--u))}
+.vsep{width:60%%;height:calc(.4 * var(--u));background:linear-gradient(to right,rgba(91,156,246,0),var(--bleu) 20%%,var(--bleu) 80%%,rgba(91,156,246,0))}
+.branches{gap:4vw}
+.zone.cols2 .in{grid-template-columns:1fr}
+.zone.cols2 .in::before{display:none}
+.waffle{width:64vw}
+.bars,.seuil,.compare3{width:88vw;max-width:88vw}
+.waffle-wrap,.sources{max-width:88vw}
+.ref-card{top:14%%;bottom:%(bottom)s%%;left:6vw;right:6vw}
+/* Schéma (16:9, dessiné pour 1920 × 1080) : posé dans une bande 16:9 au centre, à l'échelle 1080/1920 */
+.step.step-sch{inset:auto;left:0;top:%(band)spx;width:1920px;height:1080px;overflow:hidden;transform:scale(.5625);transform-origin:0 0}
+/* Incrustation : mêmes neuf zones, sur 1080 × 1920. La scène réduite est un écran 9:16 entier. */
+.ov-tl{left:0;top:0;width:540px;height:960px}.ov-tr{left:540px;top:0;width:540px;height:960px}
+.ov-bl{left:0;top:960px;width:540px;height:960px}.ov-br{left:540px;top:960px;width:540px;height:960px}
+.ov-t{left:0;top:0;width:1080px;height:960px}.ov-b{left:0;top:960px;width:1080px;height:960px}
+.ov-l{left:0;top:0;width:540px;height:1920px}.ov-r{left:540px;top:0;width:540px;height:1920px}
+.ov-c{left:0;top:0;width:1080px;height:1920px}
+.ovstage{width:1080px;height:1920px;margin:-960px 0 0 -540px}
+""" % {"u": ("%g" % VERTICAL_UNIT_PX), "top": SAFE_TOP_PCT, "bottom": SAFE_BOTTOM_PCT,
+       "band": int(round((1920 - 1080 * 1080 / 1920.0) / 2))}
+
+
+def css_vertical(base_css):
+    """Feuille de style complète du format 9:16 : le CSS du projet (`style-joriel.css`) et `CSS_EXT`,
+    convertis, puis `CSS_VERTICAL`. Écrite dans `assets/style-joriel-9x16.css`."""
+    head = "/* style-joriel-9x16.css — format 9:16 (1080 × 1920), généré par scripts/build.py. */\n"
+    return head + vertical_css(base_css) + "\n" + vertical_css(CSS_EXT) + CSS_VERTICAL
+
 
 NUM_RE = re.compile(r"([+\-−]?)\s*(\d[\d\s\u00a0\u202f]*(?:[.,]\d+)?)\s*(.*)$")
 

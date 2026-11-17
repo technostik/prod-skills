@@ -57,6 +57,14 @@ INCRUST_BASE = "plein"
 # mesure 10 px, +2 px de marge contre les artefacts de compression. À ajuster ici.
 CAST_CROP_TOP_PX = 12
 VIEWPORT_W, VIEWPORT_H = 1920, 1080
+# Format de sortie : orthogonal au mode (auto, webcam, incrustation). `9:16` = un Short vertical, une seule
+# vidéo, un seul chapitre (voir references/shorts.md § Format 9:16). Le format 16:9 est celui d'avant.
+FORMATS = {"16:9": (1920, 1080), "9:16": (1080, 1920)}
+DEFAULT_FORMAT = "16:9"
+FORMAT_ALIASES = {"16:9": "16:9", "16x9": "16:9", "paysage": "16:9", "horizontal": "16:9", "landscape": "16:9",
+                  "9:16": "9:16", "9x16": "9:16", "vertical": "9:16", "portrait": "9:16", "short": "9:16",
+                  "shorts": "9:16"}
+SHORT_MAX_S = 180.0         # au-delà, YouTube ne classe plus la vidéo verticale parmi les Shorts
 CAM_TWEEN_S = 0.55          # transition de cadre entre deux états de base (inchangé)
 CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de Cast
 # Le crop bascule 1/4 d'image AVANT la borne : quelle que soit la fréquence de rendu, l'image
@@ -67,16 +75,12 @@ import music_plan
 import schema_anim
 import shorts_plan
 from render_primitive import (ALIASES, CSS_EXT, ICONS, OVERLAY_ANCHORS, OVERLAY_DEFAULTS,
-                              KINDS, OVERLAY_KINDS, Primitives, as_blocks, canonical, canonical_anchor,
-                              esc, num_parts, overlay_wrap, to_float)
+                              OVERLAY_DEFAULTS_BY_FORMAT, KINDS, OVERLAY_KINDS, Primitives, as_blocks,
+                              canonical, canonical_anchor, css_vertical, esc, num_parts, overlay_wrap, to_float)
 
 JS_TEMPLATE = r"""
 // Mouvements des primitives. Délais relatifs au début de l'étape.
-var CAM = {
-  pip:  { left: 1460, top: 821, width: 422, height: 238, opacity: 1 },
-  full: { left: 480, top: 270, width: 960, height: 540, opacity: 1 },
-  off:  { left: 1460, top: 821, width: 422, height: 238, opacity: 0 }
-};
+__CAMGEOM__
 function applyCam(tl, frame, mode, t, stepSel) {
   var g = CAM[mode] || CAM.off;
   if (t === 0) tl.set(frame, g, 0);
@@ -206,6 +210,22 @@ window.__timelines["__ID__"] = tl;
 """
 
 
+# Géométrie de la caméra, en px sur le viewport du format (voir references/webcam.md).
+# 16:9 : le texte historique, inchangé. 9:16 : pip et plein en 9:16 (la prise verticale n'est jamais déformée),
+# pip au-dessus de la zone des légendes de YouTube Shorts.
+CAM_GEOM_JS = {
+    "16:9": """var CAM = {
+  pip:  { left: 1460, top: 821, width: 422, height: 238, opacity: 1 },
+  full: { left: 480, top: 270, width: 960, height: 540, opacity: 1 },
+  off:  { left: 1460, top: 821, width: 422, height: 238, opacity: 0 }
+};""",
+    "9:16": """var CAM = {
+  pip:  { left: 40, top: 1052, width: 252, height: 448, opacity: 1 },
+  full: { left: 162, top: 288, width: 756, height: 1344, opacity: 1 },
+  off:  { left: 40, top: 1052, width: 252, height: 448, opacity: 0 }
+};""",
+}
+
 # Webcam sans Cast : appel historique, inchangé à l'octet près.
 JS_CAMCALL_LEGACY = '  if (document.querySelector("#__CAM__")) applyCam(tl, "#__CAM__", step.getAttribute("data-cam") || "off", t, sel);'
 
@@ -215,7 +235,7 @@ JS_INCRUSTCAM = r"""
 // incrustation : vidéo plein écran sous les visuels. t = secondes locales, m = plein | cast, p = état précédent.
 var CAMEV = __CAMEV__;
 var CAST_CROP = __CASTCROP__;
-tl.set("#__CAM__", { left: 0, top: 0, width: 1920, height: 1080, opacity: 1 }, 0);
+tl.set("#__CAM__", { left: 0, top: 0, width: __VW__, height: __VH__, opacity: 1 }, 0);
 tl.set("#__CAMCONTENT__", { transformOrigin: "50% 0%", scale: 1, yPercent: 0 }, 0);
 CAMEV.forEach(function (e) {
   if ((e.m === "cast") !== (e.p === "cast"))
@@ -231,7 +251,7 @@ JS_CASTCAM = r"""
 // (null au premier), s = étape courante, ss = début d'étape, d = durée de transition (0 = instantané).
 var CAMEV = __CAMEV__;
 var CAST_CROP = __CASTCROP__;
-CAM.cast = { left: 0, top: 0, width: 1920, height: 1080, opacity: 1 };
+CAM.cast = { left: 0, top: 0, width: __VW__, height: __VH__, opacity: 1 };
 // habillage du cadre, en px sur 1920x1080 : .3vh, 1.4vh et l'ombre de .cam-frame (style-joriel.css)
 var CAM_DECOR = {
   normal: { borderWidth: 3.24, borderRadius: 15.12, boxShadow: "0px 17.28px 54px rgba(0,0,0,0.65)" },
@@ -269,6 +289,25 @@ CAMEV.forEach(function (e) {
 def die(msg):
     print("ERREUR : " + msg, file=sys.stderr)
     sys.exit(1)
+
+
+def parse_format(raw):
+    """`16:9` (défaut) ou `9:16`. Accepte les noms (`vertical`, `short`, `paysage`…) et la forme déjà utilisée par
+    l'en-tête `**Format**` des storyboards : `1080×1920 @ 30 fps` (la largeur et la hauteur décident). Vide : 16:9."""
+    text = str(raw or "").strip().lower()
+    key = re.sub(r"\s+", "", text)
+    if not key:
+        return DEFAULT_FORMAT
+    if key in FORMAT_ALIASES:
+        return FORMAT_ALIASES[key]
+    m = re.search(r"(\d{3,5})\s*[x×]\s*(\d{3,5})", text)
+    if m:
+        ratio = int(m.group(1)) / float(m.group(2))
+        if abs(ratio - 16 / 9.0) < 0.05:
+            return "16:9"
+        if abs(ratio - 9 / 16.0) < 0.03:
+            return "9:16"
+    die("format inconnu : %r (attendu : 16:9 ou 9:16, ou une définition `1920×1080` / `1080×1920`)" % raw)
 
 
 def norm(s):
@@ -1057,16 +1096,16 @@ def check_overlay_kinds(scenes):
             % (", ".join(sorted(OVERLAY_KINDS)), "\n  ".join(bad)))
 
 
-def assign_placements(scenes, avoid):
+def assign_placements(scenes, avoid, pool=OVERLAY_DEFAULTS):
     """Résout l'ancre de chaque étape (`_place`) et retourne les avertissements.
 
     `place:` du storyboard fait foi. Sinon : automatique et reproductible, parmi les deux quarts
     supérieurs hors zones à éviter, en évitant de répéter la position précédente ; le tirage ne
     dépend que de l'id de l'étape (jamais d'un aléa à chaque build)."""
     warns = []
-    defaults = [d for d in OVERLAY_DEFAULTS if d not in avoid]
+    defaults = [d for d in pool if d not in avoid]
     if not defaults:
-        defaults = list(OVERLAY_DEFAULTS)
+        defaults = list(pool)
         warns.append("les deux positions automatiques sont des zones à éviter : ignorées pour les étapes sans `place:`")
     prev = None
     for sc in scenes:
@@ -1102,9 +1141,12 @@ def scene_bg(scene):
     return "assets/bg/%s.jpg" % fond
 
 
-def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None, incrust=None):
+def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None, incrust=None,
+                       fmt=DEFAULT_FORMAT):
     """`cast` : None (rendu webcam historique) ou {"plan": CameraPlan, "crop": {...}}.
-    `incrust` : None, ou {"plan": CameraPlan(base `plein`), "crop": {...}} : mode incrustation."""
+    `incrust` : None, ou {"plan": CameraPlan(base `plein`), "crop": {...}} : mode incrustation.
+    `fmt` : `16:9` (rendu historique, inchangé à l'octet près) ou `9:16` (Short vertical)."""
+    vw, vh = FORMATS[fmt]
     cid = comp_id(idx)
     dur = float(scene.get("_dur") or total_dur)
     start = float(scene.get("_start") or 0)
@@ -1214,6 +1256,7 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
           .replace("__CAMCONTENT__", "cam-content-" + cid)
           .replace("__CAM__", "cam-frame-" + cid if camera_src else "__none__")
           .replace("__ID__", cid))
+    js = js.replace("__CAMGEOM__", CAM_GEOM_JS[fmt]).replace("__VW__", str(vw)).replace("__VH__", str(vh))
 
     if incrust:
         fond_html = ""          # la vidéo plein écran est le fond
@@ -1222,12 +1265,14 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
                      'data-layout-allow-overflow="">\n  <img class="fond" id="fond-img" src="%s" alt="">\n'
                      '  <div class="voile"></div>\n  <div class="vignette"></div>\n</div>' % (dur, esc(bg)))
 
+    links = ('<link rel="stylesheet" href="assets/style-joriel.css">\n'
+             '<link rel="stylesheet" href="assets/style-joriel-ext.css">' if fmt == DEFAULT_FORMAT
+             else '<link rel="stylesheet" href="assets/style-joriel-9x16.css">')
     return """<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"></head><body>
 <template>
-<link rel="stylesheet" href="assets/style-joriel.css">
-<link rel="stylesheet" href="assets/style-joriel-ext.css">
-<div id="root" data-composition-id="{cid}" data-width="1920" data-height="1080" data-duration="{dur:.2f}">
+{links}
+<div id="root" data-composition-id="{cid}" data-width="{vw}" data-height="{vh}" data-duration="{dur:.2f}">
 {fond}
 {cam}
 {steps}
@@ -1235,16 +1280,17 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
 <script>{js}</script>
 </template>
 </body></html>
-""".format(cid=cid, dur=dur, fond=fond_html, cam=cam_html, steps="\n".join(parts), js=js)
+""".format(links=links, cid=cid, vw=vw, vh=vh, dur=dur, fond=fond_html, cam=cam_html, steps="\n".join(parts), js=js)
 
 
-def render_index(title, slug, scenes, total_dur, audio_src, audio_dur):
+def render_index(title, slug, scenes, total_dur, audio_src, audio_dur, fmt=DEFAULT_FORMAT):
+    vw, vh = FORMATS[fmt]
     hosts = []
     for i, sc in enumerate(scenes):
         hosts.append('<div id="%s" class="clip" data-composition-id="%s" data-composition-src="compositions/%s.html" '
-                     'data-start="%.2f" data-duration="%.2f" data-track-index="0" data-width="1920" '
-                     'data-height="1080" data-track-kind="graphics"></div>'
-                     % (comp_id(i), comp_id(i), comp_id(i), sc["_start"], sc["_dur"]))
+                     'data-start="%.2f" data-duration="%.2f" data-track-index="0" data-width="%d" '
+                     'data-height="%d" data-track-kind="graphics"></div>'
+                     % (comp_id(i), comp_id(i), comp_id(i), sc["_start"], sc["_dur"], vw, vh))
     audio = ""
     if audio_src:
         audio = ('<audio id="voix" src="%s" data-start="0" data-duration="%.2f"></audio>'
@@ -1253,12 +1299,12 @@ def render_index(title, slug, scenes, total_dur, audio_src, audio_dur):
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1920, height=1080">
+<meta name="viewport" content="width={vw}, height={vh}">
 <title>{title}</title>
 <script src="assets/gsap.min.js"></script>
 </head>
 <body>
-<div id="root" data-composition-id="{slug}" data-start="0" data-duration="{dur:.2f}" data-width="1920" data-height="1080">
+<div id="root" data-composition-id="{slug}" data-start="0" data-duration="{dur:.2f}" data-width="{vw}" data-height="{vh}">
 {hosts}
 {audio}
 </div>
@@ -1268,7 +1314,7 @@ window.__timelines["{slug}"] = gsap.timeline({{ paused: true }});
 </script>
 </body>
 </html>
-""".format(title=esc(title), slug=esc(slug), dur=total_dur, hosts="\n".join(hosts), audio=audio)
+""".format(title=esc(title), slug=esc(slug), dur=total_dur, hosts="\n".join(hosts), audio=audio, vw=vw, vh=vh)
 
 
 # --------------------------------------------------------------------------- #
@@ -1390,6 +1436,9 @@ def main():
     ap.add_argument("--avoid", default=None,
                     help="incrustation : ancres à ne pas utiliser en automatique (ex. bas-droite) ; "
                          "défaut : `**Zones à éviter**` de l'en-tête")
+    ap.add_argument("--format", default=None,
+                    help="format de sortie : 16:9 (défaut) ou 9:16 (Short vertical, 1080×1920). Défaut : "
+                         "`**Format**` de l'en-tête du storyboard. Orthogonal au mode.")
     ap.add_argument("--slug", default=None)
     a = ap.parse_args()
 
@@ -1401,6 +1450,17 @@ def main():
         die("storyboard absent : %s (voir references/storyboard-format.md)" % sb_path)
 
     movie = parse_storyboard(sb_path, root)
+    fmt = parse_format(a.format or movie["meta"].get("format", ""))
+    VW, VH = FORMATS[fmt]
+    prep_path = root / "assets" / "prep.json"
+    if prep_path.exists():
+        try:
+            prep_fmt = parse_format(json.loads(prep_path.read_text(encoding="utf-8")).get("format", ""))
+        except (ValueError, SystemExit):
+            prep_fmt = fmt
+        if prep_fmt != fmt:
+            print("AVERTISSEMENT : le projet a été préparé en %s (assets/prep.json) mais la composition est en %s"
+                  % (prep_fmt, fmt), file=sys.stderr)
     scenes = movie["scenes"]
     figs, refs = movie["figures"], movie["refs"]
     schemas = movie["schemas"]
@@ -1439,6 +1499,11 @@ def main():
     total = max(sc["_start"] + sc["_dur"] for sc in scenes)
     audio_dur = wav_duration(root / audio) if audio else 0.0
     total = max(total, audio_dur)
+    if fmt != DEFAULT_FORMAT:
+        print("format %s : %d×%d" % (fmt, VW, VH))
+        if total > SHORT_MAX_S:
+            print("AVERTISSEMENT : %.0f s : au-delà de %.0f s, YouTube ne classe plus une vidéo verticale parmi les "
+                  "Shorts" % (total, SHORT_MAX_S), file=sys.stderr)
 
     # mode : option, sinon en-tête du storyboard
     mode_raw = norm(a.mode or movie["meta"].get("mode", ""))
@@ -1448,7 +1513,7 @@ def main():
         meta_avoid = [v for k, v in movie["meta"].items() if "eviter" in norm(k)]
         avoid, avoid_warns = parse_avoid(a.avoid, *meta_avoid)
         check_overlay_kinds(scenes)
-        for w in avoid_warns + assign_placements(scenes, avoid):
+        for w in avoid_warns + assign_placements(scenes, avoid, OVERLAY_DEFAULTS_BY_FORMAT[fmt]):
             print("AVERTISSEMENT : " + w, file=sys.stderr)
         if not camera:
             print("AVERTISSEMENT : mode incrustation sans vidéo (assets/cam-clean.mkv absent) : "
@@ -1477,12 +1542,12 @@ def main():
     cast = incrust = None
     if incrust_mode:
         # base `plein` unique ; Cast = crop aux intervalles détectés (aucun intervalle : jamais de crop)
-        crop = (cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px)
+        crop = (cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px, VW, VH)
                 if cast_meta and cast_segs else {})
         incrust = {"plan": CameraPlan(scenes, cast_segs, fixed_base=INCRUST_BASE), "crop": crop}
     elif cast_segs:
         plan = CameraPlan(scenes, cast_segs)
-        crop = cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px)
+        crop = cast_crop(cast_meta["width"], cast_meta["height"], a.cast_crop_top_px, VW, VH)
         cast = {"plan": plan, "crop": crop}
 
     # sorties
@@ -1562,6 +1627,11 @@ def main():
 
     # shorts de promotion : trois séquences percutantes, au format de `video short-extractor`
     shorts_off = a.no_shorts or norm(movie["meta"].get("shorts", "")) in ("aucun", "aucune", "non", "none", "sans", "0")
+    if fmt != DEFAULT_FORMAT and not shorts_off:
+        # la vidéo EST le short : pas de séquences de promotion à en extraire
+        shorts_off = True
+        if movie["shorts"]:
+            print("shorts de promotion : ignorés en format %s (la vidéo est déjà le short)" % fmt)
     seg_path = data / "shorts_segments.json"
     if movie["shorts"] and not shorts_off:
         sentences = shorts_plan.sentences_from_transcript(transcript) if transcript else []
@@ -1590,7 +1660,7 @@ def main():
         for st in sc["steps"]:
             st["_value"] = renderer.figure((st.get("figures") or [""])[0]).get("value", "")
         compositions.append(render_composition(renderer, sc, i, sc["_dur"], camera,
-                                               sc["_start"] if camera else 0, cast, incrust))
+                                               sc["_start"] if camera else 0, cast, incrust, fmt))
     (data / "scenes.json").write_text(
         json.dumps(scenes_json(scenes), ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -1599,18 +1669,28 @@ def main():
 
     slug = a.slug or re.sub(r"[^a-z0-9]+", "-", norm(movie["title"])).strip("-") or "film"
     (root / "index.html").write_text(
-        render_index(movie["title"], slug, scenes, total, audio, audio_dur), encoding="utf-8")
+        render_index(movie["title"], slug, scenes, total, audio, audio_dur, fmt), encoding="utf-8")
 
     # styles
     css = root / "assets" / "style-joriel.css"
-    if not css.exists():
-        demo_css = Path(__file__).resolve().parent.parent / "examples" / "demo" / "assets" / "style-joriel.css"
-        if demo_css.exists():
-            css.write_text(demo_css.read_text(encoding="utf-8"), encoding="utf-8")
-            print("écrit : assets/style-joriel.css (copie de la démo ; les primitives absentes sont dans style-joriel-ext.css)")
-        else:
+    demo_css = Path(__file__).resolve().parent.parent / "examples" / "demo" / "assets" / "style-joriel.css"
+    if fmt != DEFAULT_FORMAT:
+        # une seule feuille, dérivée du CSS 16:9 du projet (ou de la démo) : `vh` → unité fixe, puis redéfinitions
+        src = css if css.exists() else demo_css
+        if not src.exists():
             die("assets/style-joriel.css absent et modèle de démo introuvable")
-    (root / "assets" / "style-joriel-ext.css").write_text(CSS_EXT, encoding="utf-8")
+        (root / "assets").mkdir(exist_ok=True)
+        (root / "assets" / "style-joriel-9x16.css").write_text(css_vertical(src.read_text(encoding="utf-8")),
+                                                               encoding="utf-8")
+        print("écrit : assets/style-joriel-9x16.css (format %s)" % fmt)
+    else:
+        if not css.exists():
+            if demo_css.exists():
+                css.write_text(demo_css.read_text(encoding="utf-8"), encoding="utf-8")
+                print("écrit : assets/style-joriel.css (copie de la démo ; les primitives absentes sont dans style-joriel-ext.css)")
+            else:
+                die("assets/style-joriel.css absent et modèle de démo introuvable")
+        (root / "assets" / "style-joriel-ext.css").write_text(CSS_EXT, encoding="utf-8")
 
     # schémas : un élément que aucune étape ne montre n'apparaîtra jamais (par exemple ajouté dans Excalidraw puis oublié)
     for sid, sch in schemas.items():
