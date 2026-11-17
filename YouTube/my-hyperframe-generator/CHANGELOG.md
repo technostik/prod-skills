@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.18.0
+
+- **Format de sortie 9:16 (Short vertical), orthogonal au mode.** `**Format** : 1080×1920 @ 30 fps` dans l'en-tête du storyboard, ou `build.py --format 9:16` / `prepare.py init --format 9:16`. Les trois modes (auto, webcam, incrustation) s'appliquent : même storyboard, mêmes primitives, mêmes trois modalités de caméra. Une seule vidéo, un seul chapitre : pas de concaténation, pas de shorts de promotion (`## 6. Shorts` ignoré), 180 s au plus (avertissement au-delà).
+- `scripts/short-take.py` : la prise par défaut est la **dernière vidéo de `$HF_VIDEOS_DIR`** (`~/Vidéos`, hors sous-dossiers et fichiers en cours d'écriture) ; même contrat que `concat-mkv.sh` (`cam-original.mkv`, `voix-brut.wav`) + `take.json` ; avertit si la prise n'est pas en 9:16.
+- `build.py` : viewport, géométrie de la caméra (`pip` 252×448, `full` 756×1344, `cast` plein écran), crop du filet Cast, ancres de l'incrustation (défaut : quarts inférieurs) paramétrés par le format. CSS : `assets/style-joriel-9x16.css`, dérivé du CSS 16:9 (`vh` → `calc(N * var(--u))`, même taille en px) + redéfinitions (marges de sécurité de YouTube Shorts, `versus` empilé, schémas dans une bande 16:9 centrale). **Le 16:9 est inchangé à l'octet près.**
+- `detect-cast.py` : la zone et l'épaisseur du filet suivent le **petit côté** de l'image (sinon le filet de 10 px d'une prise 1080×1920 n'était pas repéré). `prepare.py` : `init --format`, chapitre unique en 9:16.
+- Test : `scripts/test-vertical.py` (dont Chromium). Limites : schémas non redessinés pour le portrait ; texte des incrustations réduit de moitié ; pas d'inserts.
+
 ## 1.17.0
 
 - **Fonds en plein écran, références en entier.** Un fond (`BG-xx`, `kind: image` avec `src`) est toujours plein écran, rogné au besoin (`cover`). Une référence (`ref:`, `ref-shot`, fichier d'un `ref-card`) se voit **toujours en entier** (`contain`) : les bandes qui restent sont transparentes et montrent le fond de la scène. `fit: cover | contain` force l'autre choix sur une étape. Le CSS étendu porte la règle, donc un projet dont `style-joriel.css` est ancien en profite. Test : `scripts/test-media-fit.py` (balisage, puis pixels dans Chromium).

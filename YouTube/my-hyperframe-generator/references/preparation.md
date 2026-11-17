@@ -52,6 +52,15 @@ storyboard (`references/music.md`) et se génèrent après le build.
 5. Fonds, références, chiffres, schémas.
 6. `python3 scripts/prepare.py chapters`, puis `python3 scripts/prepare.py check`.
 
+### Short (format 9:16)
+
+`python3 scripts/prepare.py init --mode <mode> --format 9:16`. Une seule prise, un seul chapitre :
+
+1. `SCENARIO.md` court (un seul titre) ; le locuteur dicte, en vertical (auto : le TTS lit le script).
+2. La prise : `python3 scripts/short-take.py` (la dernière vidéo de `$HF_VIDEOS_DIR`, ou un fichier en argument) à la place de `concat-mkv.sh` ; puis `clean-posthoc.py`, `detect-cast.py`, `transcript-export.py` comme en webcam.
+3. Fonds en **1080 × 1920** ; références, chiffres, schémas (dessinés en 16:9, posés dans une bande centrale).
+4. `python3 scripts/prepare.py chapters [--title …]` écrit un chapitre unique (pas de `chapters.txt`) ; `prepare.py check` exige un seul chapitre.
+
 ## Commandes
 
 ```bash

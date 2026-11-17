@@ -104,6 +104,18 @@ Aucune déformation. Les dimensions de la source viennent de `cast-segments.json
 
 La timeline est calculée en Python puis injectée telle quelle dans chaque composition (`CAMEV`, temps locaux de la scène, intervalles qui commencent avant ou traversent plusieurs scènes compris). Chaque tween porte ses valeurs de départ (`fromTo`, `immediateRender: false`) et il n'y a aucun callback : les seeks avant et arrière sont déterministes. Le résultat complet est écrit dans `data/camera.json`.
 
+## Format 9:16 (Short)
+
+La prise est déjà verticale (1080×1920) : le cadre garde son ratio 9:16 et n'est jamais déformé. Géométrie de `applyCam` en px sur 1080×1920 (`CAM_GEOM_JS` dans `build.py`) :
+
+| Valeur | 16:9 (1920×1080) | 9:16 (1080×1920) |
+|---|---|---|
+| `pip` | 422×238 en (1460, 821) | 252×448 en (40, 1052) : en bas à gauche, au-dessus des légendes de YouTube Shorts |
+| `full` | 960×540 centré (50 %) | 756×1344 en (162, 288) (70 %) |
+| `cast` | 1920×1080 | 1080×1920, filet vert de 10 px retiré (crop `cast_crop` avec le viewport 1080×1920) |
+
+`detect-cast.py` mesure le filet d'après le **petit côté** de l'image : 10 px en 1080×1920 comme en 1920×1080. Une prise 16:9 donnée à un Short est rognée au centre (`object-fit: cover`) : avertissement de `short-take.py`.
+
 ## Commandes (mode webcam)
 
 Même init que `SKILL.md` § Projet, puis :

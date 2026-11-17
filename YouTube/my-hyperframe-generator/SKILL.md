@@ -1,10 +1,10 @@
 ---
 name: hyperframe-joriel
-description: Build a Joriel-styled HyperFrames video in one of three modes — auto (the script is the transcript, vocalized with TTS), webcam (a take read from the script; the video alternates with the visuals) or incrustation (same take, but the video stays full screen under the visuals, which are overlaid in one of nine screen zones). The order is fixed: the scenario, then a preparation stage (voice and transcript first, then backgrounds, references, chapters, screencasts, schemas), then a structured storyboard written on the measured transcript, then scripts/build.py. Includes animated Excalidraw schemas, punctual orchestral music mixed under the voice, and full-screen backgrounds with full-image references. The worked chapter is examples/demo. Use when the user asks for hyperframe-joriel.
+description: Build a Joriel-styled HyperFrames video in one of three modes — auto (the script is the transcript, vocalized with TTS), webcam (a take read from the script; the video alternates with the visuals) or incrustation (same take, but the video stays full screen under the visuals, which are overlaid in one of nine screen zones). The order is fixed: the scenario, then a preparation stage (voice and transcript first, then backgrounds, references, chapters, screencasts, schemas), then a structured storyboard written on the measured transcript, then scripts/build.py. Includes animated Excalidraw schemas, punctual orchestral music mixed under the voice, and full-screen backgrounds with full-image references. The worked chapter is examples/demo. Output format 16:9 (default) or 9:16 (a vertical Short from one take, orthogonal to the mode). Use when the user asks for hyperframe-joriel.
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.17.0
+version: 1.18.0
 ---
 
 # Hyperframe-joriel
@@ -21,6 +21,8 @@ Cette skill est découpée en un **socle commun** (ce fichier) et **trois sous-s
 | Rien n'est enregistré, le TTS lira le script. Script = transcript. | **auto** | `modes/auto.md` |
 | 1..n `.mkv` déjà tournés en lisant le script, sans composition. L'écart est faible. La vidéo **alterne** avec les visuels (coin, mi-écran, absente, ou plein écran pour un screencast). | **webcam** | `modes/webcam.md` |
 | Les mêmes `.mkv`, mais la vidéo **reste plein écran** (webcam ou screencast OBS) et les visuels sont **posés par-dessus**. | **incrustation** | `modes/incrustation.md` |
+
+**Format de sortie** (orthogonal au mode) : 16:9 par défaut, ou **9:16** pour un Short vertical (§ Format 9:16). Ce n'est pas un quatrième mode : les trois modes s'y appliquent.
 
 Le choix entre **webcam** et **incrustation** est celui de l'utilisateur, pour toute la vidéo ; le LLM ne le déduit pas du contenu. S'il n'est pas dit, le demander. S'il manque l'ordre des tronçons `.mkv`, le demander aussi. Le mode s'écrit dans l'en-tête du storyboard : `**Mode** : auto | webcam | incrustation`. Le mode `slides` (le storyboard avant la prise) n'est plus utilisé : il est archivé dans `archive/slides/README.md`.
 
@@ -68,6 +70,16 @@ Variables d'environnement (valeurs par défaut entre parenthèses). Aucun chemin
 | `HF_OVERLAYS_DIR` | overlays lus par le studio | `$HF_VIDEOS_DIR/OBS/assets` |
 
 Dépendances : Node ≥ 22, `hyperframes@0.9.15`, FFmpeg, Python 3, Chrome ou Edge (prise studio), `yt-dlp` (inserts seulement). Skills compagnes : `thesvg`, `media-use`, `hyperframes`, `hyperframe-scenario` (optionnelle), `report` (diagnostic). CLI fast-market : `image`, `video`.
+
+## Format 9:16 (Short)
+
+Un format de sortie, pas un mode : `**Format** : 1080×1920 @ 30 fps` dans l'en-tête du storyboard (ou `build.py --format 9:16`, `prepare.py init --format 9:16`). Les trois modes s'appliquent, avec le même storyboard et les mêmes primitives. Différences :
+
+- **Une seule vidéo, un seul chapitre.** Pas de concaténation de tronçons. La prise par défaut est **la dernière vidéo de `$HF_VIDEOS_DIR`** (`~/Vidéos`, comme en 16:9) : `python3 scripts/short-take.py` (`--which` pour voir laquelle, ou un fichier en argument), puis `clean-posthoc.py`, `detect-cast.py`, `transcript-export.py` comme d'habitude. `prepare.py chapters` écrit alors un chapitre unique.
+- **La webcam est déjà en 9:16** (sinon avertissement : rognée au centre). Caméra `pip` / `full` / `cast` et `incrustation` en 1080×1920 (`references/webcam.md`, `modes/incrustation.md`).
+- **Pas de shorts de promotion** : la vidéo *est* le short (`## 6. Shorts` ignoré). Au plus 180 s (avertissement au-delà).
+- Le CSS est dérivé du CSS 16:9 dans `assets/style-joriel-9x16.css` ; marges de sécurité (zones recouvertes par l'interface de YouTube Shorts) ; `versus` empilé ; les schémas (dessinés en 16:9) sont posés dans une bande centrale ; fonds en 1080×1920.
+- Pas d'inserts. Sortie : le mp4 vertical de `npx hyperframes render`, directement le short.
 
 ## Projet
 
@@ -219,7 +231,7 @@ python3 scripts/build.py \
   [--audio assets/voix.wav] \
   [--camera assets/cam-clean.mkv] \
   [--cast-segments assets/cast-segments.json] \
-  [--mode auto|webcam|incrustation] [--avoid bas-droite] \
+  [--mode auto|webcam|incrustation] [--avoid bas-droite] [--format 16:9|9:16] \
   [--slug mon-film]
 ```
 

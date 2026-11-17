@@ -24,7 +24,7 @@ Le LLM décide **quel passage devient quelle primitive** (éditorial). Le code n
 **Langage visuel** : references/visual-language-joriel.md
 **Mode** : auto | webcam | incrustation
 **Durée estimée** : ≈ N min
-**Format** : 1920×1080 @ 30 fps
+**Format** : 1920×1080 @ 30 fps   (ou `1080×1920 @ 30 fps` : Short vertical 9:16, voir `references/shorts.md`)
 
 ## 0. Fiche
 

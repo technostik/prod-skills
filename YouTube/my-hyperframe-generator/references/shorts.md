@@ -1,5 +1,7 @@
 # Shorts de promotion
 
+> Ce fichier traite des shorts **extraits** d'une vidéo 16:9. Pour **produire** un Short vertical (format 9:16, une seule vidéo, un seul chapitre), voir `SKILL.md` § Format 9:16 : rien n'est extrait, la vidéo finale est le short, et `## 6. Shorts` est ignoré.
+
 En écrivant le storyboard, le LLM **propose trois séquences** de la vidéo, **3 minutes au plus chacune**, parmi les plus
 percutantes, pour en faire la promo. Elles sont déclarées dans la section `## 6. Shorts` du storyboard ; `build.py` en tire
 `data/shorts_segments.json`, au format que lit la commande `video short-extractor` de fast-market.

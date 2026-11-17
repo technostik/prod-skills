@@ -51,6 +51,10 @@ Une zone est le **centre d'un sous-rectangle** de l'écran. L'écran coupé en q
 
 Écritures acceptées : les noms ci-dessus, `coin supérieur droite`, `coin inférieur gauche`, `plein centre`, `tl` `tr` `bl` `br` `t` `b` `l` `r` `c`, sans tenir compte des accents ni de la casse. `place: auto` force la position automatique. Un nom inconnu donne un avertissement et la position automatique.
 
+### Format 9:16
+
+Les neuf zones existent aussi sur 1080×1920 (quarts de 540×960, scène réduite de la même échelle). La position automatique par défaut est alors **un des deux quarts inférieurs** (`bas-gauche`, `bas-droite`) : sur une prise verticale le visage occupe le haut et le milieu. Le texte, réduit de moitié, reste plus petit qu'en 16:9 : préférer `kw` et `count` courts, ou `place: centre` (échelle 0,75) pour l'essentiel.
+
 ### Position automatique
 
 Par défaut : le milieu d'un des deux quarts supérieurs (`haut-gauche`, `haut-droite`). Le tirage est **reproductible** : il ne dépend que de l'identifiant de l'étape, jamais d'un aléa à chaque build, et la même position n'est jamais choisie deux fois de suite (hors `place:` explicite). Les zones à éviter sont exclues. Le résultat est écrit dans `data/steps.json` (`place`, `place_source` : `auto` ou `storyboard`).
