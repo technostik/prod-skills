@@ -50,8 +50,8 @@ SCHEMA_VERSION = 1
 
 # --------------------------------------------------------------------------- #
 # Paramètres de détection — tout se règle ici.
-# Les valeurs en « px » sont données pour une image de 1080 px de haut et sont
-# mises à l'échelle si la vidéo a une autre hauteur.
+# Les valeurs en « px » sont données pour une image dont le petit côté mesure 1080 px (1920×1080 ou, en
+# format 9:16, 1080×1920 : le filet OBS y mesure aussi 10 px) et sont mises à l'échelle sinon.
 # --------------------------------------------------------------------------- #
 
 # Zone examinée en haut de l'image (px). Le filet mesure 10 px : 20 laisse voir
@@ -134,9 +134,11 @@ def probe(path: Path) -> dict:
 # Lecture de la bande supérieure
 # --------------------------------------------------------------------------- #
 
-def zone_rows(height: int) -> int:
-    """Hauteur source (px) de la zone examinée, mise à l'échelle de l'image."""
-    return max(4, min(height, round(ZONE_PX * height / 1080)))
+def zone_rows(height: int, width: int = 0) -> int:
+    """Hauteur source (px) de la zone examinée, mise à l'échelle de l'image (d'après son petit côté : en 9:16
+    le filet OBS mesure 10 px comme en 16:9, pas 18)."""
+    ref = min(height, width) if width else height
+    return max(4, min(height, round(ZONE_PX * ref / 1080)))
 
 
 def read_band(path: Path, width: int, height: int):
@@ -145,7 +147,7 @@ def read_band(path: Path, width: int, height: int):
     ffmpeg ne décode que le flux vidéo, recadre la bande du haut, la réduit en
     largeur (moyenne `area`) et la sert brute sur stdout. Rien n'est écrit sur disque.
     """
-    zr = zone_rows(height)
+    zr = zone_rows(height, width)
     vf = "crop=%d:%d:0:0,scale=%d:%d:flags=area,format=rgb24" % (width, zr, SAMPLE_COLS, ZONE_PX)
     cmd = ["ffmpeg", "-v", "error", "-nostdin", "-i", str(path), "-map", "0:v:0", "-an", "-sn",
            "-vsync", "passthrough", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
