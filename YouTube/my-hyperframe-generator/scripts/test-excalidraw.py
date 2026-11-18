@@ -134,7 +134,7 @@ def part_a():
     ed = {x["id"]: x for x in S0.edges}
     check("flèche pointillée : manuelle (jamais montrée toute seule), l'autre reste automatique",
           ed["Intelligence>Filtre"]["manual"] and not ed["Vie>Intelligence"]["manual"], {k: v["manual"] for k, v in ed.items()})
-    b0, _, _ = sa.compile_beats(S0, "u", [{"id": "X#0", "rel": 0, "params": {"show": ["Intelligence", "Filtre"]}},
+    b0, _, _, _ = sa.compile_beats(S0, "u", [{"id": "X#0", "rel": 0, "params": {"show": ["Intelligence", "Filtre"]}},
                                           {"id": "X#1", "rel": 5, "params": {"show": ["Intelligence>Filtre"]}}])
     check("flèche pointillée : n'apparaît qu'à l'étape qui la nomme",
           not [o for o in b0[0]["ops"] if o["op"] == "edge"] and len([o for o in b0[1]["ops"] if o["op"] == "edge"]) == 1, [o["op"] for o in b0[0]["ops"]])
@@ -181,7 +181,7 @@ def part_a():
     # compile : même moteur que les autres schémas
     items = [{"id": "X#0", "rel": 1.0, "params": {"show": ["La galaxie", "Vie", "Intelligence"]}},
              {"id": "X#1", "rel": 5.0, "params": {"show": ["Filtre", "Intelligence>Filtre"], "focus": ["Filtre"], "zoom": ["Filtre"], "glow": ["Filtre"]}}]
-    beats, shown, warns = sa.compile_beats(S, "u", items)
+    beats, shown, warns, _ever = sa.compile_beats(S, "u", items)
     ops0 = [o["op"] for o in beats[0]["ops"]]
     check("compile : formes puis lien automatique Vie>Intelligence", ops0.count("node") == 3 and ops0.count("edge") == 1, ops0)
     glow = [o for o in beats[1]["ops"] if o["op"] == "glow"]

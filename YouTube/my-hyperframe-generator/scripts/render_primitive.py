@@ -355,7 +355,8 @@ class Primitives:
         self.figures = figures or {}
         self.refs = refs or {}
         self.schemas = schemas or {}      # registre §1c : {Dxx: schema_anim.Schema}
-        self._schema_shown = {}           # éléments déjà montrés, par schéma (d'un groupe au suivant)
+        self._schema_shown = {}           # encore à l'écran, porté au groupe suivant
+        self._schema_ever = {}            # montré au moins une fois, même masqué ensuite par hide
         self.warnings = []
 
     def warn(self, msg):
@@ -481,6 +482,7 @@ class Primitives:
         out = schema_anim.render_group(sch, uid, beats, carry=self._schema_shown.get(sch.id),
                                        cam_frame=cam_frame, sel=sel)
         self._schema_shown[sch.id] = out["shown"]
+        self._schema_ever[sch.id] = self._schema_ever.get(sch.id, set()) | out.get("ever", out["shown"])
         for w in out["warnings"]:
             self.warn(w)
         return out

@@ -549,7 +549,8 @@ def compile_beats(schema, uid, items, carry=None):
     l'identique quel que soit l'ordre des seeks.
     Retourne (beats, éléments montrés à la fin, avertissements).
     """
-    shown = set(carry or ())            # clés ("n", i) / ("e", i)
+    shown = set(carry or ())            # clés ("n", i) / ("e", i) encore à l'écran
+    ever = set(shown)                   # déjà montré au moins une fois (même si hide ensuite)
     opac = {k: 1.0 for k in shown}
     cam = IDENT
     beats, warns = [], []
@@ -588,6 +589,7 @@ def compile_beats(schema, uid, items, carry=None):
         for k, n in enumerate(new_nodes):
             ops.append({"op": "node", "dt": round(dt + k * 0.16, 3), "el": _pid(uid, "n", n["i"])})
             shown.add(("n", n["i"]))
+            ever.add(("n", n["i"]))
             opac[("n", n["i"])] = 1.0
         t_edges = dt + len(new_nodes) * 0.16 + (0.15 if new_nodes else 0.0)
         new_edges = [e for e in edges if ("e", e["i"]) not in shown]
@@ -607,6 +609,7 @@ def compile_beats(schema, uid, items, carry=None):
                         "path": _pid(uid, "e", e["i"]) + "-p", "heads": heads,
                         "label": (_pid(uid, "l", e["i"]) if e["label"] else None)})
             shown.add(("e", e["i"]))
+            ever.add(("e", e["i"]))
             opac[("e", e["i"])] = 1.0
         t_after = t_edges + len(new_edges) * 0.3 + (0.45 if new_edges else 0.0)
         fresh = {("n", n["i"]) for n in new_nodes} | {("e", e["i"]) for e in new_edges}
@@ -659,6 +662,37 @@ def compile_beats(schema, uid, items, carry=None):
             ops.append({"op": "glow", "kind": "edge", "dt": round(gdt + (len(gnodes) + k) * 0.1, 3),
                         "el": _pid(uid, "e", e["i"]) + "-p"})
 
+        # 5) hide : sortie temporaire. L'élément quitte l'écran et l'état porté au groupe suivant,
+        # donc il ne reste pas dans le schéma final.
+        hide_raw = p.get("hide")
+        if hide_raw not in (None, "", False):
+            hn, he, hu = schema.resolve(hide_raw)
+            for u in hu:
+                warns.append("étape %s : `hide` référence inconnue `%s` (schéma %s)" % (sid, u, schema.id))
+            groups = {}
+            for n in hn:
+                key = ("n", n["i"])
+                if key not in shown:
+                    warns.append("étape %s : `hide` sur %s, pas encore affiché (schéma %s)" % (sid, n["id"], schema.id))
+                    continue
+                groups.setdefault(opac.get(key, 1.0), []).append(_pid(uid, "n", n["i"]))
+                shown.discard(key)
+                opac[key] = 0.0
+            for e in he:
+                key = ("e", e["i"])
+                if key not in shown:
+                    warns.append("étape %s : `hide` sur le lien %s, pas encore affiché (schéma %s)"
+                                 % (sid, e["id"], schema.id))
+                    continue
+                els = [_pid(uid, "e", e["i"])]
+                if e["label"]:
+                    els.append(_pid(uid, "l", e["i"]))
+                groups.setdefault(opac.get(key, 1.0), []).extend(els)
+                shown.discard(key)
+                opac[key] = 0.0
+            for frm, els in groups.items():
+                ops.append({"op": "fade", "dt": round(t_after, 3), "els": els, "from": frm, "to": 0.0})
+
         if not ops:
             warns.append("étape %s sans effet : aucun `show`, `glow`, `focus` ni `zoom` utile (schéma %s)"
                          % (sid, schema.id))
@@ -673,7 +707,7 @@ def compile_beats(schema, uid, items, carry=None):
         if it.get("camera") == "full":
             warns.append("étape %s : `camera: full` recouvre le centre du schéma ; préférer `off` ou `pip`" % sid)
         beats.append(beat)
-    return beats, shown, warns
+    return beats, shown, warns, ever
 
 
 # --------------------------------------------------------------------------- #
@@ -745,11 +779,18 @@ RUNTIME = r"""
       } else if (o.op === "fade") {
         tl.fromTo(o.els.map(function (e) { return "#" + e; }).join(","), { opacity: o.from }, { opacity: o.to, duration: 0.5, ease: "power2.out", immediateRender: false }, t);
       } else if (o.op === "glow" && o.kind === "node" && o.fx === "filter") {
-        tl.to("#" + o.el, { scale: 1.1, filter: "drop-shadow(0 0 26px " + o.halo + ")", duration: 0.28, yoyo: true, repeat: 1, ease: "power2.inOut" }, t);
+        // Pas de yoyo/repeat : HyperFrames seek la timeline, un repeat ne se referme pas et le nœud pulse jusqu'à la fin.
+        var restF = "drop-shadow(0 0 0px rgba(0,0,0,0))";
+        tl.fromTo("#" + o.el, { scale: 1, filter: restF },
+          { scale: 1.08, filter: "drop-shadow(0 0 22px " + o.halo + ")", duration: 0.22, ease: "power2.out", immediateRender: false }, t);
+        tl.to("#" + o.el, { scale: 1, filter: restF, duration: 0.34, ease: "power2.inOut", immediateRender: false }, t + 0.22);
       } else if (o.op === "glow" && o.kind === "node") {
-        tl.to("#" + o.el, { scale: 1.14, boxShadow: "0 0 64px 8px " + o.halo, duration: 0.28, yoyo: true, repeat: 1, ease: "power2.inOut" }, t);
+        tl.fromTo("#" + o.el, { scale: 1, boxShadow: "0 0 0px 0px rgba(0,0,0,0)" },
+          { scale: 1.08, boxShadow: "0 0 36px 4px " + o.halo, duration: 0.22, ease: "power2.out", immediateRender: false }, t);
+        tl.to("#" + o.el, { scale: 1, boxShadow: "0 0 0px 0px rgba(0,0,0,0)", duration: 0.34, ease: "power2.inOut", immediateRender: false }, t + 0.22);
       } else if (o.op === "glow") {
-        tl.fromTo("#" + o.el, { strokeWidth: 5 }, { strokeWidth: 12, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut", immediateRender: false }, t);
+        tl.fromTo("#" + o.el, { strokeWidth: 5 }, { strokeWidth: 11, duration: 0.22, ease: "power2.out", immediateRender: false }, t);
+        tl.to("#" + o.el, { strokeWidth: 5, duration: 0.34, ease: "power2.inOut", immediateRender: false }, t + 0.22);
       }
     });
   });
@@ -763,7 +804,7 @@ def render_group(schema, uid, items, carry=None, cam_frame=None, sel=None):
     Retourne {"inner": HTML (numéros d'étape + schéma), "js": JS à ajouter à la composition,
               "shown": éléments montrés (à reporter sur le groupe suivant), "warnings": [...]}.
     """
-    beats, shown, warns = compile_beats(schema, uid, items, carry)
+    beats, shown, warns, ever = compile_beats(schema, uid, items, carry)
     numbers = []
     for k, b in enumerate(beats):
         b["no"] = "%s-no%d" % (uid, k)
@@ -774,7 +815,7 @@ def render_group(schema, uid, items, carry=None, cam_frame=None, sel=None):
     payload = {"stage": "#%s-stage" % uid, "sel": sel or "", "camFrame": cam_frame or "",
                "beats": beats}
     js = "\n" + RUNTIME.replace("__G__", json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
-    return {"inner": inner, "js": js, "shown": shown, "warnings": warns}
+    return {"inner": inner, "js": js, "shown": shown, "ever": ever, "warnings": warns}
 
 
 def unseen(schema, shown):

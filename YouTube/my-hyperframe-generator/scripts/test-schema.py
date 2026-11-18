@@ -205,7 +205,7 @@ def part_a():
         {"id": "I1.1#2", "rel": 9.0, "params": {"show": ["filtre"], "zoom": ["filtre"], "focus": ["filtre"]}},
         {"id": "I1.1#3", "rel": 12.0, "params": {"focus": "all", "zoom": "all"}},
     ]
-    beats, shown, warns = sa.compile_beats(S, uid, items)
+    beats, shown, warns, _ever = sa.compile_beats(S, uid, items)
     check("beats : un par étape, temps conservés", [b["t"] for b in beats] == [2.0, 6.0, 9.0, 12.0])
     b0 = beats[0]["ops"]
     check("beat 0 : 2 nœuds + le lien auto vie>intel", len(ids(b0, "node")) == 2 and len(ids(b0, "edge")) == 1, b0)
@@ -232,17 +232,17 @@ def part_a():
     check("tout le schéma est montré à la fin", len([k for k in shown if k[0] == "n"]) == 4, shown)
 
     # robustesse
-    _, _, w = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"show": ["inconnu"]}}])
+    _, _, w, _ = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"show": ["inconnu"]}}])
     check("référence inconnue : avertissement, pas d'exception",
           any("référence inconnue" in x for x in w) and any("sans effet" in x for x in w), w)
-    _, _, w = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"glow": ["vie"]}}])
+    _, _, w, _ = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"glow": ["vie"]}}])
     check("glow sur un nœud pas encore montré : avertissement", any("pas encore affiché" in x for x in w), w)
-    _, _, w = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"show": ["vie"]}, "camera": "full"}])
+    _, _, w, _ = sa.compile_beats(S, uid, [{"id": "X#0", "rel": 0, "params": {"show": ["vie"]}, "camera": "full"}])
     check("camera full sur un schéma : avertissement", any("camera: full" in x for x in w), w)
 
     # persistance d'un groupe à l'autre
-    _, shown1, _ = sa.compile_beats(S, uid, items[:1])
-    beats2, _, _ = sa.compile_beats(S, uid, [{"id": "I9.1#0", "rel": 0, "params": {"show": ["vie", "tech"]}}], carry=shown1)
+    _, shown1, _, _ = sa.compile_beats(S, uid, items[:1])
+    beats2, _, _, _ = sa.compile_beats(S, uid, [{"id": "I9.1#0", "rel": 0, "params": {"show": ["vie", "tech"]}}], carry=shown1)
     nodes2 = [o["el"] for o in ids(beats2[0]["ops"], "node")]
     check("carry : un nœud déjà montré ne réapparaît pas", nodes2 == [uid + "-n2"], nodes2)
     html = sa.stage_html(S, uid, shown1)

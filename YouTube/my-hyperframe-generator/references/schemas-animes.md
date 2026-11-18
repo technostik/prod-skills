@@ -126,6 +126,7 @@ schéma, les suivantes le reprennent.
 | `glow` | coup de projecteur sur des éléments **déjà visibles** |
 | `focus` | ces éléments restent pleins, **tout le reste visible passe en retrait** (25 %), jusqu'au prochain `focus`. `"all"` rétablit tout |
 | `zoom` | la caméra cadre ces éléments (zoom jusqu'à 2,4×). `"all"` revient à la vue d'ensemble. Absent : la caméra ne bouge pas |
+| `hide` | ces éléments **disparaissent** et ne font plus partie de l'état. Ils ne restent pas dans le schéma final. Mots clés temporaires d'une étape |
 
 **Références** : `vie` (un nœud) · `vie>intel` (un lien, par ses nœuds, ou son `id`) · `@passe` (un
 groupe : ses nœuds et les liens entre eux) · `"all"` (tout). Une liste JSON, ou `"vie, intel"`.

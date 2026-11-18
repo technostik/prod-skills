@@ -1719,7 +1719,7 @@ def main():
 
     # schémas : un élément que aucune étape ne montre n'apparaîtra jamais (par exemple ajouté dans Excalidraw puis oublié)
     for sid, sch in schemas.items():
-        shown = renderer._schema_shown.get(sid)
+        shown = renderer._schema_ever.get(sid) or renderer._schema_shown.get(sid)
         if shown is None:
             renderer.warn("schéma %s déclaré mais utilisé par aucune étape" % sid)
             continue
