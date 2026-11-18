@@ -145,6 +145,8 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 >
 > 15. **Shorts de promotion** (`references/shorts.md`). Format 16:9 seulement : en `**Format** : 1080×1920` la vidéo est déjà le short, n'écris pas de `## 6. Shorts`, vise 180 s au plus et une accroche dans les trois premières secondes. Une fois le storyboard écrit, propose **trois séquences** de la vidéo, **3 minutes au plus chacune**, parmi les plus percutantes, pour en faire la promo : une punchline, une métaphore forte, un chiffre choc, une thèse tranchée. Elles sont **autonomes** (comprises sans le reste), s'ouvrent sur une **accroche** dans les trois premières secondes, se terminent sur une **chute**, durent de préférence 20 à 60 s, et sont **trois idées différentes** sans chevauchement. Déclare-les en `## 6. Shorts` (`ID | Titre | Début | Fin | Pourquoi`) en citant des **étapes** (début = début de l'étape de départ, fin = fin de l'étape d'arrivée) ; le titre est l'accroche (≤ 100 caractères).
 
+> 16. **Short (`**Format** : 1080×1920`) : début animé et rythme dense.** Un Short dont le début n'est pas animé n'est pas regardé : la première étape tombe à `t=0.00` (jamais d'écran fixe ni de titre posé qui attend), et c'est la plus forte de la séquence (`punch`, `count` ou `strike` en grand, jamais un simple `title`). Pendant les **30 premières secondes** : une étape toutes les **2 à 4 s** (pas de plus de 4 s sans changement à l'image), des étapes courtes, des primitives qui bougent (`count`, `strike`, `punch`, `stamp`, `versus`, `chain`, `diverge`, un `schema` animé) plutôt que du texte qui reste ; en `webcam` et `incrustation`, alterner les états de caméra (`pip` ↔ `full` ↔ `cast`) ou les positions plutôt que de garder un cadre immobile. Passé les 30 s, le rythme peut se détendre un peu (étapes de 3 à 6 s), sans retomber à l'écran fixe.
+
 ---
 
 ## Checklist de validation (à passer avant de rendre le STORYBOARD.md)
@@ -163,6 +165,7 @@ Selon le mode (le sous-skill `modes/<mode>.md` est fourni lui aussi) :
 - [ ] Format markdown exact (tableaux, tirets, indentation)
 - [ ] Webcam : `camera` ∈ `off`/`pip`/`full`/`cast` ; `cast` seulement là où `cast-segments.json` recoupe l'étape
 - [ ] Schémas : déclarés en §1c (JSON valide, nœuds dans la scène et sans chevauchement), `Dxx` cité par la 1re étape, éléments montrés dans l'ordre de la parole, `zoom` / `focus` ramenés à `"all"` quand on revient à l'ensemble
+- [ ] Short 9:16 : première étape à `t=0.00` et la plus forte ; une étape toutes les 2 à 4 s pendant les 30 premières secondes ; caméra alternée (webcam, incrustation)
 - [ ] Shorts (16:9 seulement) : trois séquences en `## 6. Shorts`, chacune ≤ 180 s, autonome, avec une accroche et une chute, sans chevauchement, citées par étapes
 - [ ] Musique : registre §1d (prompts en anglais, `no vocals`), `music:` sur les moments forts seulement, ≤ ≈ 35 % du film, aucune musique sous un chiffre ou une démonstration, durée ≥ 4 s, pas de chevauchement
 - [ ] Incrustation : aucun `camera`, primitives lisibles en surimpression uniquement, `place:` seulement sur demande

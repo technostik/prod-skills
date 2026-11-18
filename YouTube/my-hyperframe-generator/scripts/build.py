@@ -65,6 +65,11 @@ FORMAT_ALIASES = {"16:9": "16:9", "16x9": "16:9", "paysage": "16:9", "horizontal
                   "9:16": "9:16", "9x16": "9:16", "vertical": "9:16", "portrait": "9:16", "short": "9:16",
                   "shorts": "9:16"}
 SHORT_MAX_S = 180.0         # au-delà, YouTube ne classe plus la vidéo verticale parmi les Shorts
+# Rythme d'un Short : un Short dont le début n'est pas animé n'est pas regardé. Dans les 30 premières secondes,
+# quelque chose bouge dès la première seconde et l'image change au moins toutes les 4 s.
+SHORT_HOOK_S = 30.0
+SHORT_FIRST_STEP_S = 1.0
+SHORT_MAX_GAP_S = 4.0
 CAM_TWEEN_S = 0.55          # transition de cadre entre deux états de base (inchangé)
 CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de Cast
 # Le crop bascule 1/4 d'image AVANT la borne : quelle que soit la fréquence de rendu, l'image
@@ -308,6 +313,24 @@ def parse_format(raw):
         if abs(ratio - 9 / 16.0) < 0.03:
             return "9:16"
     die("format inconnu : %r (attendu : 16:9 ou 9:16, ou une définition `1920×1080` / `1080×1920`)" % raw)
+
+
+def short_rhythm_warnings(starts, total):
+    """Avertissements sur le début d'un Short. `starts` : instants (s) où une étape apparaît ; `total` : durée (s)."""
+    out = []
+    starts = sorted(starts)
+    if not starts:
+        return out
+    if starts[0] > SHORT_FIRST_STEP_S:
+        out.append("rythme : rien n'apparaît avant %.1f s ; un Short dont le début n'est pas animé n'est pas regardé "
+                   "(première étape à t ≤ %.0f s)" % (starts[0], SHORT_FIRST_STEP_S))
+    horizon = min(SHORT_HOOK_S, total)
+    marks = [t for t in starts if t < horizon] + [horizon]
+    for a, b in zip(marks, marks[1:]):
+        if b - a > SHORT_MAX_GAP_S + 1e-6:
+            out.append("rythme : %.1f s sans changement à l'image entre %.1f s et %.1f s (les %.0f premières secondes "
+                       "d'un Short : un changement toutes les %.0f s au plus)" % (b - a, a, b, SHORT_HOOK_S, SHORT_MAX_GAP_S))
+    return out
 
 
 def norm(s):
@@ -1504,6 +1527,8 @@ def main():
         if total > SHORT_MAX_S:
             print("AVERTISSEMENT : %.0f s : au-delà de %.0f s, YouTube ne classe plus une vidéo verticale parmi les "
                   "Shorts" % (total, SHORT_MAX_S), file=sys.stderr)
+        for w in short_rhythm_warnings([st["_t"] for sc in scenes for st in sc["steps"]], total):
+            print("AVERTISSEMENT : " + w, file=sys.stderr)
 
     # mode : option, sinon en-tête du storyboard
     mode_raw = norm(a.mode or movie["meta"].get("mode", ""))

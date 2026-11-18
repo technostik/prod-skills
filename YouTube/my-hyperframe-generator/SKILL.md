@@ -79,6 +79,7 @@ Un format de sortie, pas un mode : `**Format** : 1080×1920 @ 30 fps` dans l'en-
 - **La webcam est déjà en 9:16** (sinon avertissement : rognée au centre). Caméra `pip` / `full` / `cast` et `incrustation` en 1080×1920 (`references/webcam.md`, `modes/incrustation.md`).
 - **Pas de shorts de promotion** : la vidéo *est* le short (`## 6. Shorts` ignoré). Au plus 180 s (avertissement au-delà).
 - Le CSS est dérivé du CSS 16:9 dans `assets/style-joriel-9x16.css` ; marges de sécurité (zones recouvertes par l'interface de YouTube Shorts) ; `versus` empilé ; les schémas (dessinés en 16:9) sont posés dans une bande centrale ; fonds en 1080×1920.
+- **Début animé, rythme dense dans les 30 premières secondes** : un Short dont le début n'est pas animé n'est pas regardé. Première étape à `t=0`, la plus forte ; une étape toutes les 2 à 4 s ; primitives qui bougent et caméra alternée (`references/scenario-to-storyboard-prompt.md` règle 16). `build.py` avertit si rien n'apparaît avant 1 s ou si l'image reste plus de 4 s sans changer dans les 30 premières secondes.
 - Pas d'inserts. Sortie : le mp4 vertical de `npx hyperframes render`, directement le short.
 
 ## Projet

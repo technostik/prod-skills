@@ -6,6 +6,7 @@
 - `scripts/short-take.py` : la prise par défaut est la **dernière vidéo de `$HF_VIDEOS_DIR`** (`~/Vidéos`, hors sous-dossiers et fichiers en cours d'écriture) ; même contrat que `concat-mkv.sh` (`cam-original.mkv`, `voix-brut.wav`) + `take.json` ; avertit si la prise n'est pas en 9:16.
 - `build.py` : viewport, géométrie de la caméra (`pip` 252×448, `full` 756×1344, `cast` plein écran), crop du filet Cast, ancres de l'incrustation (défaut : quarts inférieurs) paramétrés par le format. CSS : `assets/style-joriel-9x16.css`, dérivé du CSS 16:9 (`vh` → `calc(N * var(--u))`, même taille en px) + redéfinitions (marges de sécurité de YouTube Shorts, `versus` empilé, schémas dans une bande 16:9 centrale). **Le 16:9 est inchangé à l'octet près.**
 - `detect-cast.py` : la zone et l'épaisseur du filet suivent le **petit côté** de l'image (sinon le filet de 10 px d'une prise 1080×1920 n'était pas repéré). `prepare.py` : `init --format`, chapitre unique en 9:16.
+- Shorts : instruction de rythme (règle 16 du prompt storyboard, SKILL.md) : début animé, une étape toutes les 2 à 4 s pendant les 30 premières secondes ; `build.py` avertit (`short_rhythm_warnings`) si la première étape tombe après 1 s ou si l'image reste plus de 4 s sans changer dans ce laps.
 - Test : `scripts/test-vertical.py` (dont Chromium). Limites : schémas non redessinés pour le portrait ; texte des incrustations réduit de moitié ; pas d'inserts.
 
 ## 1.17.0

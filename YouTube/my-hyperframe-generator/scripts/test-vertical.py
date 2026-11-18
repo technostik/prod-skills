@@ -141,6 +141,27 @@ def part_b(tmp):
     check("`--format vertical` prime sur l'en-tête", 'data-width="1080"' in (r3 / "index.html").read_text(encoding="utf-8"), res3.stderr[-200:])
 
 
+def part_rythme(tmp):
+    print("R. rythme d'un Short")
+    w = build.short_rhythm_warnings
+    check("début animé, une étape toutes les 3 s : aucun avertissement", w([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30], 40) == [])
+    check("première étape après 1 s : avertissement", any("avant" in x for x in w([2, 5, 8], 40)))
+    check("plus de 4 s sans changement dans les 30 premières secondes : avertissement",
+          any("sans changement" in x for x in w([0, 3, 10, 13], 40)))
+    check("après 30 s, le rythme n'est pas contrôlé", w([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 45], 60) == [])
+    check("le trou final avant la 30e seconde est vu", any("sans changement" in x for x in w([0, 3, 6, 9, 12, 15, 18, 21, 24], 40)))
+    slow = CAM_SB.replace("t=0.00", "t=2.00").replace("(2.5s) [off/kw] Sans", "(2.5s) [off/kw] Sans")
+    r = project(tmp, slow, "plent")
+    video(r / "assets" / "cam-clean.mkv")
+    res = run(HERE / "build.py", "--root", r)
+    check("build 9:16 : l'avertissement de rythme est émis, le build réussit",
+          res.returncode == 0 and "rythme" in res.stderr, res.stderr[-300:])
+    ok = project(tmp, CAM_SB, "prapide")
+    video(ok / "assets" / "cam-clean.mkv")
+    check("build 9:16 : un début animé ne déclenche pas d'avertissement de rythme",
+          "rythme" not in run(HERE / "build.py", "--root", ok).stderr)
+
+
 def part_c(tmp):
     print("C. webcam + Cast, prise verticale")
     r = project(tmp, CAM_SB, "pcam")
@@ -253,6 +274,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="vertical-") as t:
         t = Path(t)
         part_b(t)
+        part_rythme(t)
         rcam = part_c(t)
         part_e(t)
         part_f(t, rcam)
