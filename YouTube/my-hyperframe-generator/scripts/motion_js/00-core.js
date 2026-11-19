@@ -1,5 +1,5 @@
 // Mouvement « vivant » des primitives : noyau. Inséré dans chaque composition par build.py (scripts/motion.py).
-// Déterministe : aucun Math.random. Tout tirage vient d'un PRNG semé (graine du film + scène + identifiant d'étape),
+// Déterministe : aucun appel au hasard natif. Tout tirage vient d'un PRNG semé (graine du film + scène + identifiant d'étape),
 // donc deux rendus du même storyboard sont identiques, et `--motion-seed` change toutes les variations.
 var _M = (function (tl, CFG) {
   var VW = CFG.vw, VH = CFG.vh;

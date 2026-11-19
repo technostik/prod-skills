@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.19.0
+
+- **Mouvement vivant des primitives (défaut), avec retour au sobre.** `build.py --motion vivant|calme|sobre` (ou `**Mouvement**` dans l'en-tête, `motion:` sur une étape). `vivant` : entrées depuis les bords, chute, rotation, zoom, flou ; tampons lancés de travers ; pastilles dispersées ; barres, flèches, compteurs, `versus`, `diverge`, `ref-card`, images et fonds en variantes. `calme` : mêmes variantes, plus discrètes. `sobre` : rendu historique **octet pour octet**.
+- Tirages déterministes (PRNG semé : graine du film + scène + étape ; `--motion-seed`), jamais de `Math.random` ; un « sac » évite deux entrées identiques de suite.
+- `scripts/motion.py`, `scripts/motion_js/*.js` (bibliothèque JS insérée dans chaque composition ; un fichier par famille de primitives), jetons `__M_*__` dans `JS_TEMPLATE`. Test : `scripts/test-motion.py`.
+
 ## 1.18.0
 
 - **Format de sortie 9:16 (Short vertical), orthogonal au mode.** `**Format** : 1080×1920 @ 30 fps` dans l'en-tête du storyboard, ou `build.py --format 9:16` / `prepare.py init --format 9:16`. Les trois modes (auto, webcam, incrustation) s'appliquent : même storyboard, mêmes primitives, mêmes trois modalités de caméra. Une seule vidéo, un seul chapitre : pas de concaténation, pas de shorts de promotion (`## 6. Shorts` ignoré), 180 s au plus (avertissement au-delà).

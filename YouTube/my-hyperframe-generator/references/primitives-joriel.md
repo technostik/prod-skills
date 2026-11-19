@@ -31,6 +31,36 @@ Le style est dans `examples/demo/assets/style-joriel.css`, les animations dans l
 
 Les tweens d'un même élément portent sur des propriétés différentes ; quand un `fromTo` en suit un autre sur le même élément (zoom de la `ref-card`), il reçoit `immediateRender: false` (voir `hyperframes-check.md`).
 
+## Mouvement vivant (défaut) et mouvement sobre
+
+Le tableau « Mouvements » ci-dessus décrit le profil **`sobre`**, qui reste le rendu historique exact. Le profil **`vivant`** (défaut de `build.py`) remplace chaque mouvement fixe par une variante tirée au sort (`scripts/motion_js/`), **sans changer l'état final** de l'étape (sauf l'inclinaison finale d'un tampon et l'image dont la dérive se termine ailleurs). `calme` = mêmes variantes, distances ×0,55, sans rebond, secousse, respiration ni inclinaison.
+
+| Primitive | Variantes (vivant) |
+|---|---|
+| bloc `.in` (entrée de toute étape) | arrive de la gauche, de la droite, du haut ou du bas (depuis le bord de l'écran), zoom ×1,7, inclinaison (skew), rotation, flou, chute avec rebond, ou montée de 34 px (l'ancien). Tirage en « sac » : une variante ne revient qu'après les autres. Primitives déjà animées (`versus`, `diverge`, `compare3`, `bars`, `seuil`, `ref-card`, `waffle`) : entrée discrète (fondu, montée ou zoom léger) |
+| lignes d'un bloc | alternent gauche et droite |
+| `kicker`, `stitle` | le kicker part d'un côté tiré au sort, le titre descend |
+| respiration | le contenu flotte de ±5 px (±3 en incrustation) pendant l'étape |
+| `count` | durée 0,9–1,5 s, courbe parmi 4, pulsation du chiffre à l'arrivée, libellé qui arrive d'un côté. Jamais de dépassement de la cible |
+| `strike` | sens des traits tiré au sort, vitesses variables, secousse du mot |
+| `stamp` | lancé de travers depuis un point tiré au sort, rotation finale ±1,5–5°, légère secousse de la scène |
+| `chip` | dispersées autour de leur place, dans un ordre mélangé, avec rotation |
+| `icon`, `check`, `cross` | la pastille tourne en entrant, puis le trait se dessine |
+| `arrow` | arrive d'une direction différente à chaque flèche, puis va-et-vient (gauche puis droite) |
+| `enumerate` | le nouvel item arrive à gauche ou à droite en alternance (un quart du temps par le bas) |
+| `spotlight` | items qui entrent en alternant les côtés, relief ×1,12–1,22 avec légère inclinaison |
+| `cols2` | lignes qui alternent gauche et droite |
+| `versus` | chaque colonne arrive de son côté (ou la gauche tombe, la droite monte), mêmes états finaux (×0,82 / ×1,16) |
+| `diverge` | le tronc vient de la gauche, flèches élastiques, ordre ↗ puis ↘ conservé |
+| `punch` | chaque mot d'une direction différente, dernier mot appuyé, avancée lente ×1,035 ou recul lent |
+| `ref-card` | la carte arrive inclinée d'un côté, lignes alternées, balayage du surlignage |
+| `bars`, `seuil` | une courbe par barre (sans dépassement), libellés alternés, repère qui tombe et rebondit |
+| `compare3` | lignes qui alternent gauche et droite |
+| image, `ref-shot` | zoom avant, zoom arrière ou dérive latérale/verticale, toujours cadrée (jamais de bord nu) |
+| fond de scène | dérive lente (au lieu du zoom fixe de 5 %) |
+
+Réglages : `**Mouvement** : vivant | calme | sobre` (en-tête), `build.py --motion … --motion-seed N`, `- motion: …` sur une étape (profil de l'étape ou direction d'entrée forcée : `gauche`, `droite`, `haut`, `bas`, `zoom`, `inclinaison`, `rotation`, `flou`, `chute`, `montee`). Les tirages sont déterministes (graine + identifiant d'étape) : un rendu se reproduit à l'identique. Limites : les schémas animés (`schema_anim.py`) et la caméra ne sont pas concernés.
+
 ## Structure d'une étape (step)
 
 ```html

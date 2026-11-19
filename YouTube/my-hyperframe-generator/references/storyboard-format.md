@@ -25,6 +25,7 @@ Le LLM décide **quel passage devient quelle primitive** (éditorial). Le code n
 **Mode** : auto | webcam | incrustation
 **Durée estimée** : ≈ N min
 **Format** : 1920×1080 @ 30 fps   (ou `1080×1920 @ 30 fps` : Short vertical 9:16, voir `references/shorts.md`)
+**Mouvement** : vivant | calme | sobre   (facultatif ; défaut `vivant` ; « vivant · graine 7 » fixe la graine)
 
 ## 0. Fiche
 
@@ -127,6 +128,10 @@ Ce que la thèse ne doit pas faire dire aux chiffres ou aux sources.
 ---
 
 ## Règles de syntaxe (lues par `build.py`)
+
+### Mouvement d'une étape (facultatif)
+
+`- motion: <valeur>` sur une étape. `sobre`, `calme` ou `vivant` changent le profil de cette étape seule (ex. `sobre` sur un chiffre grave). `gauche`, `droite`, `haut`, `bas`, `zoom`, `inclinaison`, `rotation`, `flou`, `chute`, `montee` forcent la **direction d'entrée** de l'étape (ex. un chiffre qui arrive toujours par la droite). Valeur inconnue : avertissement, ignorée.
 
 ### Scène
 

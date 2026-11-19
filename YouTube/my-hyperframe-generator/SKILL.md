@@ -4,7 +4,7 @@ description: Build a Joriel-styled HyperFrames video in one of three modes — a
 argument-hint: "<script.md | video.mkv>"
 author: joriel
 category: Video Creation
-version: 1.18.0
+version: 1.19.0
 ---
 
 # Hyperframe-joriel
@@ -54,6 +54,8 @@ La composition illustre, le transcript explique. L'un renforce l'autre. La compo
 - S'il existe une vidéo du locuteur (mode webcam) : webcam incrustée en coin, mi-écran, ou rien. En mode incrustation, la vidéo reste plein écran et ce sont les visuels qui se posent dessus.
 
 Visuel, identique d'une vidéo à l'autre : fond noir, typographie la plus grande possible, éléments simples (flèche, liste, tableau, graphique, deux colonnes, symétrie), mouvement simple (translation, rotation, zoom) et changement de couleur (griser pour mettre en retrait).
+
+**Mouvement des primitives.** Par défaut (`vivant`), chaque entrée et chaque primitive tire sa variante dans un répertoire : texte qui arrive d'un bord, qui tombe, qui tourne, tampon lancé de travers, pastilles dispersées, barres qui poussent chacune à sa façon, images en dérive. Les tirages sont **déterministes** (graine = titre du film, ou `--motion-seed`) et ne répètent jamais deux fois de suite la même entrée. `calme` garde les variantes en réduisant distances et effets ; `sobre` redonne le rendu historique, **octet pour octet**. `**Mouvement** : vivant | calme | sobre` dans l'en-tête, `--motion` en ligne de commande, `motion:` sur une étape. Détail : `references/primitives-joriel.md` § Mouvement vivant.
 
 Les valeurs, les blocs et les gabarits sont dans `references/visual-language-joriel.md`. Les appliquer, sans style improvisé. Le fond par défaut est `BG-00` ; le noir pur est réservé aux punchlines. Écran, caméra, sons, correspondance des étapes : `references/scenario-studio-conventions.md`.
 
@@ -233,6 +235,7 @@ python3 scripts/build.py \
   [--camera assets/cam-clean.mkv] \
   [--cast-segments assets/cast-segments.json] \
   [--mode auto|webcam|incrustation] [--avoid bas-droite] [--format 16:9|9:16] \
+  [--motion vivant|calme|sobre] [--motion-seed N] \
   [--slug mon-film]
 ```
 
@@ -291,6 +294,7 @@ Chaque mode a son sous-skill, à lire une fois le mode choisi (§ Routeur) : `mo
 ## Ce que ce dépôt fournit
 
 - `scripts/build.py` : builder générique des trois modes, source unique `assets/storyboard.md`.
+- `scripts/motion.py` et `scripts/motion_js/*.js` : le mouvement des primitives (profils, graine, bibliothèque JS insérée dans chaque composition). Test : `scripts/test-motion.py`.
 - `scripts/render_primitive.py` : module commun de rendu des primitives, importé par `build.py`. Une primitive n'est écrite qu'une fois.
 - `scripts/prepare.py` : la préparation (checklist, contrôle, chapitres, validation des schémas) ; `scripts/transcript-export.py`, `scripts/make-music.py`, `scripts/mix-music.py`, `scripts/excalidraw-preview.py`, `scripts/schema-to-excalidraw.py` : les étapes qui l'entourent.
 - Les primitives sont dans `references/primitives-joriel.md` et rendues par `render_primitive.py`. Les **schémas animés** (`kind: schema`, registre §1c, état qui persiste d'une étape à l'autre) sont décrits dans `references/schemas-animes.md` et rendus par `scripts/schema_anim.py`. `seuil`, `bars`, `compare3`, `brand`, la caméra et l'incrustation sont couverts ; leurs styles manquants sont écrits dans `assets/style-joriel-ext.css` au build. **Schémas Excalidraw** : un fichier `assets/schemas/Dxx.excalidraw`, asset de la préparation, qu'on regarde (`scripts/excalidraw-preview.py`), valide et retouche avant de l'intégrer ; ronds, losanges, imbrications ; voir `references/schemas-excalidraw.md`.
