@@ -76,6 +76,7 @@ CAST_TWEEN_S = 0.35         # transition de cadre à l'entrée / à la sortie de
 # échantillonnée à l'instant exact `n / fps` est du bon côté de la borne (jamais une image de retard).
 CAST_FRAME_LEAD = 0.25
 
+import motion
 import music_plan
 import schema_anim
 import shorts_plan
@@ -94,8 +95,8 @@ function applyCam(tl, frame, mode, t, stepSel) {
   tl.to("#fond", { filter: blur, duration: 0.4, ease: "power2.inOut" }, t);
   tl.to(stepSel, { filter: blur, duration: 0.4, ease: "power2.inOut" }, t);
 }
-const tl = gsap.timeline({ paused: true });
-if (document.querySelector("#fond-img")) tl.fromTo("#fond-img", { scale: 1 }, { scale: 1.05, duration: __DUR__, ease: "none" }, 0);
+const tl = gsap.timeline({ paused: true });__M_LIB__
+if (document.querySelector("#fond-img")__M_BG__) tl.fromTo("#fond-img", { scale: 1 }, { scale: 1.05, duration: __DUR__, ease: "none" }, 0);
 function _fmt(n, dec) {
   var s = dec ? Number(n).toFixed(dec) : Math.round(n).toString();
   var p = s.split(".");
@@ -108,16 +109,16 @@ document.querySelectorAll(".step,.step-punch").forEach(function (step) {
   const sel = "#" + step.id;
   const has = function (q) { return step.querySelector(q) !== null; };
 __CAMCALL__
-  tl.addLabel(step.getAttribute("data-step"), t);
+  tl.addLabel(step.getAttribute("data-step"), t);__M_PRE__
 
   // entrée de l'étape : le bloc glisse et apparaît
   const inEl = step.querySelector(".in");
-  if (inEl) tl.fromTo("#" + inEl.id, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
+  if (inEl__M_IN__) tl.fromTo("#" + inEl.id, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
   var _num = step.querySelector(".dbig") || step.querySelector(".dkw");
-  if (_num && inEl) tl.fromTo("#" + inEl.id, { scale: 0.92 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)" }, t + 0.05);
-  if (inEl && step.querySelectorAll(".in > .dline").length > 1) tl.fromTo(sel + " .in > .dline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
-  if (has(".kicker")) tl.fromTo(sel + " .kicker", { opacity: 0, x: -26 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
-  if (has(".stitle")) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
+  if (_num && inEl__M_IN__) tl.fromTo("#" + inEl.id, { scale: 0.92 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)" }, t + 0.05);
+  if (inEl && step.querySelectorAll(".in > .dline").length > 1__M_IN__) tl.fromTo(sel + " .in > .dline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
+  if (has(".kicker")__M_HEAD__) tl.fromTo(sel + " .kicker", { opacity: 0, x: -26 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, t);
+  if (has(".stitle")__M_HEAD__) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
 
   // versus
   if (has(".versus")) {
@@ -208,7 +209,7 @@ __CAMCALL__
   if (has(".crow")) tl.fromTo(sel + " .crow", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.16 }, t + 0.15);
   // image plein écran, capture : zoom lent
   var _img = step.querySelector("img.fond, img.ref-shot");
-  if (_img) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
+  if (_img__M_IM__) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);
 });__CASTCAM__
 window.__timelines = window.__timelines || {};
 window.__timelines["__ID__"] = tl;
@@ -1165,7 +1166,7 @@ def scene_bg(scene):
 
 
 def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media_start, cast=None, incrust=None,
-                       fmt=DEFAULT_FORMAT):
+                       fmt=DEFAULT_FORMAT, mot=None):
     """`cast` : None (rendu webcam historique) ou {"plan": CameraPlan, "crop": {...}}.
     `incrust` : None, ou {"plan": CameraPlan(base `plein`), "crop": {...}} : mode incrustation.
     `fmt` : `16:9` (rendu historique, inchangé à l'octet près) ou `9:16` (Short vertical)."""
@@ -1273,7 +1274,10 @@ def render_composition(renderer, scene, idx, total_dur, camera_src, camera_media
     else:
         camcall, castcam = JS_CAMCALL_LEGACY, ""
     castcam += schema_js
-    js = (JS_TEMPLATE.replace("__CAMCALL__", camcall)
+    mot = mot or {"profile": "sobre"}
+    js = (motion.apply(JS_TEMPLATE, mot["profile"],
+                       motion.scene_cfg(mot["profile"], mot.get("seed", 0), cid, vw, vh, mot.get("steps", {})))
+          .replace("__CAMCALL__", camcall)
           .replace("__CASTCAM__", castcam)
           .replace("__DUR__", "%.2f" % dur)
           .replace("__CAMCONTENT__", "cam-content-" + cid)
@@ -1462,6 +1466,11 @@ def main():
     ap.add_argument("--format", default=None,
                     help="format de sortie : 16:9 (défaut) ou 9:16 (Short vertical, 1080×1920). Défaut : "
                          "`**Format**` de l'en-tête du storyboard. Orthogonal au mode.")
+    ap.add_argument("--motion", default=None,
+                    help="mouvement des primitives : vivant (défaut : variantes tirées au sort), calme, ou sobre "
+                         "(rendu historique, octet pour octet). Défaut : `**Mouvement**` de l'en-tête (scripts/motion.py)")
+    ap.add_argument("--motion-seed", type=int, default=None,
+                    help="graine des variations de mouvement (défaut : dérivée du titre du film)")
     ap.add_argument("--slug", default=None)
     a = ap.parse_args()
 
@@ -1529,6 +1538,18 @@ def main():
                   "Shorts" % (total, SHORT_MAX_S), file=sys.stderr)
         for w in short_rhythm_warnings([st["_t"] for sc in scenes for st in sc["steps"]], total):
             print("AVERTISSEMENT : " + w, file=sys.stderr)
+
+    # mouvement des primitives : option, sinon en-tête du storyboard (défaut : vivant)
+    mot_profile, mot_seed, mot_warns = motion.parse_profile(a.motion, movie["meta"].get("mouvement"))
+    mot_steps, step_warns = motion.step_overrides(scenes)
+    for w in mot_warns + step_warns:
+        print("AVERTISSEMENT : " + w, file=sys.stderr)
+    if a.motion_seed is not None:
+        mot_seed = a.motion_seed
+    if mot_seed is None:
+        mot_seed = motion.default_seed(movie["title"])
+    mot = {"profile": mot_profile, "seed": mot_seed, "steps": mot_steps}
+    print("mouvement : %s%s" % (mot_profile, "" if mot_profile == "sobre" else " (graine %d)" % mot_seed))
 
     # mode : option, sinon en-tête du storyboard
     mode_raw = norm(a.mode or movie["meta"].get("mode", ""))
@@ -1685,7 +1706,7 @@ def main():
         for st in sc["steps"]:
             st["_value"] = renderer.figure((st.get("figures") or [""])[0]).get("value", "")
         compositions.append(render_composition(renderer, sc, i, sc["_dur"], camera,
-                                               sc["_start"] if camera else 0, cast, incrust, fmt))
+                                               sc["_start"] if camera else 0, cast, incrust, fmt, mot))
     (data / "scenes.json").write_text(
         json.dumps(scenes_json(scenes), ensure_ascii=False, indent=2), encoding="utf-8")
 
