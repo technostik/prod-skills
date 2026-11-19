@@ -121,13 +121,13 @@ __CAMCALL__
   if (has(".stitle")__M_HEAD__) tl.fromTo(sel + " .stitle", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, t + 0.1);
 
   // versus
-  if (has(".versus")) {
+  if (has(".versus")__M_VS__) {
     tl.fromTo(sel + " .vsep", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out" }, t + 0.15);
     tl.fromTo(sel + " .vcol.left", { scale: 1, x: 0 }, { scale: 0.82, x: -24, duration: 0.7, ease: "power2.out" }, t + 0.3);
     tl.fromTo(sel + " .vcol.right", { scale: 1 }, { scale: 1.16, duration: 0.8, ease: "back.out(1.4)" }, t + 0.3);
   }
   // diverge
-  if (has(".diverge")) {
+  if (has(".diverge")__M_DV__) {
     tl.fromTo(sel + " .branch.up .darr-big", { opacity: 0, x: -36, y: 36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
     tl.fromTo(sel + " .branch.down .darr-big", { opacity: 0, x: -36, y: -36 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.85);
     tl.fromTo(sel + " .branch.up .dsub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, t + 0.6);
@@ -191,7 +191,7 @@ __CAMCALL__
   }
   // ref-card
   var _ref = step.querySelector(".ref-card");
-  if (_ref) {
+  if (_ref__M_RF__) {
     var rs = "#" + _ref.id;
     tl.fromTo(rs, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, t);
     tl.fromTo(rs + " > div", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.12 }, t + 0.2);
@@ -199,14 +199,14 @@ __CAMCALL__
     tl.fromTo(rs, { scale: 1 }, { scale: 1.03, duration: dur, ease: "none", immediateRender: false }, t);
   }
   // barres : poussent à leur largeur relative
-  if (has(".bfill")) tl.fromTo(sel + " .bfill", { scaleX: 0 }, { scaleX: function (i, el) { return parseFloat(el.getAttribute("data-w")) / 100; }, transformOrigin: "left center", duration: 0.8, ease: "power3.out", stagger: 0.14 }, t + 0.3);
+  if (has(".bfill")__M_BA__) tl.fromTo(sel + " .bfill", { scaleX: 0 }, { scaleX: function (i, el) { return parseFloat(el.getAttribute("data-w")) / 100; }, transformOrigin: "left center", duration: 0.8, ease: "power3.out", stagger: 0.14 }, t + 0.3);
   // seuil : le remplissage rejoint la valeur, le repère se pose
-  if (has(".sfill")) {
+  if (has(".sfill")__M_SE__) {
     tl.fromTo(sel + " .sfill", { scaleX: 0 }, { scaleX: function (i, el) { return parseFloat(el.getAttribute("data-w")) / 100; }, transformOrigin: "left center", duration: 0.9, ease: "power3.out" }, t + 0.3);
     tl.fromTo(sel + " .stick", { opacity: 0, scaleY: 0 }, { opacity: .9, scaleY: 1, duration: 0.45, ease: "back.out(1.8)" }, t + 0.55);
   }
   // compare3 : lignes successives
-  if (has(".crow")) tl.fromTo(sel + " .crow", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.16 }, t + 0.15);
+  if (has(".crow")__M_C3__) tl.fromTo(sel + " .crow", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.16 }, t + 0.15);
   // image plein écran, capture : zoom lent
   var _img = step.querySelector("img.fond, img.ref-shot");
   if (_img__M_IM__) tl.fromTo("#" + _img.id, { scale: 1 }, { scale: _img.classList.contains("fond") ? 1.07 : 1.04, duration: dur, ease: "none" }, t);

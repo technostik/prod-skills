@@ -85,7 +85,8 @@ def _lib():
 FLAGS = {"__M_IN__": "entry", "__M_HEAD__": "head", "__M_IM__": "img"}
 SIMPLE_FLAGS = {"__M_CT__": "count", "__M_ST__": "strike", "__M_EN__": "enumerate", "__M_SP__": "spot",
                 "__M_C2__": "cols2", "__M_SM__": "stamp", "__M_CH__": "chip", "__M_IC__": "icon",
-                "__M_AR__": "arrow", "__M_PU__": "punch"}
+                "__M_AR__": "arrow", "__M_PU__": "punch", "__M_VS__": "versus", "__M_DV__": "diverge",
+                "__M_RF__": "ref", "__M_BA__": "bars", "__M_SE__": "seuil", "__M_C3__": "compare3"}
 
 
 def apply(js, profile, cfg):
