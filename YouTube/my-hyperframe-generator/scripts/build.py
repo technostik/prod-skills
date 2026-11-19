@@ -136,25 +136,25 @@ __CAMCALL__
     tl.fromTo(sel + " .branch.down .darr-big", { scale: 1 }, { scale: 1.35, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, t + 1.35);
   }
   // strike
-  if (has(".sline1")) {
+  if (has(".sline1")__M_ST__) {
     tl.fromTo(sel + " .sline1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "left center" }, t + 0.35);
     tl.fromTo(sel + " .sline2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power2.inOut", transformOrigin: "right center" }, t + 0.7);
   }
   // count
   step.querySelectorAll(".ctr").forEach(function (el) {
-    var obj = { val: 0 }, target = parseFloat(el.getAttribute("data-target"));
+    __M_CTRRET__var obj = { val: 0 }, target = parseFloat(el.getAttribute("data-target"));
     var dec = parseInt(el.getAttribute("data-dec") || "0", 10);
     if (!isFinite(target)) return;
     tl.to(obj, { val: target, duration: 1.1, ease: "power3.out", onUpdate: function () { el.textContent = _fmt(obj.val, dec); } }, t + 0.15);
   });
-  if (has(".dbig") && has(".dsub")) tl.fromTo(sel + " .dsub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t + 0.9);
+  if (has(".dbig") && has(".dsub")__M_CT__) tl.fromTo(sel + " .dsub", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, t + 0.9);
   // enumerate : le nouvel item entre, les précédents s'estompent
-  if (has(".it.new")) {
+  if (has(".it.new")__M_EN__) {
     tl.fromTo(sel + " .it.new", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, t + 0.1);
     if (has(".it:not(.new)")) tl.fromTo(sel + " .it:not(.new)", { opacity: 1 }, { opacity: 0.55, duration: 0.5, ease: "power2.out" }, t + 0.1);
   }
   // spotlight : liste entière, même couleur ; chaque item est mis en relief tour à tour (zoom temporaire)
-  if (has(".spot")) {
+  if (has(".spot")__M_SP__) {
     var _spot = step.querySelectorAll(".spot .it");
     tl.fromTo(sel + " .spot .it", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, t + 0.1);
     var _sn = _spot.length;
@@ -169,23 +169,23 @@ __CAMCALL__
     }
   }
   // cols2
-  if (has(".cols2")) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
+  if (has(".cols2")__M_C2__) tl.fromTo(sel + " .cols2 .dline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, t + 0.15);
   // stamp
-  if (has(".stamp")) {
+  if (has(".stamp")__M_SM__) {
     tl.fromTo(sel + " .stamp", { scale: 2.4, opacity: 0, rotation: -14 }, { scale: 0.94, opacity: 1, rotation: -3, duration: 0.24, ease: "power4.in", stagger: 0.24 }, t + 0.35);
     tl.to(sel + " .stamp", { scale: 1, duration: 0.2, ease: "back.out(3)", stagger: 0.24 }, t + 0.59);
   }
   // chip
-  if (has(".chip")) tl.fromTo(sel + " .chip", { scale: 0, y: 10 }, { scale: 1, y: 0, duration: 0.45, ease: "back.out(2.4)", stagger: 0.14 }, t + 0.25);
+  if (has(".chip")__M_CH__) tl.fromTo(sel + " .chip", { scale: 0, y: 10 }, { scale: 1, y: 0, duration: 0.45, ease: "back.out(2.4)", stagger: 0.14 }, t + 0.25);
   // icon / check / cross
-  if (has(".dico")) {
+  if (has(".dico")__M_IC__) {
     tl.fromTo(sel + " .dico", { scale: 0 }, { scale: 1, duration: 0.45, ease: "back.out(2.2)", stagger: 0.14 }, t + 0.2);
     tl.fromTo(sel + " .dico path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out", stagger: 0.07 }, t + 0.45);
   }
   // arrow
-  if (has(".darr")) tl.fromTo(sel + " .darr", { opacity: 0, x: -34, scale: 0.7 }, { opacity: 1, x: 0, scale: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, t + 0.3);
+  if (has(".darr")__M_AR__) tl.fromTo(sel + " .darr", { opacity: 0, x: -34, scale: 0.7 }, { opacity: 1, x: 0, scale: 1, duration: 0.5, ease: "back.out(2)", stagger: 0.28 }, t + 0.3);
   // punch
-  if (step.classList.contains("step-punch")) {
+  if (step.classList.contains("step-punch")__M_PU__) {
     tl.fromTo(sel + " .w", { opacity: 0, y: 46, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.7)", stagger: 0.2 }, t + 0.1);
     tl.fromTo(sel + " .punch-text", { scale: 1 }, { scale: 1.035, duration: dur, ease: "none" }, t);
   }

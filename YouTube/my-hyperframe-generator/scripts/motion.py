@@ -83,7 +83,9 @@ def _lib():
 
 # jeton du gabarit JS -> nom du drapeau posé par la bibliothèque (` && !_mv.<drapeau>` dans la condition)
 FLAGS = {"__M_IN__": "entry", "__M_HEAD__": "head", "__M_IM__": "img"}
-SIMPLE_FLAGS = {}
+SIMPLE_FLAGS = {"__M_CT__": "count", "__M_ST__": "strike", "__M_EN__": "enumerate", "__M_SP__": "spot",
+                "__M_C2__": "cols2", "__M_SM__": "stamp", "__M_CH__": "chip", "__M_IC__": "icon",
+                "__M_AR__": "arrow", "__M_PU__": "punch"}
 
 
 def apply(js, profile, cfg):
